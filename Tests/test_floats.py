@@ -52,7 +52,7 @@ class FloatArithmeticTestCase(PyjionTestCase):
         self.assertEqual(b % a, 2.5)
 
 
-class FloatFormattingTestCase(NoPgcPyjionTestCase):
+class FloatFormattingTestCase(PyjionTestCase):
 
     def test_format_specials(self):
         # Test formatting of nans and infs.

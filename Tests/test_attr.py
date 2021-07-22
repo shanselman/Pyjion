@@ -1,6 +1,6 @@
 import unittest
 import sys
-from base import NoPgcPyjionTestCase
+from base import PyjionTestCase
 
 
 # A class with a few attributes for testing the `getattr` and `setattr` builtins.
@@ -11,7 +11,7 @@ class F:
     d = 4
 
 
-class GetAttrTestCase(NoPgcPyjionTestCase):
+class GetAttrTestCase(PyjionTestCase):
 
     def test_existing_attr(self):
         f = F()
@@ -27,7 +27,7 @@ class GetAttrTestCase(NoPgcPyjionTestCase):
         self.assertEqual(sys.getrefcount(f), before)
 
 
-class SetAttrTestCase(NoPgcPyjionTestCase):
+class SetAttrTestCase(PyjionTestCase):
 
     def test_existing_attr(self):
         f = F()

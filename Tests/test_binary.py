@@ -1,4 +1,4 @@
-from base import NoPgcPyjionTestCase, PyjionTestCase
+from base import PyjionTestCase
 
 
 class BinaryOperationTestCase(PyjionTestCase):

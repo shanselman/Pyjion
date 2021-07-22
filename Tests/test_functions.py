@@ -4,10 +4,10 @@ import pyjion.dis
 import unittest
 import math
 import time
-from base import NoPgcPyjionTestCase
+from base import PyjionTestCase
 
 
-class ScopeLeaksTestCase(NoPgcPyjionTestCase):
+class ScopeLeaksTestCase(PyjionTestCase):
 
     def test_slice(self):
         a = "12345"
@@ -28,7 +28,7 @@ class ScopeLeaksTestCase(NoPgcPyjionTestCase):
         self.assertEqual(before, sys.getrefcount(a))
 
 
-class FunctionCallsTestCase(NoPgcPyjionTestCase):
+class FunctionCallsTestCase(PyjionTestCase):
 
     def test_arg0(self):
         def arg0() -> int:
@@ -307,7 +307,7 @@ class FunctionCallsTestCase(NoPgcPyjionTestCase):
         self.assertTrue(info['compiled'], info['compile_result'])
 
 
-class ClassMethodCallsTestCase(NoPgcPyjionTestCase):
+class ClassMethodCallsTestCase(PyjionTestCase):
 
     def test_arg0(self):
         class F:
@@ -588,7 +588,7 @@ class ClassMethodCallsTestCase(NoPgcPyjionTestCase):
         self.assertTrue(info['compiled'], info['compile_result'])
 
 
-class FunctionKwCallsTestCase(NoPgcPyjionTestCase):
+class FunctionKwCallsTestCase(PyjionTestCase):
 
     def test_arg1(self):
         def arg1(e):
@@ -775,7 +775,7 @@ class FunctionKwCallsTestCase(NoPgcPyjionTestCase):
         self.assertTrue(info['compiled'], info['compile_result'])
 
 
-class ObjectMethodCallsTestCase(NoPgcPyjionTestCase):
+class ObjectMethodCallsTestCase(PyjionTestCase):
 
     def test_arg0(self):
         class F:

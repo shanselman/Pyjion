@@ -120,16 +120,7 @@ class MathTestCase(PyjionTestCase):
         self.assertEqual(x, "boo 3")
 
 
-class StatisticsTestCase(unittest.TestCase):
-
-    def setUp(self) -> None:
-        pyjion.enable()
-        pyjion.enable_pgc()
-        pyjion.enable_graphs()
-
-    def tearDown(self) -> None:
-        pyjion.disable()
-        gc.collect()
+class StatisticsTestCase(PyjionTestCase):
 
     def test_mean(self):
         answer = statistics.mean([1, 2, 3, 4, 4])
