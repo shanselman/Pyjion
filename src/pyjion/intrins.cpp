@@ -1614,8 +1614,13 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
     return v;
 }
 
-PyObject* PyJit_LoadGlobalHash(PyFrameObject* f, PyObject* name, Py_hash_t name_hash) {
+PyObject* PyJit_LoadGlobalHash(PyObject* ob, PyObject* name, Py_hash_t name_hash) {
     PyObject* v;
+    if (!PyFrame_Check(ob)){
+        PyErr_SetString(PyExc_ValueError, "Not frame object.");
+        return nullptr;
+    }
+    PyFrameObject* f = (PyFrameObject*)ob;
     if (PyDict_CheckExact(f->f_globals)
         && PyDict_CheckExact(f->f_builtins)) {
         v = _PyDict_GetItem_KnownHash((PyObject*)f->f_globals, name, name_hash);
