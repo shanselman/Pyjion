@@ -423,6 +423,7 @@ public:
     virtual void emit_incref() = 0;
 
     virtual void emit_debug_msg(const char* msg) = 0;
+    virtual void emit_debug_fault(const char* msg, const char* context, py_opindex index) = 0;
     virtual void emit_debug_pyobject() = 0;
 
     // Python 3.7 method calls
