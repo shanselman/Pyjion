@@ -1617,7 +1617,8 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
 PyObject* PyJit_LoadGlobalHash(PyObject* ob, PyObject* name, Py_hash_t name_hash) {
     PyObject* v;
     if (!PyFrame_Check(ob)){
-        PyErr_SetString(PyExc_ValueError, "Not frame object.");
+        printf("Hit critical error on load global hash. This is not a frame.");
+        abort();
         return nullptr;
     }
     PyFrameObject* f = (PyFrameObject*)ob;
