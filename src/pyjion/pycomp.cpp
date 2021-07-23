@@ -2135,7 +2135,7 @@ JittedCode* PythonCompiler::emit_compile() {
     auto* jitInfo = new CorJitInfo(PyUnicode_AsUTF8(m_code->co_filename), PyUnicode_AsUTF8(m_code->co_name), m_module, m_compileDebug);
     auto addr = m_il.compile(jitInfo, g_jit, m_code->co_stacksize + 100).m_addr;
     if (addr == nullptr) {
-#ifdef DEBUG
+#ifdef REPORT_CLR_FAULTS
         printf("Compiling failed %s from %s line %d\r\n",
             PyUnicode_AsUTF8(m_code->co_name),
             PyUnicode_AsUTF8(m_code->co_filename),
@@ -2144,16 +2144,7 @@ JittedCode* PythonCompiler::emit_compile() {
 #endif
         delete jitInfo;
         return nullptr;
-    } 
-#ifdef DEBUG
-    else {
-        printf("Compiling success %s from %s line %d\r\n",
-            PyUnicode_AsUTF8(m_code->co_name),
-            PyUnicode_AsUTF8(m_code->co_filename),
-            m_code->co_firstlineno
-            );
     }
-#endif
     return jitInfo;
 }
 
