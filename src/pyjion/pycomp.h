@@ -420,6 +420,7 @@ public:
     void emit_not_in() override;
 
     void emit_is(bool isNot) override;
+    void emit_is(bool isNot, AbstractValueWithSources lhs, AbstractValueWithSources rhs) override;
 
     void emit_compare_object(uint16_t compareType) override;
     void emit_compare_known_object(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) override;

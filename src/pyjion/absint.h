@@ -267,7 +267,6 @@ class AbstractInterpreter {
     _Py_CODEUNIT *mByteCode;
     size_t mSize;
     Local mErrorCheckLocal;
-    Local mExcVarsOnStack; // Counter of the number of exception variables on the stack.
     bool mTracingEnabled;
     bool mProfilingEnabled;
     Local mTracingInstrLowerBound;
@@ -428,9 +427,6 @@ private:
     void unwindHandlers();
 
     void emitRaise(ExceptionHandler *handler);
-    void popExcVars();
-    void decExcVars(size_t count);
-    void incExcVars(size_t count);
     void updateIntermediateSources();
     void escapeEdges(const vector<Edge>& edges, py_opindex curByte);
     void dumpEscapedLocalsToFrame(const unordered_map<py_oparg, AbstractValueKind>& locals, py_opindex at);

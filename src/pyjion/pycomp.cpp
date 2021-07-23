@@ -1883,6 +1883,9 @@ void PythonCompiler::emit_is(bool isNot) {
     }
 }
 
+void PythonCompiler::emit_is(bool isNot, AbstractValueWithSources lhs, AbstractValueWithSources rhs) {
+    emit_is(isNot); // TODO: Come back to this.
+}
 
 void PythonCompiler::emit_in() {
     m_il.emit_call(METHOD_CONTAINS_TOKEN);

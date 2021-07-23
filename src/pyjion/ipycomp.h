@@ -391,6 +391,7 @@ public:
     virtual void emit_not_in() = 0;
     // Does an is check and pushes a boxed Python bool on the stack as the result
     virtual void emit_is(bool isNot) = 0;
+    virtual void emit_is(bool isNot, AbstractValueWithSources lhs, AbstractValueWithSources rhs) = 0;
 
     // Performs a comparison for values on the stack which are objects, keeping a boxed Python object as the result.
     virtual void emit_compare_object(uint16_t compareType) = 0;
