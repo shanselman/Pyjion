@@ -107,6 +107,7 @@
 #define METHOD_DEBUG_TYPE                        0x0000003D
 #define METHOD_DEBUG_PYOBJECT                    0x0000003E
 #define METHOD_UNWIND_EH                         0x0000003F
+#define METHOD_DEBUG_FAULT                       0x00000040
 #define METHOD_PY_PUSHFRAME                      0x00000041
 #define METHOD_PY_POPFRAME                       0x00000042
 #define METHOD_PY_IMPORTNAME                     0x00000043
@@ -459,6 +460,7 @@ public:
     void emit_incref() override;
 
     void emit_debug_msg(const char* msg) override;
+    void emit_debug_fault(const char* msg, const char* context, py_opindex index) override;
     void emit_debug_pyobject() override;
 
     void emit_load_method(void* name) override;

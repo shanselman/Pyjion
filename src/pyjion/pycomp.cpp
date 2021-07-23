@@ -1760,6 +1760,15 @@ void PythonCompiler::emit_debug_pyobject() {
     m_il.emit_call(METHOD_DEBUG_PYOBJECT);
 }
 
+void PythonCompiler::emit_debug_fault(const char* msg, const char* context, py_opindex index) {
+#ifdef DEBUG
+    m_il.ld_i((void*)msg);
+    m_il.ld_i((void*)context);
+    m_il.ld_i4(index);
+    m_il.emit_call(METHOD_DEBUG_FAULT);
+#endif
+}
+
 LocalKind PythonCompiler::emit_binary_float(uint16_t opcode) {
     switch (opcode) {
         case BINARY_ADD:
@@ -2554,6 +2563,7 @@ GLOBAL_METHOD(METHOD_DEBUG_TRACE, &PyJit_DebugTrace, CORINFO_TYPE_VOID, Paramete
 GLOBAL_METHOD(METHOD_DEBUG_PTR, &PyJit_DebugPtr, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DEBUG_TYPE, &PyJit_DebugType, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DEBUG_PYOBJECT, &PyJit_DebugPyObject, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_DEBUG_FAULT, &PyJit_DebugFault, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT));
 
 GLOBAL_METHOD(METHOD_PY_POPFRAME, &PyJit_PopFrame, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_PY_PUSHFRAME, &PyJit_PushFrame, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));

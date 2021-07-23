@@ -381,17 +381,17 @@ private:
 
     // Checks to see if we have a null value as the last value on our stack
     // indicating an error, and if so, branches to our current error handler.
-    void errorCheck(const char* reason = nullptr, py_opindex curByte = 0);
+    void errorCheck(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0);
     void invalidFloatErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
     void invalidIntErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
-    void intErrorCheck(const char* reason = nullptr, py_opindex curByte = 0);
+    void intErrorCheck(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0);
 
     vector<Label>& getRaiseAndFreeLabels(size_t blockId);
     void ensureRaiseAndFreeLocals(size_t localCount);
 
     void ensureLabels(vector<Label>& labels, size_t count);
 
-    void branchRaise(const char* reason = nullptr, py_opindex curByte = 0, bool force=false);
+    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force=false);
     void raiseOnNegativeOne(py_opindex curByte);
 
     void unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler = nullptr);

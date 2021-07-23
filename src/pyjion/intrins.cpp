@@ -824,6 +824,10 @@ void PyJit_DebugTrace(char* msg) {
     puts(msg);
 }
 
+void PyJit_DebugFault(char* msg, char* context, int32_t index) {
+    printf("%s %s at %d\n", msg, context, index);
+}
+
 void PyJit_DebugPtr(void* ptr) {
     printf("Pointer at %p\n", ptr);
 }
