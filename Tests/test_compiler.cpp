@@ -573,3 +573,22 @@ TEST_CASE("Test classmethods"){
         CHECK(t.returns() == "10185");
     }
 }
+
+TEST_CASE("Test COMPARE_OP with is and is not None") {
+    SECTION("Test is not None"){
+        auto t = EmissionTest(
+                "def f():\n"
+                "  def func(path, debug_override=None, *, optimization=None):\n"
+                "     if debug_override is not None:\n"
+                "        __builtins__.get('the debug_override parameter is deprecated; use '\n"
+                "                       \"'optimization' instead\", DeprecationWarning)\n"
+                "        if optimization is not None:\n"
+                "            message = 'debug_override or optimization must be set to None'\n"
+                "            raise TypeError(message)\n"
+                "        optimization = '' if debug_override else 1\n"
+                "     path = path.upper()\n"
+                "     return path\n"
+                "  return func('xyz'), func('xyz', True)\n");
+        CHECK(t.returns() == "('XYZ', 'XYZ')");
+    }
+}
