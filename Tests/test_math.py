@@ -1,6 +1,5 @@
 import unittest
 from base import PyjionTestCase
-import gc
 import statistics
 from fractions import Fraction
 

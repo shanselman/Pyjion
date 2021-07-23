@@ -1,12 +1,11 @@
 import io
 from base import PyjionTestCase
+import pickle
 
 
 class PickleTestCase(PyjionTestCase):
 
     def test_simple_pickle(self):
-        import pickle
-
         f = io.BytesIO()
 
         # An arbitrary collection of objects supported by pickle.

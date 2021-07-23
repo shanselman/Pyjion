@@ -1,5 +1,6 @@
 from base import PyjionTestCase
 import unittest
+import yaml
 
 
 class PyyamlTestCase(PyjionTestCase):
@@ -12,7 +13,6 @@ linear:
   - test
   - 1
         """
-        import yaml
         data1 = yaml.safe_load(content)
 
         data2 = yaml.safe_load(content)
