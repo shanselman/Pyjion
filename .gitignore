@@ -25,7 +25,9 @@ cmake-build-*/
 .tox/
 venv*/
 .venv/
-*.pyc
+.venv*/
 MANIFEST
 src/pyjion/*.so
-/src/pyjion/_pyjion.cp39-win_amd64.pyd
+src/pyjion/*.pyd
+*.py[co]
+__pycache__
