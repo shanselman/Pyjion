@@ -9,11 +9,13 @@ class F:
     c = 3
     d = 4
 
+
 def test_existing_attr():
     f = F()
     before = sys.getrefcount(f)
     assert getattr(f, "a") is not None
     assert sys.getrefcount(f) == before
+
 
 def test_missing_attr():
     f = F()
@@ -22,12 +24,14 @@ def test_missing_attr():
         getattr(f, "e")
     assert sys.getrefcount(f) == before
 
+
 def test_existing_attr():
     f = F()
     before = sys.getrefcount(f)
     assert setattr(f, "a", 10) is None
     assert f.a == 10
     assert before == sys.getrefcount(f)
+
 
 def test_new_attr():
     f = F()

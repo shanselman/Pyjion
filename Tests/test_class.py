@@ -1,12 +1,12 @@
 
 def test_add():
-    class number:
+    class Number:
         def __add__(self, other):
             return 4 + other
 
         def __radd__(self, other):
             return other + 4
 
-    a = number()
+    a = Number()
     assert 3 + a == 7
     assert a + 3 == 7

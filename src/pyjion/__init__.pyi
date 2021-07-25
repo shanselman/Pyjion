@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 def enable() -> bool:
     ...
 
@@ -52,10 +54,10 @@ def disable_graphs() -> None:
 def get_graph(f: callable) -> str:
     ...
 
-def status() -> dict:
+def status() -> Dict[Any, Any]:
     ...
 
-def symbols(f: callable) -> dict:
+def symbols(f: callable) -> Dict[int, str]:
     ...
 
 __version__: str

@@ -1,6 +1,8 @@
 import pyjion
+import pytest
 
 
+@pytest.mark.graph
 def test_graph_dump() -> None:
     def f():
         a = 1
