@@ -1,8 +1,5 @@
 import sys
 
-import pyjion
-import pyjion.dis
-
 
 def test_list_init():
     l = []
@@ -21,17 +18,7 @@ def test_list_slice():
     assert l[1:3] == [1, 2]
 
 
-def assertOptimized(func, capsys) -> None:
-    assert pyjion.info(func)['compiled']
-    pyjion.dis.dis(func)
-    captured = capsys.readouterr()
-
-    assert "ldarg.1" in captured.out
-    assert "MethodTokens.METHOD_GETITER_TOKEN" in captured.out
-    assert "MethodTokens.METHOD_ITERNEXT_TOKEN" not in captured.out
-
-
-def test_const_list_is_optimized(capsys):
+def test_const_list():
     def _f():
         l = [0, 1, 2, 3, 4]
         o = 0
@@ -40,10 +27,9 @@ def test_const_list_is_optimized(capsys):
         return o
 
     assert _f() == 10
-    assertOptimized(_f, capsys)
 
 
-def test_builtin_list_is_optimized(capsys):
+def test_builtin_list():
     def _f():
         l = (0, 1, 2, 3, 4)
         o = 0
@@ -52,7 +38,6 @@ def test_builtin_list_is_optimized(capsys):
         return o
 
     assert _f() == 10
-    assertOptimized(_f, capsys)
 
 
 def test_const_list_refcount():

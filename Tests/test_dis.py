@@ -71,8 +71,8 @@ def test_thin(capsys):
                             b'\x00\x00\x00\x00\xd3X%J\x17XT\x06 '
                             b'\n\x00\x00\x00\xd3T\x0b\xdd\x1c\x00\x00\x00\t\x16>\t\x00\x00\x00&&&\x19\tY\r+\xf08'
                             b'\x00\x00\x00\x00\x16\xd38\x01\x00\x00\x00\x07\x03(B\x00\x00\x00*')
-    captured = capsys.readouterr()
     print_il(test_method, symbols={})
+    captured = capsys.readouterr()
     assert "ldarg.1" in captured.out
 
 
@@ -85,7 +85,6 @@ def test_dis_native(capsys):
     assert test_f() == 10
     dis_native(test_f)
     captured = capsys.readouterr()
-
     assert "PUSH RBP" in captured.out
 
 

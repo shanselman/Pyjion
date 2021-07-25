@@ -8,7 +8,7 @@ def test_static_sequence():
         return a + b
 
     f([0, 1])
-    assert pyjion.info(f)['pgc'] == 1
+    assert pyjion.info(f)['pgc'] >= 1
 
     f([0, 1])
     assert pyjion.info(f)['pgc'] == 2
@@ -21,7 +21,7 @@ def test_changed_sequence():
 
     r = f([1, 2])
     assert r == 3
-    assert pyjion.info(f)['pgc'] == 1
+    assert pyjion.info(f)['pgc'] >= 1
     r = f((3, 4))
     assert r == 7
     assert pyjion.info(f)['pgc'] == 2

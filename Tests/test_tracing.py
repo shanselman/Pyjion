@@ -55,7 +55,7 @@ def test_custom_tracer(capsys):
     assert test_f() == 10
     sys.settrace(None)
     captured = capsys.readouterr()
-    assert "Calling <code object test_f" in captured.out
+    assert "Calling <code object _f" in captured.out
     assert "Changing line to " in captured.out
     assert "Returning " in captured.out
     assert "STORE_FAST" in captured.out
@@ -130,5 +130,5 @@ def test_custom_tracer(capsys):
     assert _f() == 10
     sys.setprofile(None)
     captured = capsys.readouterr()
-    assert "Calling <code object test_f" in captured.out
+    assert "Calling <code object _f" in captured.out
     assert "Returning " in captured.out

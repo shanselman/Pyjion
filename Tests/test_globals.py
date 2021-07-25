@@ -10,7 +10,7 @@ def test_import(capsys):
     assert _f() == 2
     info = pyjion.info(_f)
     assert info['compiled']
-    captured = capsys.readouterr()
     pyjion.dis.dis(_f)
+    captured = capsys.readouterr()
     assert "ldarg.1" in captured.out
     assert "METHOD_LOADGLOBAL_HASH" in captured.out
