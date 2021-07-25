@@ -50,16 +50,16 @@ class TracingTestCase(unittest.TestCase):
                 out = io.StringIO()
                 dis.disco(frame.f_code, frame.f_lasti, file=out)
                 lines = out.getvalue().split('\\n')
-                [print(f"{l}") for l in lines]
+                [print("{l}") for l in lines]
                 out.close()
             elif event == 'call':
-                print(f"Calling {frame.f_code}")
+                print("Calling {frame.f_code}")
             elif event == 'return':
-                print(f"Returning {args}")
+                print("Returning {args}")
             elif event == 'line':
-                print(f"Changing line to {frame.f_lineno}")
+                print("Changing line to {frame.f_lineno}")
             else:
-                print(f"{frame} ({event} - {args})")
+                print("{frame} ({event} - {args})")
             return custom_trace
 
         def test_f():
@@ -141,15 +141,15 @@ class ProfilingTestCase(unittest.TestCase):
                 with io.StringIO() as out:
                     dis.disco(frame.f_code, frame.f_lasti, file=out)
                     lines = out.getvalue().split('\\n')
-                    [print(f"{l}") for l in lines]
+                    [print("{l}") for l in lines]
             elif event == 'call':
-                print(f"Calling {frame.f_code}")
+                print("Calling {frame.f_code}")
             elif event == 'return':
-                print(f"Returning {args}")
+                print("Returning {args}")
             elif event == 'line':
-                print(f"Changing line to {frame.f_lineno}")
+                print("Changing line to {frame.f_lineno}")
             else:
-                print(f"{frame} ({event} - {args})")
+                print("{frame} ({event} - {args})")
             return custom_trace
 
         def test_f():

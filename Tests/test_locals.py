@@ -1,28 +1,19 @@
 """Test the optimization of frame locals"""
-import unittest
-from base import PyjionTestCase
 
+def test_simple_compare():
+    def test_f():
+        a = 1
+        b = 2
+        return a == b
 
-class LocalsTestCase(PyjionTestCase):
+    assert not test_f()
 
-    def test_simple_compare(self):
-        def test_f():
-            a = 1
-            b = 2
-            return a == b
+def test_simple_delete():
+    def test_f():
+        a = 1
+        b = 2
+        del a
+        del b
+        return False
 
-        self.assertFalse(test_f())
-
-    def test_simple_delete(self):
-        def test_f():
-            a = 1
-            b = 2
-            del a
-            del b
-            return False
-
-        self.assertFalse(test_f())
-
-
-if __name__ == "__main__":
-    unittest.main()
+    assert not test_f()

@@ -4,73 +4,62 @@ import sys
 
 import pyjion
 import pyjion.dis
-import unittest
-from base import PyjionTestCase
 
 
-class ListTestCase(PyjionTestCase):
+def test_list_init():
+    l = []
+    l.append(0)
+    assert l == [0]
 
-    def test_list_init(self):
-        l = []
-        l.append(0)
-        self.assertEqual(l, [0])
+def test_list_prepopulated():
+    l = [0, 1, 2, 3, 4]
+    l.append(5)
+    assert l == [0, 1, 2, 3, 4, 5]
 
-    def test_list_prepopulated(self):
+def test_list_slice():
+    l = [0, 1, 2, 3, 4]
+    assert l[1:3] == [1, 2]
+
+
+
+def assertOptimized(func) -> None:
+    assert pyjion.info(func)['compiled']
+    f = io.StringIO()
+    with contextlib.redirect_stdout(f):
+        pyjion.dis.dis(func)
+    assert "ldarg.1" in f.getvalue()
+    assert "MethodTokens.METHOD_GETITER_TOKEN" in f.getvalue()
+    assert "MethodTokens.METHOD_ITERNEXT_TOKEN" not in f.getvalue()
+
+def test_const_list_is_optimized():
+    def test_f():
         l = [0, 1, 2, 3, 4]
-        l.append(5)
-        self.assertEqual(l, [0, 1, 2, 3, 4, 5])
+        o = 0
+        for x in l:
+            o += x
+        return o
+    assert test_f() == 10
+    assertOptimized(test_f)
 
-    def test_list_slice(self):
-        l = [0, 1, 2, 3, 4]
-        self.assertEqual(l[1:3], [1, 2])
+def test_builtin_list_is_optimized():
+    def test_f():
+        l = (0, 1, 2, 3, 4)
+        o = 0
+        for x in list(l):
+            o += x
+        return o
+    assert test_f() == 10
+    assertOptimized(test_f)
 
-
-class ListIteratorsTestCase(PyjionTestCase):
-
-    def assertOptimized(self, func) -> None:
-        self.assertTrue(pyjion.info(func)['compiled'])
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
-            pyjion.dis.dis(func)
-        self.assertIn("ldarg.1", f.getvalue())
-        self.assertIn("MethodTokens.METHOD_GETITER_TOKEN", f.getvalue())
-        self.assertNotIn("MethodTokens.METHOD_ITERNEXT_TOKEN", f.getvalue())
-
-    @unittest.skip("Disabled for now, see TODO")
-    def test_const_list_is_optimized(self):
-        def test_f():
-            l = [0, 1, 2, 3, 4]
-            o = 0
-            for x in l:
-                o += x
-            return o
-        self.assertEqual(test_f(), 10)
-        self.assertOptimized(test_f)
-
-    @unittest.skip("Disabled for now, see TODO")
-    def test_builtin_list_is_optimized(self):
-        def test_f():
-            l = (0, 1, 2, 3, 4)
-            o = 0
-            for x in list(l):
-                o += x
-            return o
-        self.assertEqual(test_f(), 10)
-        self.assertOptimized(test_f)
-
-    def test_const_list_refcount(self):
-        a = 1
-        b = 2
-        c = 3
-        before_a = sys.getrefcount(a)
-        before_b = sys.getrefcount(b)
-        before_c = sys.getrefcount(c)
-        l = [a, b, c]
-        del l
-        self.assertEqual(before_a, sys.getrefcount(a))
-        self.assertEqual(before_b, sys.getrefcount(b))
-        self.assertEqual(before_c, sys.getrefcount(c))
-
-
-if __name__ == "__main__":
-    unittest.main()
+def test_const_list_refcount():
+    a = 1
+    b = 2
+    c = 3
+    before_a = sys.getrefcount(a)
+    before_b = sys.getrefcount(b)
+    before_c = sys.getrefcount(c)
+    l = [a, b, c]
+    del l
+    assert before_a == sys.getrefcount(a)
+    assert before_b == sys.getrefcount(b)
+    assert before_c == sys.getrefcount(c)

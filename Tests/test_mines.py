@@ -17,4 +17,4 @@ class ProblemTestCase(PyjionTestCase):
         def by(s):
             return bytearray(map(ord, s))
         b = by("Hello, world")
-        self.assertEqual(re.findall(br"\w+", b), [by("Hello"), by("world")])
+        assert re.findall(br"\w+", b) == [by("Hello"), by("world")]

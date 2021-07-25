@@ -1,43 +1,33 @@
-import unittest
 import os
-from base import PyjionTestCase
+import types
 
 
-class DictTypeTestCase(PyjionTestCase):
+def test_subclassdict():
+    """Test that a subclass of dict can be merged into a static dict"""
+    out = {**os.environ, 'foo': 'bar'}
 
-    def test_subclassdict(self):
-        """Test that a subclass of dict can be merged into a static dict"""
-        out = {**os.environ, 'foo': 'bar'}
-
-        self.assertTrue('foo' in out)
+    assert 'foo' in out
 
 
-class BaseClassTestCase(PyjionTestCase):
+def test_resolve_bases():
 
-    def test_resolve_bases(self):
-        import types
-
-        class A: pass
-        class B: pass
-        class C:
-            def __mro_entries__(self, bases):
-                if A in bases:
-                    return ()
-                return (A,)
-        c = C()
-        self.assertEqual(types.resolve_bases(()), ())
-        self.assertEqual(types.resolve_bases((c,)), (A,))
-        self.assertEqual(types.resolve_bases((C,)), (C,))
-        self.assertEqual(types.resolve_bases((A, C)), (A, C))
-        self.assertEqual(types.resolve_bases((c, A)), (A,))
-        self.assertEqual(types.resolve_bases((A, c)), (A,))
-        x = (A,)
-        y = (C,)
-        z = (A, C)
-        t = (A, C, B)
-        for bases in [x, y, z, t]:
-            self.assertIs(types.resolve_bases(bases), bases)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    class A: pass
+    class B: pass
+    class C:
+        def __mro_entries__(self, bases):
+            if A in bases:
+                return ()
+            return (A,)
+    c = C()
+    assert types.resolve_bases(()) == ()
+    assert types.resolve_bases((c,)) == (A,)
+    assert types.resolve_bases((C,)) == (C,)
+    assert types.resolve_bases((A, C)) == (A, C)
+    assert types.resolve_bases((c, A)) == (A,)
+    assert types.resolve_bases((A, c)) == (A,)
+    x = (A,)
+    y = (C,)
+    z = (A, C)
+    t = (A, C, B)
+    for bases in [x, y, z, t]:
+        assert types.resolve_bases(bases) is bases
