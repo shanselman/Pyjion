@@ -58,11 +58,24 @@ jobs:
         shell: bash
         run: ./unit_tests
 
-      - name: Run Python tests
+      - name: Setup Python tests
         shell: bash
-        run: |
-          pip install -r Tests/requirements_test.txt
-          python -X dev -m unittest discover Tests/ -v
+        run: pip install -r Tests/requirements_test.txt
+      - name: Run pytest tests (level 0)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 0
+      - name: Run pytest tests (level 1)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 1
+      - name: Run pytest tests (level 2)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 2
+      - name: Run pytest tests (level 0) + external
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 0 --external
+      - name: Run pytest tests (level 1) + external
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
       - name: Run smoke tests
         shell: bash
@@ -161,11 +174,24 @@ jobs:
         with:
           directory: Tests/
 
-      - name: Run Python tests
+      - name: Setup Python tests
         shell: bash
-        run: |
-          pip install -r Tests/requirements_test.txt
-          python -X dev -m unittest discover Tests/ -v
+        run: pip install -r Tests/requirements_test.txt
+      - name: Run pytest tests (level 0)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 0
+      - name: Run pytest tests (level 1)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 1
+      - name: Run pytest tests (level 2)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 2
+      - name: Run pytest tests (level 0) + external
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 0 --external
+      - name: Run pytest tests (level 1) + external
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
       - name: Test mod
         shell: bash
@@ -270,11 +296,24 @@ jobs:
           cp c:\Users\runneradmin\AppData\Local\Microsoft\dotnet\shared\Microsoft.NETCore.App\6.0.0-preview.6.21352.12\clrjit.dll .
           .\unit_tests.exe
 
-      - name: Run Python tests
+      - name: Setup Python tests
         shell: bash
-        run: |
-          pip install -r Tests/requirements_test.txt
-          python -X dev -m unittest discover Tests/ -v
+        run: pip install -r Tests/requirements_test.txt
+      - name: Run pytest tests (level 0)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 0
+      - name: Run pytest tests (level 1)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 1
+      - name: Run pytest tests (level 2)
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 2
+      - name: Run pytest tests (level 0) + external
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 0 --external
+      - name: Run pytest tests (level 1) + external
+        shell: bash
+        run: python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
       - name: Test mod
         shell: bash

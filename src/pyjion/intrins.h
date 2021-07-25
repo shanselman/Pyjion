@@ -180,6 +180,7 @@ void PyJit_DebugTrace(char* msg);
 void PyJit_DebugPtr(void* ptr);
 void PyJit_DebugType(PyTypeObject* ty);
 void PyJit_DebugPyObject(PyObject* obj);
+void PyJit_DebugFault(char* msg, char* context, int32_t index);
 void PyJit_PgcGuardException(PyObject* obj, const char* expected);
 void PyJit_PyErrRestore(PyObject*tb, PyObject*value, PyObject*exception);
 
@@ -237,7 +238,7 @@ int PyJit_StoreGlobal(PyObject* v, PyFrameObject* f, PyObject* name);
 int PyJit_DeleteGlobal(PyFrameObject* f, PyObject* name);
 
 PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name);
-PyObject* PyJit_LoadGlobalHash(PyFrameObject* f, PyObject* name, Py_hash_t name_hash);
+PyObject* PyJit_LoadGlobalHash(PyObject* ob, PyObject* name, Py_hash_t name_hash);
 
 PyObject* PyJit_GetIter(PyObject* iterable);
 

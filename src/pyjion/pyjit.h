@@ -100,6 +100,7 @@ typedef struct PyjionSettings {
     bool opt_functionCalls = OPTIMIZE_FUNCTION_CALLS; // OPT-14
     bool opt_loadAttr = OPTIMIZE_LOAD_ATTR; // OPT-15
     bool opt_unboxing = OPTIMIZE_UNBOXING; // OPT-16
+    bool opt_isNone = OPTIMIZE_ISNONE; // OPT-17
 } PyjionSettings;
 
 static PY_UINT64_T HOT_CODE = 0;

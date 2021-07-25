@@ -1083,18 +1083,7 @@ TEST_CASE("test binary/arithmetic operations") {
         );
         CHECK(t.returns() == "1.6666666666666665");
     }
-        // division by zero error case
-    SECTION("test divide int by zero") {
-        auto t = EmissionTest(
-                "def f():\n    x = 1\n    y = 0\n    try:\n        return x / y\n    except:\n        return 42"
-        );
-        CHECK(t.returns() == "42");
-    }SECTION("test floor divide by zero") {
-        auto t = EmissionTest(
-                "def f():\n    x = 1\n    y = 0\n    try:\n        return x // y\n    except:\n        return 42"
-        );
-        CHECK(t.returns() == "42");
-    }SECTION("test name error raised on delete RefCountCheck") {
+    SECTION("test name error raised on delete RefCountCheck") {
         auto t = EmissionTest(
                 "def f():\n    a = RefCountCheck()\n    del a\n    return finalized"
         );

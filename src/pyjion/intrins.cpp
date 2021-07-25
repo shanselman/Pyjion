@@ -824,6 +824,10 @@ void PyJit_DebugTrace(char* msg) {
     puts(msg);
 }
 
+void PyJit_DebugFault(char* msg, char* context, int32_t index) {
+    printf("%s %s at %d\n", msg, context, index);
+}
+
 void PyJit_DebugPtr(void* ptr) {
     printf("Pointer at %p\n", ptr);
 }
@@ -1614,8 +1618,14 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
     return v;
 }
 
-PyObject* PyJit_LoadGlobalHash(PyFrameObject* f, PyObject* name, Py_hash_t name_hash) {
+PyObject* PyJit_LoadGlobalHash(PyObject* ob, PyObject* name, Py_hash_t name_hash) {
     PyObject* v;
+    if (!PyFrame_Check(ob)){
+        printf("Hit critical error on load global hash. This is not a frame.");
+        abort();
+        return nullptr;
+    }
+    PyFrameObject* f = (PyFrameObject*)ob;
     if (PyDict_CheckExact(f->f_globals)
         && PyDict_CheckExact(f->f_builtins)) {
         v = _PyDict_GetItem_KnownHash((PyObject*)f->f_globals, name, name_hash);
@@ -2462,6 +2472,8 @@ PyObject* PyJit_FormatValue(PyObject* item) {
 }
 
 inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg) {
+    if (func == nullptr)
+        return -1;
     tstate->tracing++;
     tstate->use_tracing = 0;
     int result = func(tracearg, f, ty, args);
