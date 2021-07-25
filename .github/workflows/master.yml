@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           pip install -r Tests/requirements_test.txt
-          python -X dev -m unittest discover Tests/ -v
+          python -X dev -m pytest Tests/ -v
 
       - name: Run smoke tests
         shell: bash
@@ -165,7 +165,7 @@ jobs:
         shell: bash
         run: |
           pip install -r Tests/requirements_test.txt
-          python -X dev -m unittest discover Tests/ -v
+          python -X dev -m pytest Tests/ -v
 
       - name: Test mod
         shell: bash
@@ -274,7 +274,7 @@ jobs:
         shell: bash
         run: |
           pip install -r Tests/requirements_test.txt
-          python -X dev -m unittest discover Tests/ -v
+          python -X dev -m pytest Tests/ -v
 
       - name: Test mod
         shell: bash
