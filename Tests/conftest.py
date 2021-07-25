@@ -9,7 +9,7 @@ def pytest_runtest_call(item: pytest.Item) -> None:
     for mark in item.iter_markers():
         if mark.name == "graph":
             pyjion.enable_graphs()
-        elif mark.name == "profiling":
+        elif mark.name == "profile":
             pyjion.enable_profiling()
         elif mark.name == "tracing":
             pyjion.enable_tracing()

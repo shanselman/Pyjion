@@ -2472,6 +2472,8 @@ PyObject* PyJit_FormatValue(PyObject* item) {
 }
 
 inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg) {
+    if (func == nullptr)
+        return -1;
     tstate->tracing++;
     tstate->use_tracing = 0;
     int result = func(tracearg, f, ty, args);
