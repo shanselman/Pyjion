@@ -24,6 +24,7 @@ def assertOptimized(func, capsys) -> None:
     assert "MethodTokens.METHOD_RICHCMP_TOKEN" not in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_const_compare(capsys):
     def _f():
         a = 1
@@ -33,6 +34,7 @@ def test_const_compare(capsys):
     assertOptimized(_f, capsys)
 
 
+@pytest.mark.optimization(level=1)
 def test_const_compare_big_left(capsys):
     def _f():
         a = 1000
@@ -42,6 +44,7 @@ def test_const_compare_big_left(capsys):
     assertOptimized(_f, capsys)
 
 
+@pytest.mark.optimization(level=1)
 def test_const_from_builtin(capsys):
     def _f():
         a = 2
@@ -51,6 +54,7 @@ def test_const_from_builtin(capsys):
     assertOptimized(_f, capsys)
 
 
+@pytest.mark.optimization(level=1)
 def test_const_compare_big_right(capsys):
     def _f():
         a = 1
@@ -60,6 +64,7 @@ def test_const_compare_big_right(capsys):
     assertOptimized(_f, capsys)
 
 
+@pytest.mark.optimization(level=1)
 def test_const_compare_big_both(capsys):
     def _f():
         a = 1000
@@ -69,6 +74,7 @@ def test_const_compare_big_both(capsys):
     assertOptimized(_f, capsys)
 
 
+@pytest.mark.optimization(level=1)
 def test_const_not_integer(capsys):
     def _f():
         a = 2
@@ -78,6 +84,7 @@ def test_const_not_integer(capsys):
     assertNotOptimized(_f, capsys)
 
 
+@pytest.mark.optimization(level=1)
 def test_float_compare(capsys):
     def _f():
         a = 2
@@ -87,6 +94,7 @@ def test_float_compare(capsys):
     assertOptimized(_f, capsys)
 
 
+@pytest.mark.optimization(level=1)
 def test_dict_key(capsys):
     def _f():
         a = {0: 'a'}
@@ -101,6 +109,7 @@ def test_dict_key(capsys):
     assert "METHOD_STORE_SUBSCR_DICT" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_dict_key_invalid_index(capsys):
     def _f_subscr():
         a = {0: 'a'}
@@ -115,6 +124,7 @@ def test_dict_key_invalid_index(capsys):
     assert "METHOD_SUBSCR_DICT_HASH" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_list_key(capsys):
     def _f():
         a = ['a']
@@ -130,6 +140,7 @@ def test_list_key(capsys):
     assert "METHOD_STORE_SUBSCR_LIST_I" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_list_key_builtin(capsys):
     def _f():
         a = list(('a',))
@@ -145,6 +156,7 @@ def test_list_key_builtin(capsys):
     assert "METHOD_STORE_SUBSCR_LIST_I" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_list_key_non_const(capsys):
     def _f(b):
         a = ['a']
@@ -161,6 +173,7 @@ def test_list_key_non_const(capsys):
     assert "METHOD_STORE_SUBSCR_LIST" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_list_from_builtin_key_non_const(capsys):
     def _f(b):
         a = list(('a',))
@@ -177,6 +190,7 @@ def test_list_from_builtin_key_non_const(capsys):
     assert "METHOD_STORE_SUBSCR_LIST" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_list_key_invalid_index(capsys):
     def _f_subscr():
         l = [0, 1, 2]
@@ -192,6 +206,7 @@ def test_list_key_invalid_index(capsys):
     assert "METHOD_SUBSCR_LIST_I" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_unknown_key_string_const(capsys):
     def _f(x):
         x['y'] = 'b'
@@ -206,6 +221,7 @@ def test_unknown_key_string_const(capsys):
     assert "METHOD_STORE_SUBSCR_DICT_HASH" in captured.out
 
 
+@pytest.mark.optimization(level=1)
 def test_unknown_int_string_const(capsys):
     def _f(x):
         x[10] = 'b'

@@ -1,7 +1,9 @@
 import pyjion
 import pyjion.dis
+import pytest
 
 
+@pytest.mark.optimization(level=1)
 def test_import(capsys):
     def _f():
         print("foo foo")

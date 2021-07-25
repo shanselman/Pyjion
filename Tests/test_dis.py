@@ -11,7 +11,7 @@ def test_offsets():
     assert _f(4) == 2.0
 
     offsets = pyjion.get_offsets(_f)
-    assert len(offsets) > 10
+    assert len(offsets) > 8
 
 
 def test_dis(capsys):

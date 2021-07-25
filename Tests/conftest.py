@@ -38,10 +38,10 @@ def pytest_generate_tests(metafunc):
 
 
 def pytest_collection_modifyitems(config, items):
-    if config.getoption("--external"):
-        # --external given in cli: do not skip external tests
-        return
     skip_external = pytest.mark.skip(reason="need --external option to run")
+    skip_optimization = pytest.mark.skip(reason="test designed for higher optimization levels")
     for item in items:
-        if "external" in item.keywords:
+        if "external" in item.keywords and not config.getoption("--external"):
             item.add_marker(skip_external)
+        if "optimization" in item.keywords and config.getoption("--opt-level") == 0:
+            item.add_marker(skip_optimization)
