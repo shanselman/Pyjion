@@ -11,7 +11,7 @@ def test_offsets():
     assert _f(4) == 2.0
 
     offsets = pyjion.get_offsets(_f)
-    assert len(offsets) > 8
+    assert len(offsets) > 7
 
 
 def test_dis(capsys):
@@ -100,7 +100,7 @@ def test_dis_native_with_offsets(capsys):
 
     assert "PUSH RBP" in captured.out
     assert "; 10 RETURN_VALUE - None (None)" in captured.out
-    assert "; METHOD_PYTUPLE_NEW" in captured.out
+    assert "; METHOD_" in captured.out
 
 
 def test_symbols():
