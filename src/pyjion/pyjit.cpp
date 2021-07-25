@@ -73,11 +73,12 @@ PyjionJittedCode::~PyjionJittedCode() {
 }
 
 PyjionCodeProfile::~PyjionCodeProfile() {
-    for (auto &pos: this->stackTypes) {
-        for(auto &observed: pos.second){
-            Py_XDECREF(observed.second);
-        }
-    }
+    // Don't decref types so that comparisons can be made to jumps
+//    for (auto &pos: this->stackTypes) {
+//        for(auto &observed: pos.second){
+//            Py_XDECREF(observed.second);
+//        }
+//    }
 }
 
 void PyjionCodeProfile::record(size_t opcodePosition, size_t stackPosition, PyObject* value){
