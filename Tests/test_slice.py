@@ -57,6 +57,7 @@ def test_list_slicing():
     assert initial_ref == sys.getrefcount(l)
     assert pyjion.info(test_list_slicing.__code__)['compiled']
 
+
 def test_list_slicing_expressions():
     l = [0, 1, 2, 3]
     x = int(2)  # prevent const rolling
@@ -72,6 +73,7 @@ def test_list_slicing_expressions():
     assert l[x::-1] == [2, 1, 0]
     assert initial_ref == sys.getrefcount(l)
     assert pyjion.info(test_list_slicing_expressions.__code__)['compiled']
+
 
 def test_string_slicing():
     assert 'The train to Oxford leaves at 3pm'[-1:3:-2] == 'm3t ealdox tnat'

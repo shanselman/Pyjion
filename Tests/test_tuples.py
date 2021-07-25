@@ -7,6 +7,7 @@ def test_identical_tuples():
     assert sys.getrefcount(l) == 4
     assert sys.getrefcount(m) == 4
 
+
 def test_tuple_prepopulated():
     l = ('0', '1', '2', '3', '4')
     r = sys.getrefcount(l)
@@ -19,12 +20,14 @@ def test_tuple_prepopulated():
     assert l[4] == '4'
     assert sys.getrefcount(l) == r
 
+
 def test_tuple_slice():
     l = ('0', '1', '2', '3', '4')
     r = sys.getrefcount(l)
     assert sys.getrefcount(l) == r
     assert l[1:3] == ('1', '2')
     assert sys.getrefcount(l) == r
+
 
 def test_tuple_unpack():
     l = ('0', '1', '2', '3', '4')
@@ -37,9 +40,11 @@ def test_tuple_unpack():
     assert last == '4'
     assert sys.getrefcount(l) == r
 
+
 def test_unknown_type():
     def get_vals():
         return (0, 1, 2, 3)
+
     res = get_vals()
     r = sys.getrefcount(res)
     assert sys.getrefcount(res) == r
@@ -47,6 +52,7 @@ def test_unknown_type():
     assert res[1] == 1
     assert res[2] == 2
     assert sys.getrefcount(res) == r
+
 
 def test_tuple_non_const():
     zero = str(0)
@@ -58,12 +64,12 @@ def test_tuple_non_const():
     l = (zero, one, two, three, four)
     r = sys.getrefcount(l)
     assert sys.getrefcount(l) == r
-    assert sys.getrefcount(zero) == r_zero+1
+    assert sys.getrefcount(zero) == r_zero + 1
     first, second, *_, last = l
     assert sys.getrefcount(l) == r
-    assert sys.getrefcount(zero) == r_zero+2
+    assert sys.getrefcount(zero) == r_zero + 2
     assert first == '0'
     assert second == '1'
     assert last == '4'
     assert sys.getrefcount(l) == r
-    assert sys.getrefcount(zero) == r_zero+2
+    assert sys.getrefcount(zero) == r_zero + 2

@@ -10,6 +10,7 @@ def test_import():
     info = pyjion.info(_f)
     assert info['compiled']
 
+
 def test_import_from():
     def _f():
         from math import sqrt
@@ -18,6 +19,7 @@ def test_import_from():
     assert _f() == 2
     info = pyjion.info(_f)
     assert info['compiled']
+
 
 def test_import_from_aliased():
     def _f():

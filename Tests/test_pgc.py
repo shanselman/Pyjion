@@ -8,12 +8,11 @@ def test_static_sequence():
         return a + b
 
     f([0, 1])
-    print(pyjion.dis.dis(f))
     assert pyjion.info(f)['pgc'] == 1
 
     f([0, 1])
-    print(pyjion.dis.dis(f))
     assert pyjion.info(f)['pgc'] == 2
+
 
 def test_changed_sequence():
     def f(x):
@@ -29,6 +28,7 @@ def test_changed_sequence():
     r = f([3, 4])
     assert r == 7
     assert pyjion.info(f)['pgc'] == 2
+
 
 def test_recursive_sequence():
     def f(x):

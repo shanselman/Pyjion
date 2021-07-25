@@ -8,7 +8,8 @@ except ImportError:
 
 
 @pytest.mark.skipif(not has_numpy, reason="No numpy installed")
-def test_array_math(self):
+@pytest.mark.external
+def test_array_math():
     t = np.array([250., 300., 350., 400.])
     v = 275.4
     x = 324.5

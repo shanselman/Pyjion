@@ -15,8 +15,9 @@ def test_perc_format():
     assert sys.getrefcount(b) == before_ref_b, "b leak"
     assert sys.getrefcount(c) == before_ref_c, "c leak"
     assert c == "Hello worldHello w0rld", "output fail"
-    c += a % ("x", )
+    c += a % ("x",)
     assert sys.getrefcount(c) == before_ref_c, "c leak"
+
 
 def test_add_inplace():
     c = "..."
@@ -30,7 +31,6 @@ def test_add_inplace():
     assert sys.getrefcount(b) == before_ref_b
     assert sys.getrefcount(c) == before_ref_c - 1
     assert c == "...Hello world!"
-
 
 
 def test_perc_format():
@@ -55,16 +55,15 @@ def _is_sunder(name):
             name[-2:-1] != '_')
 
 
-
 def test_sunder():
     assert _is_sunder("_hello_")
     assert not _is_sunder("helloooo!!_")
     assert _is_sunder("_hello_")
     assert not _is_sunder("helloooo!!_")
 
+
 def test_dunder():
     assert _is_dunder("__hello__")
     assert not _is_dunder("_hello_")
     assert _is_dunder("__hello__")
     assert not _is_dunder("_hello_")
-

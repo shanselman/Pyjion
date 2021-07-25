@@ -8,11 +8,13 @@ def test_basic():
                 z.append('a')
                 return add_a(z)
             return z
+
         return add_a([])
 
     assert _f() == ['a', 'a', 'a', 'a', 'a']
     info = pyjion.info(_f)
     assert info['compiled']
+
 
 def test_recursive_listcomp():
     def _f(t):
@@ -22,8 +24,6 @@ def test_recursive_listcomp():
         else:
             return t
 
-    assert _f([[0,2], 2, 3]) == [[0, 2], 2, 3]
+    assert _f([[0, 2], 2, 3]) == [[0, 2], 2, 3]
     info = pyjion.info(_f)
     assert info['compiled']
-
-

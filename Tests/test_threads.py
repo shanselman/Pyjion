@@ -20,6 +20,7 @@ def pendingcalls_submit(l, n):
             if _testcapi._pending_threadfunc(callback):
                 break
 
+
 def pendingcalls_wait(l, n, context=None):
     # now, stick around until l[0] has grown to 10
     count = 0
@@ -34,11 +35,11 @@ def pendingcalls_wait(l, n, context=None):
             continue
         count += 1
         assert count < 10000, \
-                        "timeout waiting for %i callbacks, got %i" % (n, len(l))
+            "timeout waiting for %i callbacks, got %i" % (n, len(l))
     print("(%i)" % (len(l),))
 
-def test_pendingcalls_threaded():
 
+def test_pendingcalls_threaded():
     # do every callback on a separate thread
     n = 32  # total callbacks
     threads = []
@@ -59,6 +60,7 @@ def test_pendingcalls_threaded():
     with support.start_threads(threads):
         pendingcalls_wait(context.l, n, context)
 
+
 def pendingcalls_thread(self, context):
     try:
         self.pendingcalls_submit(context.l, context.n)
@@ -70,6 +72,7 @@ def pendingcalls_thread(self, context):
                 print("finished threads: ", nFinished)
         if nFinished == context.nThreads:
             context.event.set()
+
 
 def test_pendingcalls_non_threaded():
     # again, just using the main thread, likely they will all be dispatched at

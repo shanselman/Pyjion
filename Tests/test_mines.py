@@ -1,12 +1,10 @@
-import re
-
-
 """
 Test problematic and complex functions
 """
+import re
 
 
-def test_regexps(self):
+def test_regexps():
     # TODO : Fix crash on dis.
     # print(pyjion.dis.dis(re.sre_compile.compile, True))
     # print(pyjion.dis.dis_native(re.sre_compile.compile, True))
