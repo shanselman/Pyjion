@@ -1,14 +1,13 @@
 import pyjion.dis
 import pyjion
 import io
-import contextlib
 import dis
 import sys
 import pytest
 
 
 @pytest.mark.tracing
-def test_traces_in_code():
+def test_traces_in_code(capsys):
     def _f():
         a = 1
         b = 2
@@ -17,17 +16,16 @@ def test_traces_in_code():
         return a + b + c + d
 
     assert _f() == 10
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f):
-        pyjion.dis.dis(_f)
-    assert "ldarg.1" in f.getvalue()
-    assert "METHOD_TRACE_FRAME_ENTRY" in f.getvalue()
-    assert "METHOD_TRACE_LINE" in f.getvalue()
-    assert "METHOD_TRACE_FRAME_EXIT" in f.getvalue()
+    pyjion.dis.dis(_f)
+    captured = capsys.readouterr()
+    assert "ldarg.1" in captured.out
+    assert "METHOD_TRACE_FRAME_ENTRY" in captured.out
+    assert "METHOD_TRACE_LINE" in captured.out
+    assert "METHOD_TRACE_FRAME_EXIT" in captured.out
 
 
 @pytest.mark.tracing
-def test_custom_tracer():
+def test_custom_tracer(capsys):
     def custom_trace(frame, event, args):
         frame.f_trace_opcodes = True
         if event == 'opcode':
@@ -53,20 +51,18 @@ def test_custom_tracer():
         d = 4
         return a + b + c + d
 
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f):
-        sys.settrace(custom_trace)
-        assert test_f() == 10
-        sys.settrace(None)
-
-    assert "Calling <code object test_f" in f.getvalue()
-    assert "Changing line to " in f.getvalue()
-    assert "Returning " in f.getvalue()
-    assert "STORE_FAST" in f.getvalue()
+    sys.settrace(custom_trace)
+    assert test_f() == 10
+    sys.settrace(None)
+    captured = capsys.readouterr()
+    assert "Calling <code object test_f" in captured.out
+    assert "Changing line to " in captured.out
+    assert "Returning " in captured.out
+    assert "STORE_FAST" in captured.out
 
 
 @pytest.mark.tracing
-def test_eh_tracer():
+def test_eh_tracer(capsys):
     def custom_trace(frame, event, args):
         frame.f_trace_opcodes = True
         if event == 'exception':
@@ -78,18 +74,17 @@ def test_eh_tracer():
         a = 1 / 0
         return a
 
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f):
-        sys.settrace(custom_trace)
-        with pytest.raises(ZeroDivisionError):
-            test_f()
-        sys.settrace(None)
+    sys.settrace(custom_trace)
+    with pytest.raises(ZeroDivisionError):
+        test_f()
+    sys.settrace(None)
+    captured = capsys.readouterr()
 
-    assert "Hit exception" in f.getvalue()
+    assert "Hit exception" in captured.out
 
 
 @pytest.mark.profile
-def test_profile_hooks_in_code():
+def test_profile_hooks_in_code(capsys):
     def _f():
         a = 1
         b = 2
@@ -98,16 +93,15 @@ def test_profile_hooks_in_code():
         return a + b + c + d
 
     assert _f() == 10
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f):
-        pyjion.dis.dis(_f)
-    assert "ldarg.1" in f.getvalue()
-    assert "METHOD_PROFILE_FRAME_ENTRY" in f.getvalue()
-    assert "METHOD_PROFILE_FRAME_EXIT" in f.getvalue()
+    pyjion.dis.dis(_f)
+    captured = capsys.readouterr()
+    assert "ldarg.1" in captured.out
+    assert "METHOD_PROFILE_FRAME_ENTRY" in captured.out
+    assert "METHOD_PROFILE_FRAME_EXIT" in captured.out
 
 
 @pytest.mark.profile
-def test_custom_tracer():
+def test_custom_tracer(capsys):
     def custom_trace(frame, event, args):
         frame.f_trace_opcodes = True
         if event == 'opcode':
@@ -132,11 +126,9 @@ def test_custom_tracer():
         d = 4
         return a + b + c + d
 
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f):
-        sys.setprofile(custom_trace)
-        assert _f() == 10
-        sys.setprofile(None)
-
-    assert "Calling <code object test_f" in f.getvalue()
-    assert "Returning " in f.getvalue()
+    sys.setprofile(custom_trace)
+    assert _f() == 10
+    sys.setprofile(None)
+    captured = capsys.readouterr()
+    assert "Calling <code object test_f" in captured.out
+    assert "Returning " in captured.out

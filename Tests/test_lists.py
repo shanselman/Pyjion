@@ -1,5 +1,3 @@
-import contextlib
-import io
 import sys
 
 import pyjion
@@ -11,45 +9,51 @@ def test_list_init():
     l.append(0)
     assert l == [0]
 
+
 def test_list_prepopulated():
     l = [0, 1, 2, 3, 4]
     l.append(5)
     assert l == [0, 1, 2, 3, 4, 5]
+
 
 def test_list_slice():
     l = [0, 1, 2, 3, 4]
     assert l[1:3] == [1, 2]
 
 
-
-def assertOptimized(func) -> None:
+def assertOptimized(func, capsys) -> None:
     assert pyjion.info(func)['compiled']
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f):
-        pyjion.dis.dis(func)
-    assert "ldarg.1" in f.getvalue()
-    assert "MethodTokens.METHOD_GETITER_TOKEN" in f.getvalue()
-    assert "MethodTokens.METHOD_ITERNEXT_TOKEN" not in f.getvalue()
+    pyjion.dis.dis(func)
+    captured = capsys.readouterr()
 
-def test_const_list_is_optimized():
-    def test_f():
+    assert "ldarg.1" in captured.out
+    assert "MethodTokens.METHOD_GETITER_TOKEN" in captured.out
+    assert "MethodTokens.METHOD_ITERNEXT_TOKEN" not in captured.out
+
+
+def test_const_list_is_optimized(capsys):
+    def _f():
         l = [0, 1, 2, 3, 4]
         o = 0
         for x in l:
             o += x
         return o
-    assert test_f() == 10
-    assertOptimized(test_f)
 
-def test_builtin_list_is_optimized():
-    def test_f():
+    assert _f() == 10
+    assertOptimized(_f, capsys)
+
+
+def test_builtin_list_is_optimized(capsys):
+    def _f():
         l = (0, 1, 2, 3, 4)
         o = 0
         for x in list(l):
             o += x
         return o
-    assert test_f() == 10
-    assertOptimized(test_f)
+
+    assert _f() == 10
+    assertOptimized(_f, capsys)
+
 
 def test_const_list_refcount():
     a = 1

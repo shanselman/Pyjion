@@ -1,29 +1,19 @@
 import pyjion
 import pyjion.dis
-import io
-import contextlib
 import sys
 
 
-class KnownMethodsBuiltins:
-    """
-    Test that methods of known, builtin types will resolve into cached variables and bypass PyJit_LoadMethod
-    """
+def test_dict_keys_optimization(capsys):
+    def _f():
+        l = {'a': 1, 'b': 2}
+        k = l.keys()
+        return tuple(k)
+    assert _f() == ('a', 'b')
+    assert pyjion.info(_f)['compiled']
+    pyjion.dis.dis(_f)
+    captured = capsys.readouterr()
+    assert "MethodTokens.METHOD_LOAD_METHOD" not in captured.out
 
-    def assertOptimized(self, func) -> None:
-        assert pyjion.info(func)['compiled']
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
-            pyjion.dis.dis(func)
-        assert "MethodTokens.METHOD_LOAD_METHOD" not in f.getvalue()
-
-    def test_dict_keys(self):
-        def test_f():
-            l = {'a': 1, 'b': 2}
-            k = l.keys()
-            return tuple(k)
-        assert test_f() == ('a', 'b')
-        self.assertOptimized(test_f)
 
 
 class RefCountTestCase:
