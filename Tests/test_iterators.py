@@ -1,25 +1,12 @@
-import pyjion
-import unittest
-import gc
+def test_nested_tuple():
+    l = (1,2,3)
+    for n in l:
+        for x in dict(), dict():
+            pass
 
 
-class IteratorTestCase(unittest.TestCase):
-
-    def setUp(self) -> None:
-        pyjion.enable()
-
-    def tearDown(self) -> None:
-        pyjion.disable()
-        gc.collect()
-
-    def test_nested_tuple(self):
-        l = (1,2,3)
-        for n in l:
-            for x in dict(), dict():
-                pass
-
-    def test_nested_list(self):
-        l = [1,2,3]
-        for n in l:
-            for x in dict(), dict():
-                pass
+def test_nested_list():
+    l = [1,2,3]
+    for n in l:
+        for x in dict(), dict():
+            pass

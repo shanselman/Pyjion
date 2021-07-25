@@ -42,14 +42,14 @@ jobs:
         shell: bash
         run: |
           python -m pip install  django==3.1.4
-          python Tests/benchmarks/test_microbenchmarks.py
-          python Tests/benchmarks/test_nbody.py
-          python Tests/benchmarks/test_fannkuch.py
-          python Tests/benchmarks/test_chaos.py
-          python Tests/benchmarks/test_float.py
-          python Tests/benchmarks/test_django_template.py
-          python Tests/benchmarks/test_deltablue.py
-          python Tests/benchmarks/test_spectralnorm.py
+          python Tests/benchmarks/bench_microbenchmarks.py
+          python Tests/benchmarks/bench_nbody.py
+          python Tests/benchmarks/bench_fannkuch.py
+          python Tests/benchmarks/bench_chaos.py
+          python Tests/benchmarks/bench_float.py
+          python Tests/benchmarks/bench_django_template.py
+          python Tests/benchmarks/bench_deltablue.py
+          python Tests/benchmarks/bench_spectralnorm.py
 
   bench-macos-11:
     runs-on: macos-11.0
@@ -81,14 +81,14 @@ jobs:
         shell: bash
         run: |
           python -m pip install  django==3.1.4
-          python Tests/benchmarks/test_microbenchmarks.py
-          python Tests/benchmarks/test_nbody.py
-          python Tests/benchmarks/test_fannkuch.py
-          python Tests/benchmarks/test_chaos.py
-          python Tests/benchmarks/test_float.py
-          python Tests/benchmarks/test_django_template.py
-          python Tests/benchmarks/test_deltablue.py
-          python Tests/benchmarks/test_spectralnorm.py
+          python Tests/benchmarks/bench_microbenchmarks.py
+          python Tests/benchmarks/bench_nbody.py
+          python Tests/benchmarks/bench_fannkuch.py
+          python Tests/benchmarks/bench_chaos.py
+          python Tests/benchmarks/bench_float.py
+          python Tests/benchmarks/bench_django_template.py
+          python Tests/benchmarks/bench_deltablue.py
+          python Tests/benchmarks/bench_spectralnorm.py
 
   bench-windows:
     runs-on: windows-latest
@@ -143,11 +143,11 @@ jobs:
         shell: bash
         run: |
           python -m pip install  django==3.1.4
-          python Tests/benchmarks/test_microbenchmarks.py
-          python Tests/benchmarks/test_nbody.py
-          python Tests/benchmarks/test_fannkuch.py
-          python Tests/benchmarks/test_chaos.py
-          python Tests/benchmarks/test_float.py
-          python Tests/benchmarks/test_django_template.py
-          python Tests/benchmarks/test_deltablue.py
-          python Tests/benchmarks/test_spectralnorm.py
+          python Tests/benchmarks/bench_microbenchmarks.py
+          python Tests/benchmarks/bench_nbody.py
+          python Tests/benchmarks/bench_fannkuch.py
+          python Tests/benchmarks/bench_chaos.py
+          python Tests/benchmarks/bench_float.py
+          python Tests/benchmarks/bench_django_template.py
+          python Tests/benchmarks/bench_deltablue.py
+          python Tests/benchmarks/bench_spectralnorm.py

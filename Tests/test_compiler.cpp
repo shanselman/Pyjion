@@ -573,3 +573,41 @@ TEST_CASE("Test classmethods"){
         CHECK(t.returns() == "10185");
     }
 }
+
+TEST_CASE("Test is and is not None") {
+    SECTION("test is none") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "    b = 1\n"
+                "    return b is None\n"
+        );
+        CHECK(t.returns() == "False");
+    }
+    SECTION("test is not none") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "    b = 1\n"
+                "    return b is not None\n"
+        );
+        CHECK(t.returns() == "True");
+    }
+    SECTION("test is none as COMPARE_OP") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "    b = 1\n"
+                "    if b is None:\n"
+                "       return True\n"
+                "    return False"
+        );
+        CHECK(t.returns() == "False");
+    }
+    SECTION("test is not none as COMPARE_OP") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "    b = 1\n"
+                "    if b is not None:\n"
+                "       return True"
+        );
+        CHECK(t.returns() == "True");
+    }
+}

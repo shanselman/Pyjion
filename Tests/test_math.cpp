@@ -1083,18 +1083,7 @@ TEST_CASE("test binary/arithmetic operations") {
         );
         CHECK(t.returns() == "1.6666666666666665");
     }
-        // division by zero error case
-    SECTION("test divide int by zero") {
-        auto t = EmissionTest(
-                "def f():\n    x = 1\n    y = 0\n    try:\n        return x / y\n    except:\n        return 42"
-        );
-        CHECK(t.returns() == "42");
-    }SECTION("test floor divide by zero") {
-        auto t = EmissionTest(
-                "def f():\n    x = 1\n    y = 0\n    try:\n        return x // y\n    except:\n        return 42"
-        );
-        CHECK(t.returns() == "42");
-    }SECTION("test name error raised on delete RefCountCheck") {
+    SECTION("test name error raised on delete RefCountCheck") {
         auto t = EmissionTest(
                 "def f():\n    a = RefCountCheck()\n    del a\n    return finalized"
         );
@@ -1282,5 +1271,56 @@ TEST_CASE("Test bool arithmetic") {
                 "def f():\n    x = True\n    y = False\n    return x is y"
         );
         CHECK(t.returns() == "False");
+    };
+}
+
+TEST_CASE("Test negatives") {
+    SECTION("test zero subtraction") {
+        auto t = EmissionTest(
+                "def f():\n    x = 0.\n    y = 0.\n    return x - y"
+        );
+        CHECK(t.returns() == "0.0");
+    };
+    SECTION("test zero power negative float") {
+        auto t = EmissionTest(
+                "def f():\n    x = 0.\n    return x ** -2."
+        );
+        CHECK(t.raises() == PyExc_ZeroDivisionError);
+    };
+    SECTION("test zero power negative") {
+        auto t = EmissionTest(
+                "def f():\n    x = 0\n    return x ** -2"
+        );
+        CHECK(t.raises() == PyExc_ZeroDivisionError);
+    };
+    SECTION("test number power negative") {
+        auto t = EmissionTest(
+                "def f():\n    x = 2\n    y = -2\n    return x ** y"
+        );
+        CHECK(t.returns() == "0.25");
+    };
+    SECTION("test negative number power") {
+        auto t = EmissionTest(
+                "def f():\n    x = -2\n    y = 2\n    return x ** y"
+        );
+        CHECK(t.returns() == "4");
+    };
+    SECTION("test negative number power float") {
+        auto t = EmissionTest(
+                "def f():\n    x = -2.\n    y = 2.\n    return x ** y"
+        );
+        CHECK(t.returns() == "4.0");
+    };
+    SECTION("test negative number power odd") {
+        auto t = EmissionTest(
+                "def f():\n    x = -3\n    y = 3\n    return x ** y"
+        );
+        CHECK(t.returns() == "-27");
+    };
+    SECTION("test negative number power float odd") {
+        auto t = EmissionTest(
+                "def f():\n    x = -3.\n    y = 3.\n    return x ** y"
+        );
+        CHECK(t.returns() == "-27.0");
     };
 }

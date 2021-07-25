@@ -1,5 +1,17 @@
 # Release notes
 
+## master
+
+* Unboxing integers that dont fit into `long long` will raise a ValueError.
+* Pyjion will mark any values above 1 billion as "big integers" and not escape them to reduce the chance of overflows.
+* Floating point `__pow__` with negative values matches all behaviour of CPython
+* Raising `0` to a negative power will raise a `ZeroDivisionError`
+* PGC no longer uses a reference to probed values, dramatically reducing memory consumption between the first and second compile cycles
+* Fixed a bug where `statistics.variance([0, 0, 1])` would raise an assertion error because of an overflow raised in Fraction arithmetic (#326)
+* Fixed a bug on calling `sys.settrace(None)` would cause a segmentation fault (#330)
+* Fixed a bug on optimized calls to custom types would crash on the 3rd execution because of the way PGC held and released references.
+* Refactored Pyjion's test suite to Pytest
+
 ## 1.0.0 (beta7)
 
 * Added `pyjion.symbols(callable)` API to fetch the dictionary of external call tokens

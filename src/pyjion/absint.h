@@ -179,7 +179,7 @@ public:
         return res;
     }
 
-    AbstractValueWithSources fromPgc(size_t stackPosition, PyTypeObject* pyTypeObject, PyObject* pyObject) {
+    AbstractValueWithSources fromPgc(size_t stackPosition, PyTypeObject* pyTypeObject, AbstractValueKind kind) {
         if (mStack.empty())
             throw StackUnderflowException();
         auto existing = mStack[mStack.size() - 1 - stackPosition];
@@ -189,7 +189,7 @@ public:
             return existing;
         else {
             return AbstractValueWithSources(
-                    new PgcValue(pyTypeObject, pyObject),
+                    new PgcValue(pyTypeObject, kind),
                     existing.Sources
             );
         }
@@ -267,7 +267,6 @@ class AbstractInterpreter {
     _Py_CODEUNIT *mByteCode;
     size_t mSize;
     Local mErrorCheckLocal;
-    Local mExcVarsOnStack; // Counter of the number of exception variables on the stack.
     bool mTracingEnabled;
     bool mProfilingEnabled;
     Local mTracingInstrLowerBound;
@@ -381,17 +380,17 @@ private:
 
     // Checks to see if we have a null value as the last value on our stack
     // indicating an error, and if so, branches to our current error handler.
-    void errorCheck(const char* reason = nullptr, py_opindex curByte = 0);
+    void errorCheck(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0);
     void invalidFloatErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
     void invalidIntErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
-    void intErrorCheck(const char* reason = nullptr, py_opindex curByte = 0);
+    void intErrorCheck(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0);
 
     vector<Label>& getRaiseAndFreeLabels(size_t blockId);
     void ensureRaiseAndFreeLocals(size_t localCount);
 
     void ensureLabels(vector<Label>& labels, size_t count);
 
-    void branchRaise(const char* reason = nullptr, py_opindex curByte = 0, bool force=false);
+    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force=false);
     void raiseOnNegativeOne(py_opindex curByte);
 
     void unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler = nullptr);
@@ -428,9 +427,6 @@ private:
     void unwindHandlers();
 
     void emitRaise(ExceptionHandler *handler);
-    void popExcVars();
-    void decExcVars(size_t count);
-    void incExcVars(size_t count);
     void updateIntermediateSources();
     void escapeEdges(const vector<Edge>& edges, py_opindex curByte);
     void dumpEscapedLocalsToFrame(const unordered_map<py_oparg, AbstractValueKind>& locals, py_opindex at);

@@ -1760,6 +1760,15 @@ void PythonCompiler::emit_debug_pyobject() {
     m_il.emit_call(METHOD_DEBUG_PYOBJECT);
 }
 
+void PythonCompiler::emit_debug_fault(const char* msg, const char* context, py_opindex index) {
+#ifdef DEBUG
+    m_il.ld_i((void*)msg);
+    m_il.ld_i((void*)context);
+    m_il.ld_i4(index);
+    m_il.emit_call(METHOD_DEBUG_FAULT);
+#endif
+}
+
 LocalKind PythonCompiler::emit_binary_float(uint16_t opcode) {
     switch (opcode) {
         case BINARY_ADD:
@@ -1874,6 +1883,9 @@ void PythonCompiler::emit_is(bool isNot) {
     }
 }
 
+void PythonCompiler::emit_is(bool isNot, AbstractValueWithSources lhs, AbstractValueWithSources rhs) {
+    emit_is(isNot); // TODO: Come back to this.
+}
 
 void PythonCompiler::emit_in() {
     m_il.emit_call(METHOD_CONTAINS_TOKEN);
@@ -2135,7 +2147,7 @@ JittedCode* PythonCompiler::emit_compile() {
     auto* jitInfo = new CorJitInfo(PyUnicode_AsUTF8(m_code->co_filename), PyUnicode_AsUTF8(m_code->co_name), m_module, m_compileDebug);
     auto addr = m_il.compile(jitInfo, g_jit, m_code->co_stacksize + 100).m_addr;
     if (addr == nullptr) {
-#ifdef DEBUG
+#ifdef REPORT_CLR_FAULTS
         printf("Compiling failed %s from %s line %d\r\n",
             PyUnicode_AsUTF8(m_code->co_name),
             PyUnicode_AsUTF8(m_code->co_filename),
@@ -2144,16 +2156,7 @@ JittedCode* PythonCompiler::emit_compile() {
 #endif
         delete jitInfo;
         return nullptr;
-    } 
-#ifdef DEBUG
-    else {
-        printf("Compiling success %s from %s line %d\r\n",
-            PyUnicode_AsUTF8(m_code->co_name),
-            PyUnicode_AsUTF8(m_code->co_filename),
-            m_code->co_firstlineno
-            );
     }
-#endif
     return jitInfo;
 }
 
@@ -2271,6 +2274,15 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
             m_il.emit_call(METHOD_PYLONG_AS_LONGLONG);
             emit_load_local(lcl);
             decref();
+
+            // Check if result is MAXLONG and mark the success flag as failed
+            Label not_nan = emit_define_label();
+            emit_dup();
+            emit_nan_long();
+            emit_branch(BranchNotEqual, not_nan);
+            emit_int(1);
+            emit_store_local(success);
+            emit_mark_label(not_nan);
 
             if (guard) {
                 emit_branch(BranchAlways, guard_pass);
@@ -2554,6 +2566,7 @@ GLOBAL_METHOD(METHOD_DEBUG_TRACE, &PyJit_DebugTrace, CORINFO_TYPE_VOID, Paramete
 GLOBAL_METHOD(METHOD_DEBUG_PTR, &PyJit_DebugPtr, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DEBUG_TYPE, &PyJit_DebugType, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DEBUG_PYOBJECT, &PyJit_DebugPyObject, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_DEBUG_FAULT, &PyJit_DebugFault, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT));
 
 GLOBAL_METHOD(METHOD_PY_POPFRAME, &PyJit_PopFrame, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_PY_PUSHFRAME, &PyJit_PushFrame, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
@@ -2573,7 +2586,7 @@ GLOBAL_METHOD(METHOD_ISNOT, &PyJit_IsNot, CORINFO_TYPE_NATIVEINT, Parameter(CORI
 GLOBAL_METHOD(METHOD_IS_BOOL, &PyJit_Is_Bool, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_ISNOT_BOOL, &PyJit_IsNot_Bool, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
-GLOBAL_METHOD(METHOD_FLOAT_POWER_TOKEN, static_cast<double(*)(double, double)>(pow), CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_DOUBLE), Parameter(CORINFO_TYPE_DOUBLE));
+GLOBAL_METHOD(METHOD_FLOAT_POWER_TOKEN, &PyJit_DoublePow, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_DOUBLE), Parameter(CORINFO_TYPE_DOUBLE));
 GLOBAL_METHOD(METHOD_FLOAT_FLOOR_TOKEN, static_cast<double(*)(double)>(floor), CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_DOUBLE));
 GLOBAL_METHOD(METHOD_INT_POWER, PyJit_LongPow, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_LONG));
 GLOBAL_METHOD(METHOD_INT_FLOOR_DIVIDE, PyJit_LongFloorDivide, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_LONG));
@@ -2584,7 +2597,7 @@ GLOBAL_METHOD(METHOD_FLOAT_MODULUS_TOKEN, static_cast<double(*)(double, double)>
 GLOBAL_METHOD(METHOD_FLOAT_FROM_DOUBLE, PyFloat_FromDouble, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_DOUBLE));
 GLOBAL_METHOD(METHOD_BOOL_FROM_LONG, PyBool_FromLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_INT));
 GLOBAL_METHOD(METHOD_NUMBER_AS_SSIZET, PyNumber_AsSsize_t, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_PYLONG_AS_LONGLONG, PyLong_AsLongLong, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_PYLONG_AS_LONGLONG, PyJit_LongAsLongLong, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_PYLONG_FROM_LONGLONG, PyLong_FromLongLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_LONG));
 
 GLOBAL_METHOD(METHOD_PYERR_SETSTRING, PyErr_SetString, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));

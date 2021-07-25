@@ -328,6 +328,18 @@ TEST_CASE("Test exception handling", "[!mayfail]") {
         );
         CHECK(t.returns() == "2");
     }
+        // division by zero error case
+    SECTION("test divide int by zero") {
+        auto t = EmissionTest(
+                "def f():\n    x = 1\n    y = 0\n    try:\n        return x / y\n    except:\n        return 42"
+        );
+        CHECK(t.returns() == "42");
+    }SECTION("test floor divide by zero") {
+        auto t = EmissionTest(
+                "def f():\n    x = 1\n    y = 0\n    try:\n        return x // y\n    except:\n        return 42"
+        );
+        CHECK(t.returns() == "42");
+    }
 }
 TEST_CASE("Exception Filters", "[!mayfail]"){
     SECTION("test filters positive case") {

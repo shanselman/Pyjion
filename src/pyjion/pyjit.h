@@ -46,16 +46,17 @@
 #include <frameobject.h>
 #include <Python.h>
 #include "codemodel.h"
+#include "absvalue.h"
 
 using namespace std;
 
 class PyjionCodeProfile{
     unordered_map<size_t, unordered_map<size_t, PyTypeObject *>> stackTypes;
-    unordered_map<size_t, unordered_map<size_t, PyObject *>> stackValues;
+    unordered_map<size_t, unordered_map<size_t, AbstractValueKind>> stackKinds;
 public:
     void record(size_t opcodePosition, size_t stackPosition, PyObject* obj);
     PyTypeObject* getType(size_t opcodePosition, size_t stackPosition);
-    PyObject* getValue(size_t opcodePosition, size_t stackPosition);
+    AbstractValueKind getKind(size_t opcodePosition, size_t stackPosition);
     ~PyjionCodeProfile();
 };
 
@@ -99,6 +100,7 @@ typedef struct PyjionSettings {
     bool opt_functionCalls = OPTIMIZE_FUNCTION_CALLS; // OPT-14
     bool opt_loadAttr = OPTIMIZE_LOAD_ATTR; // OPT-15
     bool opt_unboxing = OPTIMIZE_UNBOXING; // OPT-16
+    bool opt_isNone = OPTIMIZE_ISNONE; // OPT-17
 } PyjionSettings;
 
 static PY_UINT64_T HOT_CODE = 0;

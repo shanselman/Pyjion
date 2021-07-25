@@ -1,34 +1,29 @@
-import pyjion
-import unittest
-import gc
+import pytest
+
+try:
+    import numpy as np
+    has_numpy = True
+except ImportError:
+    has_numpy = False
 
 
-class NumpyTestCase(unittest.TestCase):
+@pytest.mark.skipif(not has_numpy, reason="No numpy installed")
+@pytest.mark.external
+def test_array_math():
+    t = np.array([250., 300., 350., 400.])
+    v = 275.4
+    x = 324.5
 
-    def setUp(self) -> None:
-        pyjion.enable()
-        pyjion.enable_graphs()
+    lte = (t <= v)
+    assert isinstance(lte, np.ndarray)
+    j = (t <= v) & (t >= x)
+    assert isinstance(j, np.ndarray)
+    comp1 = j == np.array([False, False, False, False])
+    assert isinstance(comp1, np.ndarray)
+    assert comp1.all()
 
-    def tearDown(self) -> None:
-        pyjion.disable()
-        gc.collect()
-
-    def test_array_math(self):
-        import numpy as np
-        t = np.array([250., 300., 350., 400.])
-        v = 275.4
-        x = 324.5
-
-        lte = (t <= v)
-        self.assertIsInstance(lte, np.ndarray)
-        j = (t <= v) & (t >= x)
-        self.assertIsInstance(j, np.ndarray)
-        comp1 = j == np.array([False, False, False, False])
-        self.assertIsInstance(comp1, np.ndarray)
-        self.assertTrue(comp1.all())
-
-        i = t <= v
-        self.assertIsInstance(i, np.ndarray)
-        comp2 = i == np.array([True, False, False, False])
-        self.assertIsInstance(comp2, np.ndarray)
-        self.assertTrue(comp2.all())
+    i = t <= v
+    assert isinstance(i, np.ndarray)
+    comp2 = i == np.array([True, False, False, False])
+    assert isinstance(comp2, np.ndarray)
+    assert comp2.all()
