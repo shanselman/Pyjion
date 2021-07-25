@@ -1,7 +1,6 @@
 import sys
 import pyjion
 import pyjion.dis
-import unittest
 import math
 import time
 import pytest
@@ -1054,7 +1053,3 @@ class ObjectMethodCallsTestCase:
         assert sys.getrefcount(arg1) == pre_refcnt_a
         info = pyjion.info(self.test_arg15_cfunction_exc.__code__)
         assert info['compiled'], info['compile_result']
-
-
-if __name__ == "__main__":
-    unittest.main()

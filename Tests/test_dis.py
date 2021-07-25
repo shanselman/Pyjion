@@ -1,6 +1,5 @@
 from pyjion.dis import print_il, dis, dis_native
 import pyjion
-import unittest
 import io
 import contextlib
 import sys
