@@ -62,7 +62,10 @@ jobs:
         shell: bash
         run: |
           pip install -r Tests/requirements_test.txt
-          python -X dev -m pytest Tests/ -v
+          python -X dev -m pytest Tests/ -v --opt-level 0
+          python -X dev -m pytest Tests/ -v --opt-level 1
+          python -X dev -m pytest Tests/ -v --opt-level 2
+          python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
       - name: Run smoke tests
         shell: bash
@@ -165,7 +168,10 @@ jobs:
         shell: bash
         run: |
           pip install -r Tests/requirements_test.txt
-          python -X dev -m pytest Tests/ -v
+          python -X dev -m pytest Tests/ -v --opt-level 0
+          python -X dev -m pytest Tests/ -v --opt-level 1
+          python -X dev -m pytest Tests/ -v --opt-level 2
+          python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
       - name: Test mod
         shell: bash
@@ -274,7 +280,10 @@ jobs:
         shell: bash
         run: |
           pip install -r Tests/requirements_test.txt
-          python -X dev -m pytest Tests/ -v
+          python -X dev -m pytest Tests/ -v --opt-level 0
+          python -X dev -m pytest Tests/ -v --opt-level 1
+          python -X dev -m pytest Tests/ -v --opt-level 2
+          python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
       - name: Test mod
         shell: bash
