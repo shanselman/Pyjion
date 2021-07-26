@@ -97,6 +97,8 @@ jobs:
         run: |
           python -m pyjion -m calendar
           python -m pyjion Tests/hello.py
+          pyjion -m calendar
+          pyjion Tests/hello.py
 
 
       - name: Install scikit-build for wheel
@@ -196,7 +198,7 @@ jobs:
       - name: Test mod
         shell: bash
         run: |
-          python -m pyjion -m calendar
+          pyjion -m calendar
 
       - name: Run smoke tests
         shell: bash
@@ -318,7 +320,7 @@ jobs:
       - name: Test mod
         shell: bash
         run: |
-          python -m pyjion -m calendar
+          pyjion -m calendar
 
       - name: Run smoke tests
         shell: bash

@@ -3,6 +3,29 @@
 API Reference
 =============
 
+Command-line
+------------
+
+You can run ``pyjion`` as a standalone command-line program, similar to how you would use ``python`` to run scripts and modules.
+
+   usage: pyjion [-h] [-m MODULE] [--tracing] [--profiling] [--graph] [--debug] [--no-pgc] [-o OPT_LEVEL] [script]
+
+   Python JIT Compiler
+
+   positional arguments:
+   script                script file
+
+   optional arguments:
+   -h, --help            show this help message and exit
+   -m MODULE             Execute module
+   --tracing             Enable tracing (used by debuggers)
+   --profiling           Enable profiling
+   --graph               Enable instruction graph generation
+   --debug               Enable debuggable JIT methods
+   --no-pgc              Disable PGC
+   -o OPT_LEVEL, --opt-level OPT_LEVEL
+                           Optimization level (default 1
+
 Core module
 -----------
 

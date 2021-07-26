@@ -2,7 +2,9 @@
 
 ## master
 
-* Unboxing integers that dont fit into `long long` will raise a ValueError.
+* Added `pyjion` command-line script to complement the `python -m pyjion` command
+* The pyjion CLI has flags for enabling profiling, tracing, optimization level, graphs and debugging
+* Unboxing integers that don't fit into `long long` will raise a ValueError.
 * Pyjion will mark any values above 1 billion as "big integers" and not escape them to reduce the chance of overflows.
 * Floating point `__pow__` with negative values matches all behaviour of CPython
 * Raising `0` to a negative power will raise a `ZeroDivisionError`
