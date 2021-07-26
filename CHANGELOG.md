@@ -11,6 +11,9 @@
 * Fixed a bug on calling `sys.settrace(None)` would cause a segmentation fault (#330)
 * Fixed a bug on optimized calls to custom types would crash on the 3rd execution because of the way PGC held and released references.
 * Refactored Pyjion's test suite to Pytest
+* Rewrote the documentation site
+* Fixed a bug in the native disassembler printing empty comment lines
+* Corrected the type signature of `pyjion.get_offsets()`
 
 ## 1.0.0 (beta7)
 

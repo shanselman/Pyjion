@@ -70,7 +70,7 @@ def enable_debug() -> None:
 def disable_debug() -> None:
     ...
 
-def get_offsets(f: Callable) -> tuple[tuple[int, int, int]]:
+def get_offsets(f: Callable) -> tuple[tuple[int, int, int, int]]:
     ...
 
 def enable_graphs() -> None:
