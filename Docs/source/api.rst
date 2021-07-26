@@ -1,5 +1,7 @@
-Pyjion Python API
-=================
+.. _API:
+
+API Reference
+=============
 
 Core module
 -----------
@@ -38,11 +40,15 @@ Core module
 
    Disable emitting debuggable JIT methods.
 
-.. function:: disable_profiling()
+.. function:: enable_pgc()
 
-   Disable profiling hooks.
+   Enable compilation profiling (already enabled by default)
 
-.. function:: set_threshold(to)
+.. function:: disable_pgc()
+
+   Disable compilation profiling
+
+.. function:: set_threshold(to: int)
 
    Set the threshold to JIT compile a function to the number of times it is executed.
 
@@ -54,26 +60,41 @@ Core module
 
    Return the compiled machine-code as a bytearray
 
+.. function:: get_offsets(f: Callable) -> tuple[tuple[int, int, int]]:
+   
+   Get sequence points for a compiled function (used by the disassembler)
+
+.. function::  enable_graphs() -> None:
+   
+   Enable graph generation, see :ref:`graphing`
+
+.. function::  disable_graphs() -> None:
+   
+   Disable graph generation.
+
+.. function::  get_graph(f: Callable) -> str:
+   
+   Get graph for compiled function, see :ref:`graphing`
+
+.. function::  status() -> Dict[Any, Any]:
+
+   Get Pyjion runtime status.
+
+.. function::  symbols(f: Callable) -> Dict[int, str]:
+
+   Get method symbol table (used by the disassembler).
+
+
 Disassembly module
 ------------------
 
-.. module:: pyjion.dis
-
-.. function:: dis(f, include_offsets=False)
-
-   Print the ECMA CIL bytecode in a disassembly table.
-   Set ``include_offsets=True`` to print the Python opcodes inline with the IL.
-
-.. function:: dis_native(f, include_offsets=False)
-
-   Print the x86 assembly instructions in a disassembly table (requires distorm3 and rich)
-   Set ``include_offsets=True`` to print the Python opcodes inline with the assembly.
+.. automodule:: pyjion.dis
+   :members:
+   :undoc-members:
 
 WSGI middleware
 ---------------
 
-.. module:: pyjion.wsgi
-
-.. class:: PyjionWsgiMiddleware(application)
-
-   Provides a WSGI middleware interface that enables the JIT for requests
+.. automodule:: pyjion.wsgi
+   :members:
+   :undoc-members:

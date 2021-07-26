@@ -32,8 +32,7 @@ This functionality complements PGC.
 
 Pyjion uses the .NET JIT compiler's value stack instead of CPython's value stack. In this optimization:
 
-- floating point values are "unboxed" by loading the address of ``ob_fval`` (the double of the ``PyFloatObject``) onto the stack
-and boxed where the value needs to be escaped using ``PyFloat_FromDouble()``.
+- floating point values are "unboxed" by loading the address of ``ob_fval`` (the double of the ``PyFloatObject``) onto the stack and boxed where the value needs to be escaped using ``PyFloat_FromDouble()``.
 - integer values are converted to ``int64_t`` using ``PyLong_AsLongLong``
 - boolean values are converted to ``int32_t`` using a pointer comparison with ``PyTrue`` and ``PyFalse``
 
