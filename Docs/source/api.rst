@@ -8,6 +8,8 @@ Command-line
 
 You can run ``pyjion`` as a standalone command-line program, similar to how you would use ``python`` to run scripts and modules.
 
+.. code-block::
+
    usage: pyjion [-h] [-m MODULE] [--tracing] [--profiling] [--graph] [--debug] [--no-pgc] [-o OPT_LEVEL] [script]
 
    Python JIT Compiler
