@@ -1,6 +1,6 @@
 # Release notes
 
-## master
+## 1.0.0 (rc1)
 
 * Added `pyjion` command-line script to complement the `python -m pyjion` command
 * The pyjion CLI has flags for enabling profiling, tracing, optimization level, graphs and debugging
@@ -16,6 +16,7 @@
 * Rewrote the documentation site
 * Fixed a bug in the native disassembler printing empty comment lines
 * Corrected the type signature of `pyjion.get_offsets()`
+* Fixed a bug on changed methods for object (like a global) causing crashes because of the way load_method was optimized (#335)
 
 ## 1.0.0 (beta7)
 
