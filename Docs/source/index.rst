@@ -30,7 +30,6 @@ To install from PyPi, use pip to install from a virtual environment:
 
    $ python -m pip install pyjion
 
-
 Using Pyjion
 ------------
 
@@ -65,13 +64,13 @@ You can also execute Pyjion against any script or module:
 
 .. code-block:: console
 
-    python -m pyjion my_script.py
+    pyjion my_script.py
 
 Or, for an existing Python module:
 
 .. code-block:: console
 
-    python -m pyjion -m calendar
+    pyjion -m calendar
 
 For a full list of options, see the :ref:`API`.
 

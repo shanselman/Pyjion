@@ -57,6 +57,18 @@ You can see some basic stats by running `pyjion.info(f)`, where `f` is the funct
 {'failed': False, 'compiled': True, 'run_count': 1}
 ```
 
+You can also execute Pyjion against any script or module:
+
+```console
+pyjion my_script.py
+```
+
+Or, for an existing Python module:
+
+```console
+pyjion -m calendar
+```
+
 You can see the machine code for the compiled function by disassembling it in the Python REPL.
 Pyjion has essentially compiled your small Python function into a small, standalone application.
 Install `distorm3` and `rich` first to disassemble x86-64 assembly and run `pyjion.dis.dis_native(f)`:
