@@ -15,16 +15,13 @@
 
 import sys
 import os
-import shlex
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
 
 # Get the project root dir, which is the parent dir of this
-cwd = os.getcwd()
-project_root = os.path.dirname(cwd)
+project_root = os.path.abspath('../src')
 
 # Insert the project root dir as the first element in the PYTHONPATH.
 # This lets us ensure that the source package is imported, and that its
@@ -39,7 +36,7 @@ sys.path.insert(0, project_root)
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx_autodoc_typehints']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -57,8 +54,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Pyjion'
-copyright = '2020, Brett Cannon, Dino Viehland, Anthony Shaw'
-author = 'Brett Cannon, Dino Viehland, Anthony Shaw'
+copyright = '2021, Anthony Shaw'
+author = 'Anthony Shaw'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -118,7 +115,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = 'furo'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -148,6 +145,7 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_logo = "_static/pyjion_logo.png"
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -233,7 +231,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   (master_doc, 'Pyjion.tex', 'Pyjion Documentation',
-   'Brett Cannon, Dino Viehland', 'manual'),
+   'Anthony Shaw', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

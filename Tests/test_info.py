@@ -2,15 +2,15 @@ import pyjion
 
 
 def test_once():
-    def test_f():
+    def _f():
         a = 1
         b = 2
         c = 3
         d = 4
         return a + b + c + d
 
-    assert test_f() == 10
-    info = pyjion.info(test_f)
+    assert _f() == 10
+    info = pyjion.info(_f)
 
     assert info['compiled']
     assert not info['failed']
@@ -18,14 +18,14 @@ def test_once():
 
 
 def test_never():
-    def test_f():
+    def _f():
         a = 1
         b = 2
         c = 3
         d = 4
         return a + b + c + d
 
-    info = pyjion.info(test_f)
+    info = pyjion.info(_f)
 
     assert not info['compiled']
     assert not info['failed']
@@ -33,16 +33,16 @@ def test_never():
 
 
 def test_twice():
-    def test_f():
+    def _f():
         a = 1
         b = 2
         c = 3
         d = 4
         return a + b + c + d
 
-    assert test_f() == 10
-    assert test_f() == 10
-    info = pyjion.info(test_f)
+    assert _f() == 10
+    assert _f() == 10
+    info = pyjion.info(_f)
 
     assert info['compiled']
     assert not info['failed']

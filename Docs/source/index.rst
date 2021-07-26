@@ -6,23 +6,35 @@
 Pyjion
 ======
 
-Pyjion is an implementation and technical proof of concept for a JIT API for CPython. 
+Pyjion drop-in JIT compiler for CPython 3.9. Pyjion can make your Python code execute faster without any code changes.
+
+Trying Pyjion
+-------------
+
+Checkout the live Pyjion compiler and disassembler sandbox at `trypyjion.com <https://www.trypyjion.com>`_.
+
+Prerequisites
+-------------
+
+- Pyjion requires `.NET 6 <https://dotnet.microsoft.com/download>`_ to be installed.
+- Pyjion requires `Python 3.9 <https://python.org/downloads>`_.
 
 Installing Pyjion
 -----------------
+
+Pyjion is best installed from PyPi within a Python 3.9 virtual environment. There are binary wheels for macOS, Linux and Windows. Make sure you have updated pip before installing.
 
 To install from PyPi, use pip to install from a virtual environment:
 
 .. code-block:: console
 
-   $ python -m pip install Pyjion
+   $ python -m pip install pyjion
+
 
 Using Pyjion
 ------------
 
 After following the installation steps, pyjion is a python module that you can import a Python 3.9 environment.
-
-To get started, you need to have .NET 5 installed, with Python 3.9 and the Pyjion package (I also recommend using a virtual environment).
 
 After importing pyjion, enable it by calling `pyjion.enable()` which sets a compilation threshold to 0 (the code only needs to be run once to be compiled by the JIT):
 
@@ -49,35 +61,30 @@ You can see some basic stats by running `pyjion.info(f)`, where `f` is the funct
     >>> pyjion.info(half)
     {'failed': False, 'compiled': True, 'run_count': 1}
 
-Debugging
----------
+You can also execute Pyjion against any script or module:
 
-To enable debugging of the compiled code, or tracing using a tracer (like a code coverage tool), you need to enable tracing before compiling the functions:
+.. code-block:: console
 
-.. code-block::
+    python -m pyjion my_script.py
 
-    >>> pyjion.enable_tracing()
+Or, for an existing Python module:
 
-Because debugging adds an overhead to every line, statement and function call, it is disabled by default. You can disable it manually with ``disable_tracing()``:
+.. code-block:: console
 
-.. code-block::
+    python -m pyjion -m calendar
 
-    >>> pyjion.disable_tracing()
-
-
-Documentation
-=============
-
-Main
-----
+For a full list of options, see the :ref:`API`.
 
 .. toctree::
     :glob:
     :maxdepth: 3
+    :hidden:
 
-    gettingstarted
-    building
-    using
+    development
+    debugging
+    disassembler
+    graphing
     api
     wsgi
     optimizations
+    limitations

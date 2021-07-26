@@ -4,6 +4,12 @@ from collections import namedtuple
 from warnings import warn
 import struct
 
+__all__ = [
+    "dis",
+    "dis_native",
+    "print_il"
+]
+
 # Pre stack effect
 Pop0 = 0
 Pop1 = 1
@@ -543,7 +549,7 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
     for (offset, line) in zip(offsets, highlighted_lines):
         # See if this is the offset of a matching Python instruction
         if include_offsets:
-            for py_offset, il_offset, native_offset, offset_type in jit_offsets:
+            for py_offset, _, native_offset, offset_type in jit_offsets:
                 if native_offset > 0 and (position + native_offset) == offset and offset_type == "instruction":
                     try:
                         instruction = python_instructions[py_offset]
@@ -554,7 +560,7 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
             console.print("[grey]%.8x" % offset, style="dim", end=" ")
         console.print(line, end=" ")
         if include_offsets:
-            for py_offset, il_offset, native_offset, offset_type in jit_offsets:
+            for py_offset, _, native_offset, offset_type in jit_offsets:
                 if native_offset > 0 and (position + native_offset) == offset and offset_type == "call":
                     try:
                         console.print("[grey]; %s" % symbol_table[py_offset], style="dim")
