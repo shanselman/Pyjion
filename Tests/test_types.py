@@ -5,8 +5,25 @@ import types
 def test_subclassdict():
     """Test that a subclass of dict can be merged into a static dict"""
     out = {**os.environ, 'foo': 'bar'}
-
     assert 'foo' in out
+
+
+def test_change_method():
+    class A:
+        def foo(self):
+            return 1
+
+        def bar(self):
+            return 2
+
+    a = A()
+
+    def _f():
+        return a.foo()
+
+    assert _f() == 1
+    a.foo = a.bar
+    assert _f() == 2
 
 
 def test_resolve_bases():

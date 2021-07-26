@@ -2443,12 +2443,15 @@ PyObject* PyJit_FormatObject(PyObject* item, PyObject*fmtSpec) {
 PyJitMethodLocation* PyJit_LoadMethod(PyObject* object, PyObject* name, PyJitMethodLocation* method_info) {
     PyObject* method = nullptr;
     int meth_found = -1;
-    if (method_info->method != nullptr && method_info->object != nullptr && method_info->object == object){
-        Py_INCREF(method_info->method);
-        goto end; // TODO: Verify the method somehow hasn't been swapped on the same object.
-    }
 
     meth_found = _PyObject_GetMethod(object, name, &method);
+
+    if (method_info->method != nullptr && method_info->object != nullptr && method_info->object == object){
+        if (method == method_info->method) {
+            goto end;
+        }
+    }
+
     method_info->method = method;
     if (!meth_found) {
         Py_DECREF(object);
