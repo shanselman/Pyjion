@@ -523,10 +523,12 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
         raise ModuleNotFoundError("Install distorm3 and rich before disassembling native functions")
 
     native = dump_native(f)
+
     if not native:
         print("No native code for this function, it may not have compiled correctly")
         return
     symbol_table = symbols(f)
+
     if include_offsets:
         python_instructions = {i.offset: i for i in get_instructions(f)}
         jit_offsets = get_offsets(f)
@@ -534,14 +536,14 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
         python_instructions = {}
         jit_offsets = []
 
-    code, code_length, position = native
+    code, _, position = native
     iterable = distorm3.DecodeGenerator(position, bytes(code), distorm3.Decode64Bits)
 
-    disassembled = [(offset, instruction) for (offset, size, instruction, hexdump) in iterable]
+    disassembled = [(offset, instruction) for (offset, _, instruction, _) in iterable]
 
     console = Console()
-    offsets = [offset for (offset, instruction) in disassembled]
-    instructions = [instruction for (offset, instruction) in disassembled]
+    offsets = [offset for (offset, _) in disassembled]
+    instructions = [instruction for (_, instruction) in disassembled]
 
     syntax = Syntax("", lexer_name="nasm", theme="ansi_dark")
     highlighted_lines = syntax.highlight("\n".join(instructions)).split("\n")
@@ -558,13 +560,12 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
                         warn("Invalid offset {0}".format(offsets))
         if print_pc:
             console.print("[grey]%.8x" % offset, style="dim", end=" ")
-        console.print(line, end=" ")
+        console.print(line, end="")
         if include_offsets:
             for py_offset, _, native_offset, offset_type in jit_offsets:
                 if native_offset > 0 and (position + native_offset) == offset and offset_type == "call":
                     try:
-                        console.print("[grey]; %s" % symbol_table[py_offset], style="dim")
-                        console.print('; ', end=" ")
+                        console.print(" [grey]; %s" % symbol_table[py_offset], style="dim", end="")
                     except KeyError:
                         warn("Invalid offset {0}".format(offsets))
         console.print('')  # force line-sep
