@@ -9,7 +9,7 @@ __version__ = '1.0.0rc1'
 def _no_dotnet(path):
     raise ImportError(f"Can't find a .NET 6 installation in {path}, "
                       "provide the DOTNET_ROOT environment variable "
-                      "if its installed somewhere unusual")
+                      "if it's installed somewhere unusual")
 
 
 def _which_dotnet() -> str:
