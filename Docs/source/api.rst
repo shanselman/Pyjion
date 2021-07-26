@@ -18,7 +18,7 @@ Core module
 
 .. function:: enable_tracing()
 
-   Enable tracing hooks (e.g. used by debuggers) to be emitted in the compiled CIL. Required for debugging.
+   Enable tracing hooks (e.g. used by debuggers) to be emitted in the compiled CIL. Required for :ref:`Debugging`.
 
 .. function:: disable_tracing()
 
@@ -26,7 +26,7 @@ Core module
 
 .. function:: enable_profiling()
 
-   Enable profiling hooks (e.g. used by performance profilers) to be emitted in the compiled CIL.
+   Enable profiling hooks (e.g. used by performance profilers) to be emitted in the compiled CIL. See :ref:`Debugging`
 
 .. function:: disable_profiling()
 
@@ -34,7 +34,7 @@ Core module
 
 .. function:: enable_debug()
 
-   Enable compilation of JIT as debuggable methods. I.e., to include debug data (useful for pyjion.dis.dis_native(f, include_offsets=True)
+   Sets debug flags in the .NET JIT Compiler. Used for :ref:`Disassembler` output.
 
 .. function:: disable_debug()
 
@@ -62,11 +62,11 @@ Core module
 
 .. function:: get_offsets(f: Callable) -> tuple[tuple[int, int, int]]:
    
-   Get sequence points for a compiled function (used by the disassembler)
+   Get sequence points for a compiled function (used by the :ref:`Disassembler`)
 
 .. function::  enable_graphs() -> None:
    
-   Enable graph generation, see :ref:`graphing`
+   Enable graph generation, see :ref:`Graphing`
 
 .. function::  disable_graphs() -> None:
    
@@ -74,7 +74,7 @@ Core module
 
 .. function::  get_graph(f: Callable) -> str:
    
-   Get graph for compiled function, see :ref:`graphing`
+   Get graph for compiled function, see :ref:`Graphing`
 
 .. function::  status() -> Dict[Any, Any]:
 
@@ -82,19 +82,28 @@ Core module
 
 .. function::  symbols(f: Callable) -> Dict[int, str]:
 
-   Get method symbol table (used by the disassembler).
-
+   Get method symbol table (used by the :ref:`Disassembler`).
 
 Disassembly module
 ------------------
 
-.. automodule:: pyjion.dis
-   :members:
-   :undoc-members:
+.. module:: pyjion.dis
+
+.. function:: dis(f, include_offsets=False, print_pc=True)
+
+   Print the ECMA CIL bytecode in a disassembly table.
+   Set ``include_offsets=True`` to print the Python opcodes inline with the IL.
+
+.. function:: dis_native(f, include_offsets=False, print_pc=True)
+
+   Print the x86 assembly instructions in a disassembly table (requires distorm3 and rich)
+   Set ``include_offsets=True`` to print the Python opcodes inline with the assembly.
 
 WSGI middleware
 ---------------
 
-.. automodule:: pyjion.wsgi
-   :members:
-   :undoc-members:
+.. module:: pyjion.wsgi
+
+.. class:: PyjionWsgiMiddleware(application)
+
+   Provides a WSGI middleware interface that enables the JIT for requests

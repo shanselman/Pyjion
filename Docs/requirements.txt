@@ -1,4 +1,1 @@
-https://github.com/tonybaloney/scikit-build/archive/vs2019.zip
-cmake
 furo
-sphinx-autodoc-typehints

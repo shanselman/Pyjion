@@ -1,4 +1,4 @@
-.. `Graphing`_
+.. _Graphing:
 
 Graphing
 ========

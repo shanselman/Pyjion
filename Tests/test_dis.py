@@ -77,6 +77,7 @@ def test_thin(capsys):
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="no windows support yet")
+@pytest.mark.external
 def test_dis_native(capsys):
     def test_f():
         numbers = (1, 2, 3, 4)
@@ -89,6 +90,7 @@ def test_dis_native(capsys):
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="no windows support yet")
+@pytest.mark.external
 def test_dis_native_with_offsets(capsys):
     def test_f():
         numbers = (1, 2, 3, 4)
