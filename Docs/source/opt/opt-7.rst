@@ -74,7 +74,7 @@ At compile time, it will optimize some common paths:
     b. If the index is a const value, e.g. a string, compute the hash in advance and assume the item is a dict, if not, redirect to ``PyObject_GetItem``
     c. If the index is both a hashable value and an integer, emit both the hash and index value. Try the dict first, then try the sequence type. Skipping both the hash compute and the numeric conversion
     d. If the index is a negative number, redirect to ``PySequence_GetItem``, which supports reverse indexing
-3. If the container type and the index type cannot be determined, emit a regular call to ``PyObject_GetItem``
+5. If the container type and the index type cannot be determined, emit a regular call to ``PyObject_GetItem``
 
 Gains
 -----

@@ -4,6 +4,12 @@ from collections import namedtuple
 from warnings import warn
 import struct
 
+__all__ = [
+    "dis",
+    "dis_native",
+    "print_il"
+]
+
 # Pre stack effect
 Pop0 = 0
 Pop1 = 1

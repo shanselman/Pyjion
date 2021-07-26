@@ -1,3 +1,5 @@
+.. `Graphing`_
+
 Graphing
 ========
 
