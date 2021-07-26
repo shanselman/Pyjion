@@ -7,6 +7,8 @@ Pyjion, a JIT extension for CPython that compiles your Python code into native C
 
 You can test out Pyjion now at [www.trypyjion.com](https://www.trypyjion.com).
 
+Read the full documentation at [pyjion.readthedocs.io](https://pyjion.readthedocs.io/en/latest/).
+
 ## Installing 
 
 ```console
