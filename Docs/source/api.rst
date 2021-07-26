@@ -1,5 +1,7 @@
-Pyjion Python API
-=================
+.. _API:
+
+API Reference
+=============
 
 Core module
 -----------
