@@ -76,10 +76,10 @@ Enabling tracing:
 
 .. code-block::
 
-   > python -m pyjion --tracing my_script.py
+   > pyjion --tracing my_script.py
 
 Enabling profiling:
 
 .. code-block::
 
-   > python -m pyjion --profiling my_script.py
+   > pyjion --profiling my_script.py
