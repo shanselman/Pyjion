@@ -1,5 +1,9 @@
 # Release notes
 
+## master
+
+* LOAD_BUILD_CLASS will infer a function type instead of Any (#42)
+
 ## 1.0.0 (rc1)
 
 * Added `pyjion` command-line script to complement the `python -m pyjion` command
