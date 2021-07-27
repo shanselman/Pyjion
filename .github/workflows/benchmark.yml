@@ -50,6 +50,8 @@ jobs:
           python Tests/benchmarks/bench_django_template.py
           python Tests/benchmarks/bench_deltablue.py
           python Tests/benchmarks/bench_spectralnorm.py
+          python Tests/benchmarks/bench_xml_etree.py
+          python Tests/benchmarks/bench_nqueens.py
 
   bench-macos-11:
     runs-on: macos-11.0
@@ -89,7 +91,8 @@ jobs:
           python Tests/benchmarks/bench_django_template.py
           python Tests/benchmarks/bench_deltablue.py
           python Tests/benchmarks/bench_spectralnorm.py
-
+          python Tests/benchmarks/bench_xml_etree.py
+          python Tests/benchmarks/bench_nqueens.py
   bench-windows:
     runs-on: windows-latest
     strategy:
@@ -151,3 +154,5 @@ jobs:
           python Tests/benchmarks/bench_django_template.py
           python Tests/benchmarks/bench_deltablue.py
           python Tests/benchmarks/bench_spectralnorm.py
+          python Tests/benchmarks/bench_xml_etree.py
+          python Tests/benchmarks/bench_nqueens.py
