@@ -155,18 +155,6 @@ public:
         }
     };
 
-    /// Override the default .NET CIL_NEWARR with a custom array allocator. See getHelperFtn
-    /// \param size Requested array size
-    /// \param arrayMT Array type handle
-    /// \return new vector
-    static vector<PyObject*> newArrayHelperFtn(int64_t size, CORINFO_CLASS_HANDLE arrayMT) {
-        return std::vector<PyObject*>(size);
-    }
-
-    static void stArrayHelperFtn(std::vector<PyObject*>* array, INT_PTR idx, PyObject* ref) {
-        // TODO : Implement vector allocation and assignment logic for CIL_STELEM.x
-    }
-
     void* get_code_addr() override {
         return m_codeAddr;
     }
@@ -1695,12 +1683,6 @@ public:
             case CORINFO_HELP_USER_BREAKPOINT:
                 helper = (void*)&breakpointFtn;
                 break;
-            case CORINFO_HELP_NEWARR_1_VC:
-                helper = (void*)&newArrayHelperFtn;
-                break;
-            case CORINFO_HELP_ARRADDR_ST:
-                helper = (void*)&stArrayHelperFtn;
-                break;
             case CORINFO_HELP_STACK_PROBE:
                 helper = (void*)&JIT_StackProbe;
                 break;
@@ -1740,10 +1722,6 @@ public:
         switch (ftnNum){
             case CORINFO_HELP_USER_BREAKPOINT:
                 return (void*)breakpointFtn;
-            case CORINFO_HELP_NEWARR_1_VC:
-                return (void*)newArrayHelperFtn;
-            case CORINFO_HELP_ARRADDR_ST:
-                return (void*)stArrayHelperFtn;
             case CORINFO_HELP_STACK_PROBE:
                 return (void*)JIT_StackProbe;
             case CORINFO_HELP_OVERFLOW:
