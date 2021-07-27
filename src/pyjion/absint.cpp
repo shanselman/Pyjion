@@ -801,9 +801,7 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     skipEffect = true;
                     break;
                 case LOAD_BUILD_CLASS: {
-                    // TODO: if we know this is __builtins__.__build_class__ we can push a special value
-                    // to optimize the call.f
-                    PUSH_INTERMEDIATE(&Any);
+                    PUSH_INTERMEDIATE(&Function);
                     break;
                 }
                 case SET_ADD:
