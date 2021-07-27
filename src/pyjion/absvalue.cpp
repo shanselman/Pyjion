@@ -45,15 +45,23 @@ FunctionValue Function;
 SliceValue Slice;
 ComplexValue Complex;
 IterableValue Iterable;
-BuiltinValue Builtin;
 ModuleValue Module;
 TypeValue Type;
 ByteArrayValue ByteArray;
 MethodValue Method;
 CodeObjectValue CodeObject;
 EnumeratorValue Enumerator;
-FileValue File;
-
+RangeIteratorValue RangeIterator;
+MemoryViewValue MemoryView;
+ClassMethodValue ClassMethod;
+FilterValue Filter;
+PropertyValue Property;
+MapValue Map;
+BaseObjectValue BaseObject;
+ReversedValue Reversed;
+StaticMethodValue StaticMethod;
+SuperValue Super;
+ZipValue Zip;
 
 AbstractSource::AbstractSource(py_opindex producer) {
     Sources = shared_ptr<AbstractSources>(new AbstractSources());
@@ -1087,18 +1095,6 @@ const char* IterableValue::describe() {
     return "iterable";
 }
 
-// Builtin methods
-AbstractValueKind BuiltinValue::kind() {
-    return AVK_Function;
-}
-AbstractValue* BuiltinValue::unary(AbstractSource* selfSources, int op) {
-    return AbstractValue::unary(selfSources, op);
-}
-const char* BuiltinValue::describe() {
-    return "builtin";
-}
-
-// Builtin methods
 AbstractValueKind ModuleValue::kind(){
     return AVK_Module;
 }
@@ -1109,8 +1105,6 @@ const char *ModuleValue::describe(){
     return "module";
 }
 
-
-// Type methods
 AbstractValueKind TypeValue::kind() {
     return AVK_Type;
 }
@@ -1170,19 +1164,6 @@ AbstractValue *EnumeratorValue::unary(AbstractSource *selfSources, int op) {
 
 const char *EnumeratorValue::describe() {
     return "enumerator";
-}
-
-/* File Value */
-AbstractValueKind FileValue::kind() {
-    return AVK_File;
-}
-
-AbstractValue *FileValue::unary(AbstractSource *selfSources, int op) {
-    return AbstractValue::unary(selfSources, op);
-}
-
-const char *FileValue::describe() {
-    return "file";
 }
 
 /* Code Object Value */
@@ -1253,13 +1234,36 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind){
             return &CodeObject;
         case AVK_Enumerate:
             return &Enumerator;
-        case AVK_File:
-            return &File;
         case AVK_Type:
             return &Type;
         case AVK_Module:
             return &Module;
-
+        case AVK_Method:
+            return &Method;
+        case AVK_BigInteger:
+            return &Integer;
+        case AVK_RangeIterator:
+            return &RangeIterator;
+        case AVK_MemoryView:
+            return &MemoryView;
+        case AVK_Classmethod:
+            return &ClassMethod;
+        case AVK_Filter:
+            return &Filter;
+        case AVK_Property:
+            return &Property;
+        case AVK_Map:
+            return &Map;
+        case AVK_Baseobject:
+            return &BaseObject;
+        case AVK_Reversed:
+            return &Reversed;
+        case AVK_Staticmethod:
+            return &StaticMethod;
+        case AVK_Super:
+            return &Super;
+        case AVK_Zip:
+            return &Zip;
         default:
             return &Any;
     }
@@ -1302,6 +1306,9 @@ AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
     else if (type == &PyBytes_Type) {
         return AVK_Bytes;
     }
+    else if (type == &PyByteArray_Type) {
+        return AVK_Bytearray;
+    }
     else if (type == &PySet_Type) {
         return AVK_Set;
     }
@@ -1328,6 +1335,48 @@ AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
     }
     else if (type == &PyCode_Type) {
         return AVK_Code;
+    }
+    else if (type == &PyMemoryView_Type) {
+        return AVK_MemoryView;
+    }
+    else if (type == &PyMethod_Type) {
+        return AVK_Method;
+    }
+    else if (type == &PyModule_Type) {
+        return AVK_Module;
+    }
+    else if (type == &PyRangeIter_Type) {
+        return AVK_RangeIterator;
+    }
+    else if (type == &PyMemoryView_Type) {
+        return AVK_MemoryView;
+    }
+    else if (type == &PyClassMethod_Type) {
+        return AVK_Classmethod;
+    }
+    else if (type == &PyFilter_Type) {
+        return AVK_Filter;
+    }
+    else if (type == &PyProperty_Type) {
+        return AVK_Property;
+    }
+    else if (type == &PyMap_Type) {
+        return AVK_Map;
+    }
+    else if (type == &PyBaseObject_Type) {
+        return AVK_Baseobject;
+    }
+    else if (type == &PyReversed_Type) {
+        return AVK_Reversed;
+    }
+    else if (type == &PyStaticMethod_Type) {
+        return AVK_Staticmethod;
+    }
+    else if (type == &PySuper_Type) {
+        return AVK_Super;
+    }
+    else if (type == &PyZip_Type) {
+        return AVK_Zip;
     }
     return AVK_Any;
 }
@@ -1356,7 +1405,17 @@ PyTypeObject* GetPyType(AbstractValueKind type) {
         case AVK_Bytearray: return &PyByteArray_Type;
         case AVK_Module: return &PyModule_Type;
         case AVK_Method: return &PyMethod_Type;
-        // TODO : resolve missing AVK_File and AVK_Iterable
+        case AVK_MemoryView: return &PyMemoryView_Type;
+        case AVK_Classmethod: return &PyClassMethod_Type;
+        case AVK_Filter: return &PyFilter_Type;
+        case AVK_Property: return &PyProperty_Type;
+        case AVK_Map: return &PyMap_Type;
+        case AVK_Baseobject: return &PyBaseObject_Type;
+        case AVK_Reversed: return &PyReversed_Type;
+        case AVK_Staticmethod: return &PyStaticMethod_Type;
+        case AVK_Super: return &PySuper_Type;
+        case AVK_Zip: return &PyZip_Type;
+        case AVK_Iterable: return nullptr; // Could be anything
         default:
         #ifdef DEBUG
             printf("Warning: Missing GetPyType for %d", type);
