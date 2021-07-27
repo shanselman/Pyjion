@@ -303,7 +303,13 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
                 break;
             case LOAD_CONST:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
-                       PyUnicode_AsUTF8(PyObject_Repr(PyTuple_GetItem(this->code->co_consts, node.second.oparg))), blockColor);
+                       PyUnicode_AsUTF8(PyUnicode_Substring(PyObject_Repr(PyTuple_GetItem(this->code->co_consts, node.second.oparg)), 0, 40)), blockColor);
+                break;
+            case LOAD_FAST:
+            case STORE_FAST:
+            case DELETE_FAST:
+                op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
+                       PyUnicode_AsUTF8(PyObject_Repr(PyTuple_GetItem(this->code->co_varnames, node.second.oparg))), blockColor);
                 break;
             default:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);

@@ -3,6 +3,8 @@
 ## master
 
 * LOAD_BUILD_CLASS will infer a function type instead of Any (#42)
+* Instruction graphs will include the name of fast locals
+* Instruction graph const values are capped to 40 characters 
 
 ## 1.0.0 (rc1)
 
