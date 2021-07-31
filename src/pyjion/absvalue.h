@@ -61,12 +61,21 @@ enum AbstractValueKind {
     AVK_Iterable,
     AVK_Code,
     AVK_Enumerate,
-    AVK_File,
     AVK_Type,
     AVK_Module,
     AVK_Method,
     AVK_BigInteger,
-    AVK_RangeIterator
+    AVK_RangeIterator,
+    AVK_MemoryView,
+    AVK_Classmethod,
+    AVK_Filter,
+    AVK_Property,
+    AVK_Map,
+    AVK_Baseobject,
+    AVK_Reversed,
+    AVK_Staticmethod,
+    AVK_Super,
+    AVK_Zip,
 };
 
 static bool isKnownType(AbstractValueKind kind) {
@@ -518,12 +527,6 @@ class IterableValue : public AbstractValue {
     const char* describe() override;
 };
 
-class BuiltinValue : public AbstractValue {
-    AbstractValueKind kind() override;
-    AbstractValue* unary(AbstractSource* selfSources, int op) override;
-    const char* describe() override;
-};
-
 class ModuleValue : public AbstractValue
 {
     AbstractValueKind kind() override;
@@ -562,10 +565,103 @@ class EnumeratorValue : public AbstractValue {
     const char* describe() override;
 };
 
-class FileValue : public AbstractValue {
-    AbstractValueKind kind() override;
-    AbstractValue* unary(AbstractSource* selfSources, int op) override;
-    const char* describe() override;
+class RangeIteratorValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_RangeIterator;
+    }
+    const char* describe() override {
+        return "range iterator";
+    }
+};
+
+class MemoryViewValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_MemoryView;
+    }
+    const char* describe() override {
+        return "memoryview";
+    }
+};
+
+class ClassMethodValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Classmethod;
+    }
+    const char* describe() override {
+        return "classmethod";
+    }
+};
+
+class FilterValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Filter;
+    }
+    const char* describe() override {
+        return "filter";
+    }
+};
+
+class PropertyValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Property;
+    }
+    const char* describe() override {
+        return "property";
+    }
+};
+
+class MapValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Map;
+    }
+    const char* describe() override {
+        return "map";
+    }
+};
+
+class BaseObjectValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Baseobject;
+    }
+    const char* describe() override {
+        return "baseobject";
+    }
+};
+
+class ReversedValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Reversed;
+    }
+    const char* describe() override {
+        return "reversed";
+    }
+};
+
+class StaticMethodValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Staticmethod;
+    }
+    const char* describe() override {
+        return "staticmethod";
+    }
+};
+
+class SuperValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Super;
+    }
+    const char* describe() override {
+        return "super";
+    }
+};
+
+class ZipValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Zip;
+    }
+    const char* describe() override {
+        return "zip";
+    }
 };
 
 class VolatileValue: public AbstractValue{
@@ -632,7 +728,6 @@ extern NoneValue None;
 extern FunctionValue Function;
 extern SliceValue Slice;
 extern ComplexValue Complex;
-extern BuiltinValue Builtin;
 extern IterableValue Iterable;
 extern ModuleValue Module;
 extern TypeValue Type;
@@ -640,7 +735,17 @@ extern ByteArrayValue ByteArray;
 extern MethodValue Method;
 extern CodeObjectValue CodeObject;
 extern EnumeratorValue Enumerator;
-extern FileValue File;
+extern RangeIteratorValue RangeIterator;
+extern MemoryViewValue MemoryView;
+extern ClassMethodValue ClassMethod;
+extern FilterValue Filter;
+extern PropertyValue Property;
+extern MapValue Map;
+extern BaseObjectValue BaseObject;
+extern ReversedValue Reversed;
+extern StaticMethodValue StaticMethod;
+extern SuperValue Super;
+extern ZipValue Zip;
 
 AbstractValue* avkToAbstractValue(AbstractValueKind);
 AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value = nullptr);
