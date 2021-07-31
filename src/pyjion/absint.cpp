@@ -2193,7 +2193,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                                 // The stack actually ended up being empty - either because we didn't
                                 // have any values, or the values were all non-objects that we could
                                 // spill eagerly.
-                                // TODO : Validate this logic.
                                 m_comp->emit_branch(BranchAlways, curHandler->ErrorTarget);
                         }
                         else {
