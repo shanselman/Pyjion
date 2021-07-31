@@ -65,7 +65,7 @@ unordered_map<const char*, AbstractValueKind> builtinReturnTypes = {
         {"staticmethod",AVK_Staticmethod},
         {"str",         AVK_String},
         {"sum",         AVK_Any},
-        {"super",       AVK_Super},
+        {"super",       AVK_Any},
         {"tuple",       AVK_Tuple},
         {"type",        AVK_Type},
         {"vars",        AVK_Dict},

@@ -82,4 +82,9 @@ def test_enumerate():
     assert list(enumerate(seasons, start=1)) == [(1, 'Spring'), (2, 'Summer'), (3, 'Fall'), (4, 'Winter')]
 
 def test_filter():
-    pass
+    assert list(filter(lambda x: x % 2 == 0, [1, 2, 3, 4])) == [2, 4]
+
+def test_float():
+    assert float(1) == 1.0
+    assert float(True) == 1.0
+    assert float("2.4") == 2.4
