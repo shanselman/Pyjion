@@ -3,6 +3,7 @@
 ## master
 
 * LOAD_BUILD_CLASS will infer a function type instead of Any (#42)
+* Added abstract types for all builtins (#339)
 
 ## 1.0.0 (rc1)
 
