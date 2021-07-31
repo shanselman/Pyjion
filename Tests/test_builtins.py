@@ -21,7 +21,7 @@ def test_any():
 def test_ascii():
     assert ascii(1) == "1"
     assert ascii(0.5) == "0.5"
-    assert ascii("hello") == "hello"
+    assert ascii("hello") == "'hello'"
 
 
 def test_bin():
@@ -58,7 +58,7 @@ def test_classmethod():
         def foo(cls, n):
             return cls
 
-    assert F.foo() == F
+    assert F.foo(1) == F
 
 def test_complex():
     assert complex('1+2j') == (1+2j)
