@@ -20,8 +20,7 @@ def test_existing_attr():
 def test_missing_attr():
     f = F()
     before = sys.getrefcount(f)
-    with pytest.raises(AttributeError):
-        getattr(f, "e")
+    pytest.raises(AttributeError, getattr, f, "e")
     assert sys.getrefcount(f) == before
 
 

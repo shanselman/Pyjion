@@ -194,8 +194,7 @@ def test_map():
 def test_max():
     assert max([1,2,3,4]) == 4
     assert max(1, 2, 3, 4) == 4
-    with pytest.raises(ValueError):
-        assert max([])
+    pytest.raises(ValueError, max, [])
 
 def test_memoryview():
     v = memoryview(b'abcefg')
@@ -208,15 +207,13 @@ def test_min():
     assert min([1,2,3,4]) == 1
     assert min(1, 2, 3, 4) == 1
     assert min(.1, .2, .3, .4) == .1
-    with pytest.raises(ValueError):
-        assert min([])
+    pytest.raises(ValueError, min, [])
 
 def test_next():
     gen = iter("hi")
     assert next(gen) == "h"
     assert next(gen) == "i"
-    with pytest.raises(StopIteration):
-        next(gen)
+    pytest.raises(StopIteration, next, gen)
     assert next(gen, False) == False
 
 def test_object():
@@ -288,7 +285,7 @@ def test_repr():
             self.x = x
 
         def __repr__(self):
-            return '{}'.format(x)
+            return '{}'.format(self.x)
     
     t = T(1)
 
@@ -334,3 +331,64 @@ def test_slice():
 def test_sorted():
     assert sorted([1,3,2]) == [1, 2, 3]
     assert sorted("hat") == ['a', 'h', 't']
+
+def test_staticmethod():
+    class T:
+        @staticmethod
+        def f(a, b):
+            return a + b
+    
+    assert T.f(1, 2) == 3
+    assert T().f(2, 3) == 5
+
+    class M:
+        fake_len = staticmethod(len)
+    
+    assert M.fake_len([1, 2]) == 2
+
+def test_str():
+    class T:
+        def __str__(self):
+            return "yes"
+    
+    t = T()
+    assert str(t) == "yes"
+    assert str(1) == "1"
+
+def test_sum():
+    assert sum([1, 2, 3]) == 6
+    assert sum((1, 2, 3)) == 6
+    assert sum([1, 2, 3], start=1) == 7
+
+def test_super():
+    class A:
+        def foo(self):
+            return 2
+    class B(A):
+        def foo(self):
+            return super().foo()
+    a = A()
+    b = B()
+    assert b.foo() == 2
+
+def test_type():
+    assert type("hello") == str
+    assert type(1) == int
+    assert type(.1) == float
+    assert type(object) == type
+
+    # test the type function as well
+    SuperInt = type("SuperInt", (int,), dict(a=100))
+    assert SuperInt(123) == 123
+    assert SuperInt(123).a == 100
+
+def test_vars():
+    assert 'Create a new memoryview object' in vars(memoryview)['__doc__'] 
+
+def test_zip():
+    x = [1, 2, 3]
+    y = [4, 5, 6]
+    zipped = zip(x, y)
+    assert list(zipped) == [(1, 4), (2, 5), (3, 6)]
+
+# dont test __import__

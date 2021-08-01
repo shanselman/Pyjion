@@ -1,6 +1,7 @@
 import pytest
 import pyjion
 import gc
+import warnings
 
 
 def pytest_runtest_call(item: pytest.Item) -> None:
@@ -14,10 +15,11 @@ def pytest_runtest_call(item: pytest.Item) -> None:
         elif mark.name == "tracing":
             pyjion.enable_tracing()
     pyjion.enable_debug()
-
     item.runtest()
-
     pyjion.disable()
+    inf = pyjion.info(item.function)
+    if not inf['compiled']:
+        warnings.warn("{0} did not compile ({1})".format(item.function, inf['compile_result']))
     pyjion.disable_graphs()
     pyjion.disable_profiling()
     pyjion.disable_tracing()
