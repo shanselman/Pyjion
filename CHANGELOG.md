@@ -4,6 +4,9 @@
 
 * LOAD_BUILD_CLASS will infer a function type instead of Any (#42)
 * Added abstract types for all builtins (#339)
+* Pyjion.info will now return a JitInfo object
+* Optimization flags that were applied to a function during compilation are available in JitInfo.optimizations
+* All optimizations are now runtime flags instead of compile-time features.
 
 ## 1.0.0 (rc1)
 

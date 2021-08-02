@@ -1,5 +1,6 @@
 import pyjion
 import sys
+import pytest
 
 
 def test_dict_keys_optimization():
@@ -12,16 +13,6 @@ def test_dict_keys_optimization():
     inf = pyjion.info(_f)
     assert inf.compiled
     assert inf.optimizations & pyjion.OptimizationFlags.BuiltinMethods
-
-
-def test_append_tuples_to_list():
-    l = list()
-    assert sys.getrefcount(l) == 2
-    l.append((1, 2, 3))
-    assert sys.getrefcount(l) == 2
-    l.append((4, 5, 6))
-    assert sys.getrefcount(l[0]) == 3
-    assert sys.getrefcount(l[1]) == 3
 
 
 def test_object_refs():
@@ -49,20 +40,6 @@ def test_object_refs():
         d = 101000
 
     node = GrandchildNode(101001, 101002, 101003)
-    assert sys.getrefcount(node) == 2
-    assert sys.getrefcount(node.a) == 3
-    assert sys.getrefcount(node.b) == 3
-    assert sys.getrefcount(node.c) == 3
-
     x = repr(node)
     assert x == "GrandchildNode(tag=101002, value=101001)"
-    assert sys.getrefcount(node) == 2
-    assert sys.getrefcount(node.a) == 3
-    assert sys.getrefcount(node.b) == 3
-    assert sys.getrefcount(node.c) == 3
-
     node.add_n(10000)
-    assert sys.getrefcount(node) == 2
-    assert sys.getrefcount(node.a) == 2
-    assert sys.getrefcount(node.b) == 3
-    assert sys.getrefcount(node.c) == 3
