@@ -38,8 +38,8 @@ TEST_CASE("General list unpacking") {
     }
 
     SECTION("unpacking an iterable") {
-        auto t = EmissionTest("def f(): return [1, {2}, 3]");
-        CHECK(t.returns() == "[1, {2}, 3]");
+        auto t = EmissionTest("def f(): return [1, *{2}, 3]");
+        CHECK(t.returns() == "[1, 2, 3]");
     }
 }
 

@@ -135,7 +135,6 @@ private:
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), prev);
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();
-        printf("Collected %zu values\n", collected);
         if (m_jittedcode->j_failed){
             printf("Failure code : %d \n", m_jittedcode->j_compile_result);
         }
@@ -147,6 +146,7 @@ private:
 public:
     explicit EmissionTest(const char *code) {
         PyErr_Clear();
+        printf("%s", code);
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile in JIT code");
