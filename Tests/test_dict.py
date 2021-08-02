@@ -1,40 +1,6 @@
 import sys
 import pytest
 
-
-def test_bad_key():
-    # Dictionary lookups should fail if __eq__() raises an exception.
-    class CustomException(Exception):
-        pass
-
-    class BadDictKey:
-        def __hash__(self):
-            return hash(self.__class__)
-
-        def __eq__(self, other):
-            if isinstance(other, self.__class__):
-                raise CustomException
-            return other
-
-    d = {}
-    x1 = BadDictKey()
-    x2 = BadDictKey()
-    d[x1] = 1
-
-    with pytest.raises(CustomException):
-        d[x2] = 2
-    with pytest.raises(CustomException):
-        z = d[x2]
-    with pytest.raises(CustomException):
-        x2 in d
-    with pytest.raises(CustomException):
-        d.setdefault(x2, 42)
-    with pytest.raises(CustomException):
-        d.pop(x2)
-    with pytest.raises(CustomException):
-        d.update({x2: 2})
-
-
 def test_dict_refcount():
     a = 1
     b = 2
@@ -61,6 +27,60 @@ def test_dict_refcount():
     assert before_e == sys.getrefcount(e)
     assert before_f == sys.getrefcount(f)
 
+def test_dict_build():
+    assert {1:'a', 2: 'b', 3:'c'} == {1: 'a', 2: 'b', 3: 'c'}
+    def g(a, b, c):
+        return {'a': a, 'b': b, 'c': c}
+    assert g(1,2,3) | g(1,2,3) == {'a': 1, 'b': 2, 'c': 3}
+
+def test_dict_update():
+    a = {1:'a', 2: 'b', 3:'c'}
+    a[4]='d'
+    assert a == {1: 'a', 2: 'b', 3: 'c', 4: 'd'}
+    a = dict()
+    a[4]='d'
+    assert a == {4: 'd'}
+
+def test_custom_dict():
+    class MyDict(dict):
+        def __setitem__(self, key, value):
+            super().__setitem__(key.upper(), value * 2)
+    x = MyDict()
+    x['a'] = 2
+    assert x == {'A': 4}
+
+def test_dict_comprehensions():
+    dict1 = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}
+    assert {k : v * 2 for k,v in dict1.items()} == {'a': 2, 'b': 4, 'c': 6, 'd': 8, 'e': 10}
+    assert dict({k: v for k, v in enumerate((1,2,3,))}) == {0: 1, 1: 2, 2: 3}
+    assert {k: k + 10 for k in range(10)} == {0: 10, 1: 11, 2: 12, 3: 13, 4: 14, 5: 15, 6: 16, 7: 17, 8: 18, 9: 19}
+
+def test_dict_unpacking():
+    assert {'c': 'carrot', **{'b': 'banana'}, 'a': 'apple'} == {'c': 'carrot', 'b': 'banana', 'a': 'apple'}
+
+def test_bad_dict_unpacking():
+    def f():
+        return {1:'a', **{2}, 3:'c'}
+    pytest.raises(TypeError, f, )
+
+def test_dict_merging():
+    a=dict()
+    b=dict()
+    a['x']=1
+    b['y']=2
+    assert a | b == {'x': 1, 'y': 2}
+    a=dict()
+    b=dict()
+    a['x']=1
+    b['y']=2
+    a |= b
+    assert a == {'x': 1, 'y': 2}
+    a=dict()
+    b=dict()
+    a['x']=1
+    b=[('x', 'y')]
+    a |= b
+    assert a == {'x': 'y'}
 
 def test_large_const_dict():
     ANSI_COLOR_NAMES = {

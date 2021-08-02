@@ -75,11 +75,9 @@ def test_eh_tracer(capsys):
         return a
 
     sys.settrace(custom_trace)
-    with pytest.raises(ZeroDivisionError):
-        test_f()
+    pytest.raises(ZeroDivisionError, test_f)
     sys.settrace(None)
     captured = capsys.readouterr()
-
     assert "Hit exception" in captured.out
 
 

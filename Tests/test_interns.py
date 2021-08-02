@@ -115,8 +115,7 @@ def test_dict_key_invalid_index(capsys):
         a = {0: 'a'}
         return a[1] == 'b'
 
-    with pytest.raises(KeyError):
-        _f_subscr()
+    pytest.raises(KeyError, _f_subscr, )
     assert pyjion.info(_f_subscr)['compiled']
     pyjion.dis.dis(_f_subscr)
     captured = capsys.readouterr()
@@ -135,7 +134,6 @@ def test_list_key(capsys):
     assert pyjion.info(_f)['compiled']
     pyjion.dis.dis(_f)
     captured = capsys.readouterr()
-
     assert "ldarg.1" in captured.out
     assert "METHOD_STORE_SUBSCR_LIST_I" in captured.out
 
@@ -151,7 +149,6 @@ def test_list_key_builtin(capsys):
     assert pyjion.info(_f)['compiled']
     pyjion.dis.dis(_f)
     captured = capsys.readouterr()
-
     assert "ldarg.1" in captured.out
     assert "METHOD_STORE_SUBSCR_LIST_I" in captured.out
 
@@ -196,8 +193,7 @@ def test_list_key_invalid_index(capsys):
         l = [0, 1, 2]
         return l[4] == 'b'
 
-    with pytest.raises(IndexError):
-        _f_subscr()
+    pytest.raises(IndexError, _f_subscr)
     assert pyjion.info(_f_subscr)['compiled']
     pyjion.dis.dis(_f_subscr)
     captured = capsys.readouterr()

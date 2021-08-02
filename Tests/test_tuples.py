@@ -73,3 +73,20 @@ def test_tuple_non_const():
     assert last == '4'
     assert sys.getrefcount(l) == r
     assert sys.getrefcount(zero) == r_zero + 2
+
+def test_tuple_indexing():
+    l = (4,3,2,1,0)
+    assert l[0] == 4
+    i =2
+    l = (4,3,2,1,0)
+    assert l[i] == 2
+    l = (4,3,2,1,0)
+    assert l[-1] == 0
+    l = (4,3,2,1,0)
+    assert l[::-1] == (0, 1, 2, 3, 4)
+
+def test_tuple_unpacking():
+    t = (1, *(2,), 3)
+    assert t == (1, 2, 3)
+    t = (*"he", "l", *"lo")
+    assert t == ("h", "e", "l", "l", "o")
