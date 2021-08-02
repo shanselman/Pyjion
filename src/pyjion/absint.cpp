@@ -1620,7 +1620,13 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     Label ok;
     OptimizationFlags optimizationsMade = OptimizationFlags();
     m_comp->emit_lasti_init();
-    m_comp->emit_push_frame();
+    if (m_comp->emit_push_frame()) {
+        FLAG_OPT_USAGE(InlineFramePushPop);
+    }
+    // Almost certainly will be used, tracking its usage is inefficient
+    if (OPT_ENABLED(InlineDecref)){
+        FLAG_OPT_USAGE(InlineDecref);
+    }
 
     if (mCode->co_flags & CO_GENERATOR){
         m_comp->emit_init_stacktop_local();
@@ -2022,8 +2028,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case BINARY_SUBSCR:
-                if (stackInfo.size() >= 2) {
-                    m_comp->emit_binary_subscr(byte, stackInfo.second(), stackInfo.top());
+                if (OPT_ENABLED(KnownBinarySubscr) && stackInfo.size() >= 2) {
+                    FLAG_OPT_USAGE(KnownBinarySubscr);
+                    m_comp->emit_binary_subscr(stackInfo.second(), stackInfo.top());
                     decStack(2);
                     errorCheck("optimized binary subscr failed",  "", curByte);
                 }
@@ -2411,9 +2418,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             }
             case IS_OP:
             {
-                if (OPT_ENABLED(IsNone) && stackInfo.size() >= 2) {
-                    FLAG_OPT_USAGE(IsNone);
-
+                if (OPT_ENABLED(InlineIs) && stackInfo.size() >= 2) {
+                    FLAG_OPT_USAGE(InlineIs);
                     m_comp->emit_is(oparg, stackInfo.second(), stackInfo.top());
                 } else {
                     m_comp->emit_is(oparg);
@@ -2503,7 +2509,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         m_comp->emit_profile_frame_exit();
     }
 
-    m_comp->emit_pop_frame();
+    if (m_comp->emit_pop_frame()) {
+        FLAG_OPT_USAGE(InlineFramePushPop);
+    }
 
     m_comp->emit_ret();
     auto code = m_comp->emit_compile();

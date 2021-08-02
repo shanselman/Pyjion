@@ -64,19 +64,21 @@ void PythonCompiler::load_tstate() {
     m_il.ld_arg(2);
 }
 
-void PythonCompiler::emit_push_frame() {
+bool PythonCompiler::emit_push_frame() {
     if (OPT_ENABLED(InlineFramePushPop)) {
         load_tstate();
         LD_FIELDA(PyThreadState, frame);
         load_frame();
         m_il.st_ind_i();
+        return true;
     } else {
         load_frame();
         m_il.emit_call(METHOD_PY_PUSHFRAME);
+        return false;
     }
 }
 
-void PythonCompiler::emit_pop_frame() {
+bool PythonCompiler::emit_pop_frame() {
     if (OPT_ENABLED(InlineFramePushPop)) {
         load_tstate();
         LD_FIELDA(PyThreadState, frame);
@@ -85,9 +87,11 @@ void PythonCompiler::emit_pop_frame() {
         LD_FIELDI(PyFrameObject, f_back);
 
         m_il.st_ind_i();
+        return true;
     } else {
         load_frame();
         m_il.emit_call(METHOD_PY_POPFRAME);
+        return false;
     }
 }
 
@@ -1841,50 +1845,42 @@ LocalKind PythonCompiler::emit_binary_int(uint16_t opcode) {
     return LK_Int;
 }
 
-void PythonCompiler::emit_binary_subscr(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) {
-    if (OPT_ENABLED(KnownBinarySubscr)){
-        emit_binary_subscr(left, right);
-    } else {
-        m_il.emit_call(METHOD_SUBSCR_OBJ);
-    }
+void PythonCompiler::emit_binary_subscr() {
+    m_il.emit_call(METHOD_SUBSCR_OBJ);
 }
 
 void PythonCompiler::emit_is(bool isNot) {
-    if (OPT_ENABLED(InlineIs)){
-        auto left = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-        auto right = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-
-        m_il.st_loc(left);
-        m_il.st_loc(right);
-
-        m_il.ld_loc(right);
-        m_il.ld_loc(left);
-
-        auto branchType = isNot ? BranchNotEqual : BranchEqual;
-        Label match = emit_define_label();
-        Label end = emit_define_label();
-        emit_branch(branchType, match);
-        emit_ptr(Py_False);
-        emit_dup();
-        emit_incref();
-        emit_branch(BranchAlways, end);
-        emit_mark_label(match);
-        emit_ptr(Py_True);
-        emit_dup();
-        emit_incref();
-        emit_mark_label(end);
-
-        emit_load_and_free_local(left);
-        decref();
-        emit_load_and_free_local(right);
-        decref();
-    } else {
-        m_il.emit_call(isNot ? METHOD_ISNOT : METHOD_IS);
-    }
+    m_il.emit_call(isNot ? METHOD_ISNOT : METHOD_IS);
 }
 
 void PythonCompiler::emit_is(bool isNot, AbstractValueWithSources lhs, AbstractValueWithSources rhs) {
-    emit_is(isNot); // TODO: Come back to this.
+    auto left = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
+    auto right = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
+
+    m_il.st_loc(left);
+    m_il.st_loc(right);
+
+    m_il.ld_loc(right);
+    m_il.ld_loc(left);
+
+    auto branchType = isNot ? BranchNotEqual : BranchEqual;
+    Label match = emit_define_label();
+    Label end = emit_define_label();
+    emit_branch(branchType, match);
+    emit_ptr(Py_False);
+    emit_dup();
+    emit_incref();
+    emit_branch(BranchAlways, end);
+    emit_mark_label(match);
+    emit_ptr(Py_True);
+    emit_dup();
+    emit_incref();
+    emit_mark_label(end);
+
+    emit_load_and_free_local(left);
+    decref();
+    emit_load_and_free_local(right);
+    decref();
 }
 
 void PythonCompiler::emit_in() {
