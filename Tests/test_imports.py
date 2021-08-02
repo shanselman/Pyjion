@@ -8,7 +8,7 @@ def test_import():
 
     assert _f() == 2
     info = pyjion.info(_f)
-    assert info['compiled']
+    assert info.compiled
 
 
 def test_import_from():
@@ -18,7 +18,7 @@ def test_import_from():
 
     assert _f() == 2
     info = pyjion.info(_f)
-    assert info['compiled']
+    assert info.compiled
 
 
 def test_import_from_aliased():
@@ -28,4 +28,4 @@ def test_import_from_aliased():
 
     assert _f() == 2
     info = pyjion.info(_f)
-    assert info['compiled']
+    assert info.compiled

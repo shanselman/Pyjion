@@ -12,8 +12,8 @@ def test_basic():
         return add_a([])
 
     assert _f() == ['a', 'a', 'a', 'a', 'a']
-    info = pyjion.info(_f)
-    assert info['compiled']
+    inf = pyjion.info(_f)
+    assert inf.compiled
 
 
 def test_recursive_listcomp():
@@ -26,4 +26,4 @@ def test_recursive_listcomp():
 
     assert _f([[0, 2], 2, 3]) == [[0, 2], 2, 3]
     info = pyjion.info(_f)
-    assert info['compiled']
+    assert info.compiled

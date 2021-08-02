@@ -48,13 +48,14 @@
         mStartStates[curByte] = lastState; \
     }
 
-#define CAN_UNBOX() OPT_ENABLED(unboxing) && graph->isValid()
+#define CAN_UNBOX() OPT_ENABLED(Unboxing) && graph->isValid()
 #define POP_VALUE() \
     lastState.pop(curByte, stackPosition); stackPosition++;
 #define PUSH_INTERMEDIATE(ty) \
     lastState.push(AbstractValueWithSources((ty), newSource(new IntermediateSource(curByte))));
 #define PUSH_INTERMEDIATE_TO(ty, to) \
     (to).push(AbstractValueWithSources((ty), newSource(new IntermediateSource(curByte))));
+#define FLAG_OPT_USAGE(opt) (optimizationsMade = optimizationsMade | (opt))
 
 AbstractInterpreter::AbstractInterpreter(PyCodeObject *code, IPythonCompiler* comp) : mReturnValue(&Undefined), mCode(code), m_comp(comp) {
     mByteCode = (_Py_CODEUNIT *)PyBytes_AS_STRING(code->co_code);
@@ -178,7 +179,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
                 break;
         }
     }
-    if (OPT_ENABLED(hashedNames)){
+    if (OPT_ENABLED(HashedNames)){
         for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++) {
             nameHashes[i] = PyObject_Hash(PyTuple_GetItem(mCode->co_names, i));
         }
@@ -1617,12 +1618,18 @@ void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, Instruc
 
 AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc_status, InstructionGraph* graph) {
     Label ok;
+    OptimizationFlags optimizationsMade = OptimizationFlags();
     m_comp->emit_lasti_init();
-    m_comp->emit_push_frame();
+    if (m_comp->emit_push_frame()) {
+        FLAG_OPT_USAGE(InlineFramePushPop);
+    }
+    // Almost certainly will be used, tracking its usage is inefficient
+    if (OPT_ENABLED(InlineDecref)){
+        FLAG_OPT_USAGE(InlineDecref);
+    }
 
     if (mCode->co_flags & CO_GENERATOR){
         m_comp->emit_init_stacktop_local();
-
         yieldJumps();
     }
 
@@ -1747,7 +1754,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         m_comp->emit_compare_unboxed(oparg, stackInfo.second(), stackInfo.top());
                         decStack(2);
                         incStack(1, STACK_KIND_VALUE_INT);
-                    } else if (OPT_ENABLED(internRichCompare)){
+                    } else if (OPT_ENABLED(InternRichCompare)){
+                        FLAG_OPT_USAGE(InternRichCompare);
                         m_comp->emit_compare_known_object(oparg, stackInfo.second(), stackInfo.top());
                         decStack(2);
                         errorCheck("optimized compare failed", nullptr, curByte);
@@ -1796,7 +1804,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 }
                 break;
             case LOAD_NAME:
-                if (OPT_ENABLED(hashedNames)){
+                if (OPT_ENABLED(HashedNames)){
+                    FLAG_OPT_USAGE(HashedNames);
                     m_comp->emit_load_name_hashed(PyTuple_GetItem(mCode->co_names, oparg), nameHashes[oparg]);
                 } else {
                     m_comp->emit_load_name(PyTuple_GetItem(mCode->co_names, oparg));
@@ -1815,7 +1824,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 intErrorCheck("delete attr failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), curByte);
                 break;
             case LOAD_ATTR:
-                if (OPT_ENABLED(loadAttr) && !stackInfo.empty()){
+                if (OPT_ENABLED(LoadAttr) && !stackInfo.empty()){
+                    FLAG_OPT_USAGE(LoadAttr);
                     m_comp->emit_load_attr(PyTuple_GetItem(mCode->co_names, oparg), stackInfo.top());
                 } else {
                     m_comp->emit_load_attr(PyTuple_GetItem(mCode->co_names, oparg));
@@ -1834,7 +1844,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 intErrorCheck("delete global failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), curByte);
                 break;
             case LOAD_GLOBAL:
-                if (OPT_ENABLED(hashedNames)){
+                if (OPT_ENABLED(HashedNames)){
+                    FLAG_OPT_USAGE(HashedNames);
                     m_comp->emit_load_global_hashed(PyTuple_GetItem(mCode->co_names, oparg), nameHashes[oparg]);
                 } else {
                     m_comp->emit_load_global(PyTuple_GetItem(mCode->co_names, oparg));
@@ -1927,12 +1938,13 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 break;
             case CALL_FUNCTION:
             {
-                if (OPT_ENABLED(functionCalls) &&
+                if (OPT_ENABLED(FunctionCalls) &&
                     stackInfo.size() >= (oparg + 1) &&
                     stackInfo.nth(oparg + 1).hasSource() &&
                     stackInfo.nth(oparg + 1).hasValue() &&
                     !mTracingEnabled)
                 {
+                    FLAG_OPT_USAGE(FunctionCalls);
                     m_comp->emit_call_function_inline(oparg, stackInfo.nth(oparg + 1));
                     decStack(oparg + 1); // target + args(oparg)
                     errorCheck("inline function call failed", "", curByte);
@@ -1964,7 +1976,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case STORE_SUBSCR:
-                if (OPT_ENABLED(knownStoreSubscr) && stackInfo.size() >= 3){
+                if (OPT_ENABLED(KnownStoreSubscr) && stackInfo.size() >= 3){
+                    FLAG_OPT_USAGE(KnownStoreSubscr);
                     m_comp->emit_store_subscr(stackInfo.third(), stackInfo.second(), stackInfo.top());
                 } else {
                     m_comp->emit_store_subscr();
@@ -2015,8 +2028,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case BINARY_SUBSCR:
-                if (stackInfo.size() >= 2) {
-                    m_comp->emit_binary_subscr(byte, stackInfo.second(), stackInfo.top());
+                if (OPT_ENABLED(KnownBinarySubscr) && stackInfo.size() >= 2) {
+                    FLAG_OPT_USAGE(KnownBinarySubscr);
+                    m_comp->emit_binary_subscr(stackInfo.second(), stackInfo.top());
                     decStack(2);
                     errorCheck("optimized binary subscr failed",  "", curByte);
                 }
@@ -2053,7 +2067,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             case INPLACE_AND:
             case INPLACE_XOR:
             case INPLACE_OR:
-                if (OPT_ENABLED(typeSlotLookups) && stackInfo.size() >= 2) {
+                if (OPT_ENABLED(TypeSlotLookups) && stackInfo.size() >= 2) {
                     if (CAN_UNBOX() && op.escape) {
                         auto retKind = m_comp->emit_unboxed_binary_object(byte, stackInfo.second(), stackInfo.top());
                         decStack(2);
@@ -2069,6 +2083,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         }
                         incStack(1, retKind);
                     } else {
+                        FLAG_OPT_USAGE(TypeSlotLookups);
                         m_comp->emit_binary_object(byte, stackInfo.second(), stackInfo.top());
                         decStack(2);
                         errorCheck("optimized binary op failed",  "", curByte);
@@ -2113,7 +2128,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 auto postIterStack = ValueStack(m_stack);
                 postIterStack.dec(1); // pop iter when stopiter happens
                 py_opindex jumpTo = curByte + oparg + SIZEOF_CODEUNIT;
-                if (OPT_ENABLED(inlineIterators) && !stackInfo.empty()){
+                if (OPT_ENABLED(InlineIterators) && !stackInfo.empty()){
+                    FLAG_OPT_USAGE(InlineIterators);
+
                     auto iterator = stackInfo.top();
                     forIter(
                             jumpTo,
@@ -2401,7 +2418,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             }
             case IS_OP:
             {
-                if (OPT_ENABLED(isNone) && stackInfo.size() >= 2) {
+                if (OPT_ENABLED(InlineIs) && stackInfo.size() >= 2) {
+                    FLAG_OPT_USAGE(InlineIs);
                     m_comp->emit_is(oparg, stackInfo.second(), stackInfo.top());
                 } else {
                     m_comp->emit_is(oparg);
@@ -2425,7 +2443,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             }
             case LOAD_METHOD:
             {
-                if (OPT_ENABLED(builtinMethods) && !stackInfo.empty() && stackInfo.top().hasValue() && stackInfo.top().Value->known() && !stackInfo.top().Value->needsGuard()){
+                if (OPT_ENABLED(BuiltinMethods) && !stackInfo.empty() && stackInfo.top().hasValue() && stackInfo.top().Value->known() && !stackInfo.top().Value->needsGuard()){
+                    FLAG_OPT_USAGE(BuiltinMethods);
                     m_comp->emit_builtin_method(PyTuple_GetItem(mCode->co_names, oparg), stackInfo.top().Value);
                 } else {
                     m_comp->emit_dup(); // dup self as needs to remain on stack
@@ -2490,12 +2509,14 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         m_comp->emit_profile_frame_exit();
     }
 
-    m_comp->emit_pop_frame();
+    if (m_comp->emit_pop_frame()) {
+        FLAG_OPT_USAGE(InlineFramePushPop);
+    }
 
     m_comp->emit_ret();
     auto code = m_comp->emit_compile();
     if (code != nullptr)
-        return {code, Success};
+        return {code, Success, nullptr, optimizationsMade};
     else
         return {nullptr, CompilationJitFailure};
 }

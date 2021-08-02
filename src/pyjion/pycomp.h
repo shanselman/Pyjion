@@ -287,8 +287,8 @@ public:
 
     void emit_is_true() override;
 
-    void emit_push_frame() override;
-    void emit_pop_frame() override;
+    bool emit_push_frame() override;
+    bool emit_pop_frame() override;
     void emit_eh_trace() override;
 
     void emit_lasti_init() override;
@@ -412,7 +412,8 @@ public:
     void emit_binary_object(uint16_t opcode) override;
     void emit_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
     LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
-    void emit_binary_subscr(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
+    void emit_binary_subscr() override;
+    void emit_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) override;
     bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop) override;
     bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop, AbstractValueWithSources step) override;
 
@@ -516,7 +517,6 @@ private:
     void decref(bool noopt = false);
     CorInfoType to_clr_type(LocalKind kind);
     void pop_top() override;
-    void emit_binary_subscr(AbstractValueWithSources container, AbstractValueWithSources index);
 
     void emit_known_binary_op(AbstractValueWithSources &left, AbstractValueWithSources &right, Local leftLocal, Local rightLocal, int nb_slot,
                               int sq_slot, int fallback_token);

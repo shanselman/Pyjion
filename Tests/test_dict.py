@@ -1,5 +1,7 @@
 import sys
 import pytest
+import pyjion
+
 
 def test_dict_refcount():
     a = 1
@@ -81,6 +83,21 @@ def test_dict_merging():
     b=[('x', 'y')]
     a |= b
     assert a == {'x': 'y'}
+
+
+@pytest.mark.optimization(1)
+def test_dict_keys_optimization():
+    def _f():
+        l = {'a': 1, 'b': 2}
+        k = l.keys()
+        return tuple(k)
+
+    assert _f() == ('a', 'b')
+    inf = pyjion.info(_f)
+    assert inf.compiled
+    assert inf.optimizations & pyjion.OptimizationFlags.BuiltinMethods
+
+
 
 def test_large_const_dict():
     ANSI_COLOR_NAMES = {

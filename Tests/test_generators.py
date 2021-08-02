@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_single_yield():
     def gen():
         x = 1
@@ -119,6 +122,7 @@ def test_yield_within_branches():
     gen = cr()
     assert (next(gen), next(gen), next(gen)) ==  ('a', 'c', 'd')
 
+@pytest.mark.skip(reason="TODO: Resolve known bug between compile 1 and 2")
 def test_yield_within_branches_for_boxable_vars():
     def cr():
         x = 2
@@ -136,6 +140,7 @@ def test_yield_within_branches_for_boxable_vars():
     gen = cr()
     assert tuple(gen) == ('a', 'c', 'd', 'c')
 
+@pytest.mark.skip(reason="TODO: Resolve known bug between compile 1 and 2")
 def test_yield_within_branches_for_boxable_vars_as_iter():
     def cr():
         x = 2

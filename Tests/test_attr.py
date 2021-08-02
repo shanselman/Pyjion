@@ -24,7 +24,7 @@ def test_missing_attr():
     assert sys.getrefcount(f) == before
 
 
-def test_existing_attr():
+def test_existing_attr2():
     f = F()
     before = sys.getrefcount(f)
     assert setattr(f, "a", 10) is None

@@ -2,6 +2,8 @@ import ctypes
 import pathlib
 import os
 import platform
+from enum import IntFlag, IntEnum
+from dataclasses import dataclass
 
 __version__ = '1.0.0rc1'
 
@@ -72,13 +74,74 @@ def _which_dotnet() -> str:
 lib_path = _which_dotnet()
 
 try:
-    from ._pyjion import *  # NOQA
-    init(lib_path)
+    from ._pyjion import enable, disable, info as _info, dump_il, dump_native, get_offsets, set_threshold, \
+        get_threshold, set_optimization_level, enable_tracing, disable_tracing, enable_debug, disable_debug, \
+        enable_profiling, disable_profiling, enable_pgc, disable_pgc, enable_graphs, disable_graphs, get_graph, \
+        init as _init, status, symbols
+
+    _init(lib_path)
 except ImportError:
     raise ImportError(
-"""
+        """
 Failed to import the compiled Pyjion module. This normally means something went wrong during pip install
 and the binaries weren't compiled. Make sure you update pip before installing to get the right wheel.
 If that doesn't work, run pip in verbose mode, or file an issue at https://github.com/tonybaloney/pyjion/.
 """
     )
+
+
+class OptimizationFlags(IntFlag):
+    InlineIs = 1
+    InlineDecref = 2
+    InternRichCompare = 4
+    InlineFramePushPop = 8
+    KnownStoreSubscr = 16
+    KnownBinarySubscr = 32
+    InlineIterators = 64
+    HashedNames = 128
+    BuiltinMethods = 256
+    TypeSlotLookups = 512
+    FunctionCalls = 1024
+    LoadAttr = 2056
+    Unboxing = 4092
+    IsNone = 8184
+
+
+class CompilationResult(IntEnum):
+    NoResult = 0,
+    Success = 1,
+    CompilationException = 10
+    CompilationJitFailure = 11
+    IncompatibleCompilerFlags = 100
+    IncompatibleSize = 101
+    IncompatibleOpcode_Yield = 102
+    IncompatibleOpcode_WithExcept = 103
+    IncompatibleOpcode_With = 104
+    IncompatibleOpcode_Unknown = 110
+    IncompatibleFrameGlobal = 120
+
+
+class PgcStatus(IntEnum):
+    Uncompiled = 0
+    CompiledWithProbes = 1
+    Optimized = 2
+
+
+@dataclass()
+class JitInfo:
+    failed: bool
+    compile_result: CompilationResult
+    compiled: bool
+    optimizations: OptimizationFlags
+    pgc: PgcStatus
+    run_count: int
+
+
+def info(f) -> JitInfo:
+    d = _info(f)
+    return JitInfo(d['failed'],
+                   CompilationResult(d['compile_result']),
+                   d['compiled'],
+                   OptimizationFlags(d['optimizations']),
+                   d['pgc'],
+                   d['run_count'])

@@ -182,9 +182,9 @@ public:
      * Frames, basic function semantics */
 
      // Pushes the current Python frame into the list of frames
-    virtual void emit_push_frame() = 0;
+    virtual bool emit_push_frame() = 0;
     // Pops the current Python frame from the list of frames
-    virtual void emit_pop_frame() = 0;
+    virtual bool emit_pop_frame() = 0;
     // Returns from the current function
     virtual void emit_ret() = 0;
     // Initializes state associated with updating the frames lasti value
@@ -381,7 +381,8 @@ public:
     virtual void emit_binary_object(uint16_t opcode) = 0;
     virtual void emit_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) = 0;
     virtual LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) = 0;
-    virtual void emit_binary_subscr(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) = 0;
+    virtual void emit_binary_subscr() = 0;
+    virtual void emit_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) = 0;
     virtual bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop) = 0;
     virtual bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop, AbstractValueWithSources step) = 0;
 

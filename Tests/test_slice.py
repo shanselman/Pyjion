@@ -1,5 +1,3 @@
-import pyjion
-import pyjion.dis
 import sys
 
 
@@ -55,7 +53,6 @@ def test_list_slicing():
 
     assert [0, 1, 2, 3][False:True] == [0]
     assert initial_ref == sys.getrefcount(l)
-    assert pyjion.info(test_list_slicing.__code__)['compiled']
 
 
 def test_list_slicing_expressions():
@@ -72,7 +69,6 @@ def test_list_slicing_expressions():
     assert initial_ref == sys.getrefcount(l)
     assert l[x::-1] == [2, 1, 0]
     assert initial_ref == sys.getrefcount(l)
-    assert pyjion.info(test_list_slicing_expressions.__code__)['compiled']
 
 
 def test_string_slicing():
