@@ -185,7 +185,7 @@ public:
 };
 
 void setOptimizationLevel(unsigned short level);
-
+static PyObject* PyjionUnboxingError;
 #ifdef WINDOWS
 HMODULE GetClrJit();
 #endif

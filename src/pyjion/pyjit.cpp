@@ -820,5 +820,12 @@ static struct PyModuleDef pyjionmodule = {
 PyMODINIT_FUNC PyInit__pyjion(void)
 {
 	// Install our frame evaluation function
-	return PyModule_Create(&pyjionmodule);
+	auto mod = PyModule_Create(&pyjionmodule);
+	if (mod == nullptr)
+	    return nullptr;
+	PyjionUnboxingError = PyErr_NewException("pyjion.PyjionUnboxingError", PyExc_ValueError, nullptr);
+	int ret = PyModule_AddObject(mod, "PyjionUnboxingError", PyjionUnboxingError);
+	if (ret != 0)
+	    return nullptr;
+	return mod;
 }

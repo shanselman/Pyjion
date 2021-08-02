@@ -2794,7 +2794,7 @@ long long PyJit_LongAsLongLong(PyObject* vv){
 }
 
 void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
-    PyErr_Format(PyExc_ValueError,
+    PyErr_Format(PyjionUnboxingError,
                  "Pyjion PGC expected %s, but %s is a %s.",
                  expected,
                  PyUnicode_AsUTF8(PyObject_Repr(obj)),

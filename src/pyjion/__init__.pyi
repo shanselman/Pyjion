@@ -88,4 +88,7 @@ def status() -> Dict[Any, Any]:
 def symbols(f: Callable) -> Dict[int, str]:
     ...
 
+class PyjionUnboxingError(ValueError):
+    ...
+
 __version__: str
