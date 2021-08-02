@@ -2035,7 +2035,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                     errorCheck("optimized binary subscr failed",  "", curByte);
                 }
                 else {
-                    m_comp->emit_binary_object(byte);
+                    m_comp->emit_binary_subscr();
                     decStack(2);
                     errorCheck("binary subscr failed",  "", curByte);
                 }
