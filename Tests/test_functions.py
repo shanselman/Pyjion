@@ -54,8 +54,7 @@ class TestFunctionCalls:
             raise ValueError
 
         assert sys.getrefcount(arg0) == 2
-        with pytest.raises(ValueError):
-            arg0()
+        pytest.raises(ValueError, arg0)
         assert sys.getrefcount(arg0) == 2
         info = pyjion.info(arg0)
         assert info.compiled, info.compile_result
@@ -63,8 +62,7 @@ class TestFunctionCalls:
     def test_arg0_cfunction_exc(self):
         target = math.sqrt
         pre_ref_cnt = sys.getrefcount(target)
-        with pytest.raises(TypeError):
-            target()
+        pytest.raises(TypeError, target)
         assert sys.getrefcount(target) == pre_ref_cnt
         info = pyjion.info(self.test_arg0_cfunction_exc.__code__)
         assert info.compiled, info.compile_result
@@ -105,11 +103,9 @@ class TestFunctionCalls:
         a = '5'
         pre_ref = sys.getrefcount(a)
         assert sys.getrefcount(arg1) == 2
-        with pytest.raises(ValueError):
-            arg1(a)
+        pytest.raises(ValueError, arg1, (a,))
         assert sys.getrefcount(arg1) == 2
         assert sys.getrefcount(a) == pre_ref
-
         info = pyjion.info(arg1)
         assert info.compiled, info.compile_result
 
@@ -118,8 +114,7 @@ class TestFunctionCalls:
         four = 'four'
         pre_ref_cnt = sys.getrefcount(target)
         arg1_pre_ref_cnt = sys.getrefcount(four)
-        with pytest.raises(TypeError):
-            target((four,))
+        pytest.raises(TypeError, target, (four,))
         assert sys.getrefcount(target) == pre_ref_cnt
         assert sys.getrefcount(four) == arg1_pre_ref_cnt
         info = pyjion.info(self.test_arg1_cfunction_exc.__code__)
@@ -297,8 +292,7 @@ class TestFunctionCalls:
         pre_ref_a = sys.getrefcount(a)
         pre_ref_b = sys.getrefcount(b)
         assert sys.getrefcount(arg15) == 2
-        with pytest.raises(ValueError):
-            arg15(a, b, '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19')
+        pytest.raises(ValueError, arg15, (a, b, '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'))
         assert sys.getrefcount(arg15) == 2
         assert sys.getrefcount(a) == pre_ref_a
         assert sys.getrefcount(b) == pre_ref_b
@@ -331,8 +325,7 @@ class TestClassMethodCalls:
                 raise ValueError
 
         assert sys.getrefcount(F.arg0) == 1
-        with pytest.raises(ValueError):
-            F.arg0()
+        pytest.raises(ValueError, F.arg0)
         assert sys.getrefcount(F.arg0) == 1
         info = pyjion.info(F.arg0.__code__)
         assert info.compiled, info.compile_result
@@ -375,8 +368,7 @@ class TestClassMethodCalls:
         target = str.title
         arg_a_pre_ref = sys.getrefcount(arg_a)
         target_pre_ref = sys.getrefcount(target)
-        with pytest.raises(TypeError):
-            target((arg_a,))
+        pytest.raises(TypeError, target, ((arg_a,)))
         assert sys.getrefcount(target) == target_pre_ref
         assert sys.getrefcount(arg_a) == arg_a_pre_ref
         info = pyjion.info(self.test_arg1_cfunction_exc.__code__)
@@ -392,12 +384,10 @@ class TestClassMethodCalls:
         pre_ref_cnt = sys.getrefcount(arg_a)
         assert sys.getrefcount(F) == 5
         assert sys.getrefcount(F.arg1) == 1
-        with pytest.raises(ValueError):
-            F.arg1(arg_a)
+        pytest.raises(ValueError, F.arg1, (arg_a,))
         assert sys.getrefcount(arg_a) == pre_ref_cnt
         assert sys.getrefcount(F) == 5
         assert sys.getrefcount(F.arg1) == 1
-
         info = pyjion.info(F.arg1.__code__)
         assert info.compiled, info.compile_result
 
@@ -565,8 +555,7 @@ class TestClassMethodCalls:
         a = '  aa  '
         pre_ref_cnt = sys.getrefcount(a)
         pre_target_cnt = sys.getrefcount(target)
-        with pytest.raises(TypeError):
-            target((a, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'))
+        pytest.raises(TypeError, target, (a, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19'))
         assert sys.getrefcount(a) == pre_ref_cnt
         assert sys.getrefcount(target) == pre_target_cnt
         info = pyjion.info(self.test_arg15_cfunction_exc.__code__)
@@ -581,8 +570,7 @@ class TestClassMethodCalls:
         a = '1'
         pre_ref_cnt = sys.getrefcount(a)
         pre_target_cnt = sys.getrefcount(F.arg15)
-        with pytest.raises(ValueError):
-            F.arg15(a, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19)
+        pytest.raises(ValueError, F.arg15, (a, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19))
         assert sys.getrefcount(a) == pre_ref_cnt
         assert sys.getrefcount(F.arg15) == pre_target_cnt
         info = pyjion.info(F.arg15.__code__)
@@ -634,8 +622,7 @@ class TestFunctionKwCalls:
         args = ('5',)
         pre_ref = sys.getrefcount(args)
         assert sys.getrefcount(arg1) == 2
-        with pytest.raises(ValueError):
-            arg1(*args)
+        pytest.raises(ValueError, arg1, *args)
         assert sys.getrefcount(arg1) == 2
         assert sys.getrefcount(args) == pre_ref
         info = pyjion.info(arg1)
@@ -666,8 +653,7 @@ class TestFunctionKwCalls:
         args = {'e': '5'}
         pre_ref = sys.getrefcount(args)
         assert sys.getrefcount(arg1) == 2
-        with pytest.raises(ValueError):
-            arg1(**args)
+        pytest.raises(ValueError, arg1, **args)
         assert sys.getrefcount(arg1) == 2
         assert sys.getrefcount(args) == pre_ref
 
@@ -704,8 +690,7 @@ class TestFunctionKwCalls:
         pre_ref = sys.getrefcount(args)
         kpre_ref = sys.getrefcount(kargs)
         assert sys.getrefcount(arg1) == 2
-        with pytest.raises(ValueError):
-            arg1(*args, **kargs)
+        pytest.raises(ValueError, arg1, *args, **kargs)
         assert sys.getrefcount(arg1) == 2
         assert sys.getrefcount(args) == pre_ref
         assert sys.getrefcount(kargs) == kpre_ref
@@ -720,8 +705,7 @@ class TestFunctionKwCalls:
         a = '5'
         pre_ref = sys.getrefcount(a)
         assert sys.getrefcount(arg1) == 2
-        with pytest.raises(ValueError):
-            arg1(e=a)
+        pytest.raises(ValueError, arg1, e=a)
         assert sys.getrefcount(arg1) == 2
         assert sys.getrefcount(a) == pre_ref
 
@@ -764,8 +748,7 @@ class TestFunctionKwCalls:
         pre_ref_b = sys.getrefcount(b)
         pre_ref_c = sys.getrefcount(c)
         assert sys.getrefcount(arg3) == 2
-        with pytest.raises(ValueError):
-            arg3(a, f=b, g=c)
+        pytest.raises(ValueError, arg3, a, f=b, g=c)
 
         assert sys.getrefcount(arg3) == 2
         assert sys.getrefcount(a) == pre_ref_a
@@ -850,8 +833,7 @@ class TestObjectMethodCalls:
         pre_target_ref = sys.getrefcount(str.strip)
         pre_arg_ref = sys.getrefcount(f)
         pre_arg1_ref = sys.getrefcount(o)
-        with pytest.raises(TypeError):
-            f.strip((o,))
+        pytest.raises(TypeError, f.strip, (o,))
         assert sys.getrefcount(f) == pre_arg_ref
         assert sys.getrefcount(o) == pre_arg1_ref
         assert sys.getrefcount(str.strip) == pre_target_ref
@@ -1017,8 +999,7 @@ class TestObjectMethodCalls:
         assert sys.getrefcount(F.arg15) == 2
         assert sys.getrefcount(F) == 6
         assert sys.getrefcount(f) == 2
-        with pytest.raises(ValueError):
-            f.arg15(arg1, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15' ,'16', '17', '18')
+        pytest.raises(ValueError, f.arg15, arg1, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15' ,'16', '17', '18')
         assert sys.getrefcount(F.arg15) == 2
         assert sys.getrefcount(F) == 6
         assert sys.getrefcount(f) == 2
@@ -1045,8 +1026,7 @@ class TestObjectMethodCalls:
         pre_refcnt = sys.getrefcount(f)
         pre_refcnt_a = sys.getrefcount(arg1)
         target_pre_refcnt = sys.getrefcount(str.format)
-        with pytest.raises(IndexError):
-            f.format((arg1, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18'))
+        pytest.raises(IndexError, f.format, (arg1, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18'))
         assert sys.getrefcount(f) == pre_refcnt
         assert sys.getrefcount(str.format) == target_pre_refcnt
         assert sys.getrefcount(arg1) == pre_refcnt_a
