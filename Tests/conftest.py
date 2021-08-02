@@ -18,9 +18,8 @@ def pytest_runtest_call(item: pytest.Item) -> None:
     item.runtest()
     pyjion.disable()
     info = pyjion.info(item.function)
-    if not info['compiled']:
-        warnings.warn("{0} did not compile ({1})".format(item.function, info['compile_result']))
-    warnings.warn("{0} compiled with optimizations- ({1})".format(item.function, pyjion.OptimizationFlags(info['optimizations'])))
+    if not info.compiled:
+        warnings.warn("{0} did not compile ({1})".format(item.function, info.compile_result))
     pyjion.disable_graphs()
     pyjion.disable_profiling()
     pyjion.disable_tracing()

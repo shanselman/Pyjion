@@ -1,19 +1,16 @@
 import pyjion
-import pyjion.dis
 import sys
 
 
-def test_dict_keys_optimization(capsys):
+def test_dict_keys_optimization():
     def _f():
         l = {'a': 1, 'b': 2}
         k = l.keys()
         return tuple(k)
     assert _f() == ('a', 'b')
-    assert pyjion.info(_f)['compiled']
-    pyjion.dis.dis(_f)
-    captured = capsys.readouterr()
-    assert "MethodTokens.METHOD_LOAD_METHOD" not in captured.out
-
+    inf = pyjion.info(_f)
+    assert inf.compiled
+    assert inf.optimizations & pyjion.OptimizationFlags.BuiltinMethods
 
 
 class RefCountTestCase:

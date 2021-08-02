@@ -12,9 +12,9 @@ def test_once():
     assert _f() == 10
     info = pyjion.info(_f)
 
-    assert info['compiled']
-    assert not info['failed']
-    assert info['run_count'] >= 1
+    assert info.compiled
+    assert not info.failed
+    assert info.run_count >= 1
 
 
 def test_never():
@@ -27,9 +27,9 @@ def test_never():
 
     info = pyjion.info(_f)
 
-    assert not info['compiled']
-    assert not info['failed']
-    assert info['run_count'] == 0
+    assert not info.compiled
+    assert not info.failed
+    assert info.run_count == 0
 
 
 def test_twice():
@@ -44,6 +44,6 @@ def test_twice():
     assert _f() == 10
     info = pyjion.info(_f)
 
-    assert info['compiled']
-    assert not info['failed']
-    assert info['run_count'] >= 2
+    assert info.compiled
+    assert not info.failed
+    assert info.run_count >= 2
