@@ -44,6 +44,7 @@ extern BaseModule g_module;
 
 void setOptimizationLevel(unsigned short level){
     g_pyjionSettings.optimizationLevel = level;
+    g_pyjionSettings.optimizations = OptimizationFlags();
     SET_OPT(InlineIs, level, 1);
     SET_OPT(InlineDecref, level, 1);
     SET_OPT(InternRichCompare, level, 1);
