@@ -61,6 +61,27 @@ def test_dict_refcount():
     assert before_e == sys.getrefcount(e)
     assert before_f == sys.getrefcount(f)
 
+def test_dict_build():
+    assert {1:'a', 2: 'b', 3:'c'} == {1: 'a', 2: 'b', 3: 'c'}
+    def g(a, b, c):
+        return {'a': a, 'b': b, 'c': c}
+    assert g(1,2,3) | g(1,2,3) == {'a': 1, 'b': 2, 'c': 3}
+
+def test_dict_update():
+    a = {1:'a', 2: 'b', 3:'c'}
+    a[4]='d'
+    assert a == {1: 'a', 2: 'b', 3: 'c', 4: 'd'}
+    a = dict()
+    a[4]='d'
+    assert a == {4: 'd'}
+
+def test_custom_dict():
+    class MyDict(dict):
+        def __setitem__(self, key, value):
+        super().__setitem__(key.upper(), value * 2)
+    x = MyDict()
+    x['a'] = 2
+    assert x == {'A': 4}
 
 def test_large_const_dict():
     ANSI_COLOR_NAMES = {
