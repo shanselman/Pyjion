@@ -1,5 +1,7 @@
 import sys
 import pytest
+import pyjion
+
 
 def test_dict_refcount():
     a = 1
