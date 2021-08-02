@@ -7,6 +7,7 @@
 * Pyjion.info will now return a JitInfo object
 * Optimization flags that were applied to a function during compilation are available in JitInfo.optimizations
 * All optimizations are now runtime flags instead of compile-time features.
+* Unboxing PGC errors will raise pyjion.PyjionUnboxingError (ValueError) instead of ValueError
 
 ## 1.0.0 (rc1)
 
