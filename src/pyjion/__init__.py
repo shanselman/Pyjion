@@ -2,6 +2,7 @@ import ctypes
 import pathlib
 import os
 import platform
+import enum
 
 __version__ = '1.0.0rc1'
 
@@ -73,12 +74,30 @@ lib_path = _which_dotnet()
 
 try:
     from ._pyjion import *  # NOQA
+
     init(lib_path)
 except ImportError:
     raise ImportError(
-"""
+        """
 Failed to import the compiled Pyjion module. This normally means something went wrong during pip install
 and the binaries weren't compiled. Make sure you update pip before installing to get the right wheel.
 If that doesn't work, run pip in verbose mode, or file an issue at https://github.com/tonybaloney/pyjion/.
 """
     )
+
+
+class OptimizationFlags(enum.IntFlag):
+    InlineIs = 1
+    InlineDecref = 2
+    InternRichCompare = 4
+    InlineFramePushPop = 8
+    KnownStoreSubscr = 16
+    KnownBinarySubscr = 32
+    InlineIterators = 64
+    HashedNames = 128
+    BuiltinMethods = 256
+    TypeSlotLookups = 512
+    FunctionCalls = 1024
+    LoadAttr = 2056
+    Unboxing = 4092
+    IsNone = 8184

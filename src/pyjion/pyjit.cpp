@@ -38,24 +38,26 @@ typedef void(__cdecl* JITSTARTUP)(ICorJitHost*);
 PyjionSettings g_pyjionSettings;
 extern BaseModule g_module;
 #define SET_OPT(opt, actualLevel, minLevel) \
-    g_pyjionSettings.opt_ ## opt = (actualLevel) >= (minLevel) ? true : false;
+    if ((actualLevel) >= (minLevel)) { \
+        g_pyjionSettings.optimizations = g_pyjionSettings.optimizations | (opt) ;     \
+    }
 
 void setOptimizationLevel(unsigned short level){
     g_pyjionSettings.optimizationLevel = level;
-    SET_OPT(inlineIs, level, 1);
-    SET_OPT(inlineDecref, level, 1);
-    SET_OPT(internRichCompare, level, 1);
-    SET_OPT(inlineFramePushPop, level, 1);
-    SET_OPT(knownStoreSubscr, level, 1);
-    SET_OPT(knownBinarySubscr, level, 1);
-    SET_OPT(inlineIterators, level, 1);
-    SET_OPT(hashedNames, level, 1);
-    SET_OPT(builtinMethods, level, 1);
-    SET_OPT(typeSlotLookups, level, 1);
-    SET_OPT(functionCalls, level, 1);
-    SET_OPT(loadAttr, level, 1);
-    SET_OPT(unboxing, level, 1);
-    SET_OPT(isNone, level, 1);
+    SET_OPT(InlineIs, level, 1);
+    SET_OPT(InlineDecref, level, 1);
+    SET_OPT(InternRichCompare, level, 1);
+    SET_OPT(InlineFramePushPop, level, 1);
+    SET_OPT(KnownStoreSubscr, level, 1);
+    SET_OPT(KnownBinarySubscr, level, 1);
+    SET_OPT(InlineIterators, level, 1);
+    SET_OPT(HashedNames, level, 1);
+    SET_OPT(BuiltinMethods, level, 1);
+    SET_OPT(TypeSlotLookups, level, 1);
+    SET_OPT(FunctionCalls, level, 1);
+    SET_OPT(LoadAttr, level, 1);
+    SET_OPT(Unboxing, level, 1);
+    SET_OPT(IsNone, level, 1);
 }
 
 PgcStatus nextPgcStatus(PgcStatus status){
@@ -233,6 +235,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
 
     auto res = interp.compile(frame->f_builtins, frame->f_globals, profile, state->j_pgc_status);
     state->j_compile_result = res.result;
+    state->j_optimizations = res.optimizations;
     if (g_pyjionSettings.graph){
         state->j_graph = res.instructionGraph;
     }
@@ -334,6 +337,7 @@ void PyjionJitFree(void* obj) {
     free(code_obj->j_il);
     code_obj->j_il = nullptr;
     delete code_obj->j_profile;
+    Py_XDECREF(code_obj->j_graph);
 }
 
 static PyInterpreterState* inter(){
@@ -381,6 +385,7 @@ static PyObject *pyjion_info(PyObject *self, PyObject* func) {
 	PyDict_SetItemString(res, "failed", jitted->j_failed ? Py_True : Py_False);
     PyDict_SetItemString(res, "compile_result", PyLong_FromLong(jitted->j_compile_result));
     PyDict_SetItemString(res, "compiled", jitted->j_addr != nullptr ? Py_True : Py_False);
+    PyDict_SetItemString(res, "optimizations", PyLong_FromLong(jitted->j_optimizations));
     PyDict_SetItemString(res, "pgc", PyLong_FromLong(jitted->j_pgc_status));
 
     auto runCount = PyLong_FromUnsignedLongLong(jitted->j_run_count);

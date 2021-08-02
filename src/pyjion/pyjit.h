@@ -71,6 +71,33 @@ PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject);
 
 typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyObject**);
 
+enum OptimizationFlags
+{
+    InlineIs = 1, // OPTIMIZE_IS; // OPT-1
+    InlineDecref = 2, // OPTIMIZE_DECREF; // OPT-2
+    InternRichCompare = 4, // OPTIMIZE_INTERN_COMPARE; // OPT-3
+    InlineFramePushPop = 8, // OPTIMIZE_PUSH_FRAME; // OPT-5
+    KnownStoreSubscr = 16, // OPTIMIZE_KNOWN_STORE_SUBSCR; // OPT-6
+    KnownBinarySubscr = 32, // OPTIMIZE_KNOWN_BINARY_SUBSCR; // OPT-7
+    InlineIterators = 64, // OPTIMIZE_ITERATORS; // OPT-9
+    HashedNames = 128, // OPTIMIZE_HASHED_NAMES; // OPT-10
+    BuiltinMethods = 256, // OPTIMIZE_BUILTIN_METHODS; // OPT-12
+    TypeSlotLookups = 512, //OPTIMIZE_TYPESLOT_LOOKUPS; // OPT-13
+    FunctionCalls = 1024, // OPTIMIZE_FUNCTION_CALLS; // OPT-14
+    LoadAttr = 2056, // OPTIMIZE_LOAD_ATTR; // OPT-15
+    Unboxing = 4092, // OPTIMIZE_UNBOXING; // OPT-16
+    IsNone = 8184 // OPTIMIZE_ISNONE; // OPT-17
+};
+
+inline OptimizationFlags operator|(OptimizationFlags a, OptimizationFlags b)
+{
+    return static_cast<OptimizationFlags>(static_cast<int>(a) | static_cast<int>(b));
+}
+inline OptimizationFlags operator&(OptimizationFlags a, OptimizationFlags b)
+{
+    return static_cast<OptimizationFlags>(static_cast<int>(a) & static_cast<int>(b));
+}
+
 typedef struct PyjionSettings {
     bool tracing = false;
     bool profiling = false;
@@ -87,28 +114,14 @@ typedef struct PyjionSettings {
     const wchar_t * clrjitpath = L"";
 
     // Optimizations
-    bool opt_inlineIs = OPTIMIZE_IS; // OPT-1
-    bool opt_inlineDecref = OPTIMIZE_DECREF; // OPT-2
-    bool opt_internRichCompare = OPTIMIZE_INTERN_COMPARE; // OPT-3
-	bool opt_inlineFramePushPop = OPTIMIZE_PUSH_FRAME; // OPT-5
-    bool opt_knownStoreSubscr = OPTIMIZE_KNOWN_STORE_SUBSCR; // OPT-6
-    bool opt_knownBinarySubscr = OPTIMIZE_KNOWN_BINARY_SUBSCR; // OPT-7
-    bool opt_inlineIterators = OPTIMIZE_ITERATORS; // OPT-9
-    bool opt_hashedNames = OPTIMIZE_HASHED_NAMES; // OPT-10
-    bool opt_builtinMethods = OPTIMIZE_BUILTIN_METHODS; // OPT-12
-    bool opt_typeSlotLookups = OPTIMIZE_TYPESLOT_LOOKUPS; // OPT-13
-    bool opt_functionCalls = OPTIMIZE_FUNCTION_CALLS; // OPT-14
-    bool opt_loadAttr = OPTIMIZE_LOAD_ATTR; // OPT-15
-    bool opt_unboxing = OPTIMIZE_UNBOXING; // OPT-16
-    bool opt_isNone = OPTIMIZE_ISNONE; // OPT-17
+    OptimizationFlags optimizations = OptimizationFlags();
 } PyjionSettings;
 
 static PY_UINT64_T HOT_CODE = 0;
 
 extern PyjionSettings g_pyjionSettings;
 
-#define OPT_ENABLED(opt) g_pyjionSettings.opt_ ## opt
-
+#define OPT_ENABLED(opt) (g_pyjionSettings.optimizations & (opt))
 void PyjionJitFree(void* obj);
 
 int Pyjit_CheckRecursiveCall(PyThreadState *tstate, const char *where);
@@ -131,6 +144,7 @@ public:
 	PY_UINT64_T j_run_count;
 	bool j_failed;
 	short j_compile_result;
+	unsigned int j_optimizations;
 	Py_EvalFunc j_addr;
 	PY_UINT64_T j_specialization_threshold;
 	PyObject* j_code;
@@ -148,6 +162,7 @@ public:
 
 	explicit PyjionJittedCode(PyObject* code) {
         j_compile_result = 0;
+        j_optimizations = 0;
 		j_code = code;
 		j_run_count = 0;
 		j_failed = false;
@@ -161,6 +176,8 @@ public:
 		j_pgc_status = Uncompiled;
 		j_sequencePoints = nullptr;
 		j_sequencePointsLen = 0;
+		j_callPoints = nullptr;
+		j_callPointsLen = 0;
 		Py_INCREF(code);
 	}
 

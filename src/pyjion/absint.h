@@ -121,11 +121,11 @@ struct AbstractLocalInfo {
             };
     }
 
-    bool operator== (AbstractLocalInfo other) {
+    bool operator== (AbstractLocalInfo other) const {
         return other.ValueInfo == ValueInfo &&
             other.IsMaybeUndefined == IsMaybeUndefined;
     }
-    bool operator!= (AbstractLocalInfo other) {
+    bool operator!= (AbstractLocalInfo other) const {
         return other.ValueInfo != ValueInfo ||
             other.IsMaybeUndefined != IsMaybeUndefined;
     }
@@ -188,10 +188,10 @@ public:
         if (pyTypeObject == nullptr)
             return existing;
         else {
-            return AbstractValueWithSources(
+            return {
                     new PgcValue(pyTypeObject, kind),
                     existing.Sources
-            );
+            };
         }
     }
 
@@ -241,6 +241,7 @@ struct AbstactInterpreterCompileResult {
     JittedCode* compiledCode = nullptr;
     AbstractInterpreterResult result = NoResult;
     PyObject* instructionGraph = nullptr;
+    OptimizationFlags optimizations = OptimizationFlags();
 };
 
 class StackImbalanceException: public std::exception {

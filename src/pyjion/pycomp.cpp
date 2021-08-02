@@ -65,7 +65,7 @@ void PythonCompiler::load_tstate() {
 }
 
 void PythonCompiler::emit_push_frame() {
-    if (OPT_ENABLED(inlineFramePushPop)) {
+    if (OPT_ENABLED(InlineFramePushPop)) {
         load_tstate();
         LD_FIELDA(PyThreadState, frame);
         load_frame();
@@ -77,7 +77,7 @@ void PythonCompiler::emit_push_frame() {
 }
 
 void PythonCompiler::emit_pop_frame() {
-    if (OPT_ENABLED(inlineFramePushPop)) {
+    if (OPT_ENABLED(InlineFramePushPop)) {
         load_tstate();
         LD_FIELDA(PyThreadState, frame);
 
@@ -182,7 +182,7 @@ void PythonCompiler::decref(bool noopt) {
      * Should decrement obj->ob_refcnt
      * by either doing it inline, or calling PyJit_Decref
      */
-    if (OPT_ENABLED(inlineDecref) && !noopt){ // obj
+    if (OPT_ENABLED(InlineDecref) && !noopt){ // obj
         Label done = emit_define_label();
         Label popAndGo = emit_define_label();
         m_il.dup();                     // obj, obj
@@ -1842,7 +1842,7 @@ LocalKind PythonCompiler::emit_binary_int(uint16_t opcode) {
 }
 
 void PythonCompiler::emit_binary_subscr(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) {
-    if (OPT_ENABLED(knownBinarySubscr)){
+    if (OPT_ENABLED(KnownBinarySubscr)){
         emit_binary_subscr(left, right);
     } else {
         m_il.emit_call(METHOD_SUBSCR_OBJ);
@@ -1850,7 +1850,7 @@ void PythonCompiler::emit_binary_subscr(uint16_t opcode, AbstractValueWithSource
 }
 
 void PythonCompiler::emit_is(bool isNot) {
-    if (OPT_ENABLED(inlineIs)){
+    if (OPT_ENABLED(InlineIs)){
         auto left = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
         auto right = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
 
