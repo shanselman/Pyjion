@@ -198,6 +198,7 @@ public:
      // Loads/stores/deletes from the frame objects fast local variables
     virtual void emit_load_fast(py_oparg local) = 0;
     virtual void emit_store_fast(py_oparg local) = 0;
+    virtual void emit_store_fast_nodec(py_oparg local) = 0;
     virtual void emit_delete_fast(py_oparg index) = 0;
     virtual void emit_unbound_local_check() = 0;
 

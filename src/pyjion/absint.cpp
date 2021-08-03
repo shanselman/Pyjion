@@ -1510,7 +1510,7 @@ void AbstractInterpreter::dumpEscapedLocalsToFrame(const unordered_map<py_oparg,
     for (auto &loc: locals){
         m_comp->emit_load_local(m_fastNativeLocals[loc.first]);
         m_comp->emit_box(loc.second);
-        m_comp->emit_store_fast(loc.first);
+        m_comp->emit_store_fast_nodec(loc.first);
     }
 }
 

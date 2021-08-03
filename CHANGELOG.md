@@ -13,6 +13,7 @@
 * Instruction graphs will show conditional branches (in orange)
 * Fixed a bug in generators where mixed unboxed/boxed fast locals would yield the wrong values with PGC between the first and second compilation stages
 * Fixed a deoptimization that happened in rc1 due to PGC asserting the abstract kind on the profiling phase and then always asserting that integers were big-integers
+* Fixed a bug where unboxed locals were decrefing frame locals on yield
 
 ## 1.0.0 (rc1)
 
