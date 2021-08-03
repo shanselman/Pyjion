@@ -44,8 +44,6 @@ int main(int argc, char* const argv[]) {
     g_pyjionSettings.codeObjectSizeLimit = 1000000;
     setOptimizationLevel(1);
     int result = Catch::Session().run(argc, argv);
-
     Py_Finalize();
-
     return result;
 }
