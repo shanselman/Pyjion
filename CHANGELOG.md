@@ -9,6 +9,7 @@
 * All optimizations are now runtime flags instead of compile-time features.
 * Unboxing PGC errors will raise pyjion.PyjionUnboxingError (ValueError) instead of ValueError
 * Instruction graphs will show conditional branches (in orange)
+* Fixed a bug in generators where mixed unboxed/boxed fast locals would yield the wrong values with PGC between the first and second compilation stages
 
 ## 1.0.0 (rc1)
 
