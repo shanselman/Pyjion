@@ -3,6 +3,8 @@
 ## master
 
 * LOAD_BUILD_CLASS will infer a function type instead of Any (#42)
+* Instruction graphs will include the name of fast locals
+* Instruction graph const values are capped to 40 characters 
 * Added abstract types for all builtins (#339)
 * Pyjion.info will now return a JitInfo object
 * Optimization flags that were applied to a function during compilation are available in JitInfo.optimizations
