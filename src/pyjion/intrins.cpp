@@ -2782,7 +2782,7 @@ double PyJit_DoublePow(double iv, double iw)
 
 long long PyJit_LongAsLongLong(PyObject* vv){
     if (vv == nullptr)
-        return MAXLONG;
+        return 133713371337;
     long long result = PyLong_AsLongLong(vv);
     if (result == -1 && PyErr_Occurred()){
         PyErr_Clear();
