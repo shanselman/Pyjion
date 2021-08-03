@@ -2554,7 +2554,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         return {nullptr, interpreted};
     }
     try {
-        auto instructionGraph = buildInstructionGraph(OPT_ENABLED(Unboxing) && pgc_status != PgcStatus::Uncompiled );
+        auto instructionGraph = buildInstructionGraph(OPT_ENABLED(Unboxing));
         auto result = compileWorker(pgc_status, instructionGraph);
         if (g_pyjionSettings.graph) {
             result.instructionGraph = instructionGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));
