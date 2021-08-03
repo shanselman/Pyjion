@@ -817,7 +817,7 @@ static struct PyModuleDef pyjionmodule = {
 			  or -1 if the module keeps state in global variables. */
 	PyjionMethods
 }; 
-
+PyObject* PyjionUnboxingError;
 PyMODINIT_FUNC PyInit__pyjion(void)
 {
 	// Install our frame evaluation function
