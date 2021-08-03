@@ -228,16 +228,10 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx){
                 // if load doesn't have output edge, dont trust this graph
                 auto loadEdges = getEdgesFrom(instruction.first);
                 if (loadEdges.size() != 1 || !supportsEscaping(loadEdges[0].kind)) {
-#ifdef DEBUG
-                    printf("At %d, local %d has an unsupported kind, ignoring from escapes. Was %u, then %u\n", instruction.first, localNumber, localAvk, loadEdges[0].kind);
-#endif
                     loadsCanBeEscaped = false;
                 } else {
                     if (localAvk != AVK_Undefined  && localAvk != loadEdges[0].kind) {
                         abstractTypesMatch = false;
-#ifdef DEBUG
-                        printf("At %d, local %d has mixed types, ignoring from escapes. Was %u, then %u\n", instruction.first, localNumber, localAvk, loadEdges[0].kind);
-#endif
                     }
                     localAvk = loadEdges[0].kind;
                 }
@@ -251,9 +245,6 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx){
                 else {
                     if (localAvk != AVK_Undefined  && localAvk != storeEdges[0].kind) {
                         abstractTypesMatch = false;
-#ifdef DEBUG
-                        printf("At %d, local %d has mixed types, ignoring from escapes. Was %u, then %u\n", instruction.first, localNumber, localAvk, storeEdges[0].kind);
-#endif
                     }
                     localAvk = storeEdges[0].kind;
                 }
