@@ -28,7 +28,7 @@
 #include "unboxing.h"
 
 
-InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex , const InterpreterStack*> stacks) {
+InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex , const InterpreterStack*> stacks, bool escapeLocals) {
     this->code = code;
     auto mByteCode = (_Py_CODEUNIT *)PyBytes_AS_STRING(code->co_code);
     auto size = PyBytes_Size(code->co_code);
@@ -77,7 +77,9 @@ InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex 
         };
     }
     fixInstructions();
-    fixLocals(code->co_argcount, code->co_nlocals);
+    if (escapeLocals){
+        fixLocals(code->co_argcount, code->co_nlocals);
+    }
     deoptimizeInstructions();
     fixEdges();
 }

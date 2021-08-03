@@ -345,7 +345,7 @@ public:
     void disableTracing();
     void enableProfiling();
     void disableProfiling();
-    InstructionGraph* buildInstructionGraph();
+    InstructionGraph* buildInstructionGraph(bool escapeLocals);
 private:
     AbstractValue* toAbstract(PyObject* obj);
 

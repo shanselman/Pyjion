@@ -83,7 +83,7 @@ private:
     void deoptimizeInstructions();
     void fixLocals(py_oparg startIdx, py_oparg endIdx);
 public:
-    InstructionGraph(PyCodeObject* code, unordered_map<py_opindex, const InterpreterStack*> stacks) ;
+    InstructionGraph(PyCodeObject* code, unordered_map<py_opindex, const InterpreterStack*> stacks, bool escapeLocals) ;
     Instruction & operator [](py_opindex i) {return instructions[i];}
     size_t size() {return instructions.size();}
     PyObject* makeGraph(const char* name) ;

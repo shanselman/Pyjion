@@ -146,14 +146,13 @@ private:
 public:
     explicit EmissionTest(const char *code) {
         PyErr_Clear();
-        printf("%s \n", code);
+        printf("--- Executing Code ---\n%s \n-----------------\n", code);
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile in JIT code");
         }
         auto jitted = PyJit_EnsureExtra((PyObject*)*m_code);
         m_jittedcode = jitted;
-        printf("Optimizations used: %d \n", m_jittedcode->j_optimizations);
     }
 
     std::string returns() {
