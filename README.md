@@ -54,7 +54,7 @@ You can see some basic stats by running `pyjion.info(f)`, where `f` is the funct
 
 ```pycon
 >>> pyjion.info(half)
-{'failed': False, 'compiled': True, 'run_count': 1}
+JitInfo(failed=False, compile_result=<CompilationResult.Success: 1>, compiled=True, optimizations=<OptimizationFlags.InlineFramePushPop|InlineDecref: 10>, pgc=1, run_count=1)
 ```
 
 You can also execute Pyjion against any script or module:

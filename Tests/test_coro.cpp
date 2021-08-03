@@ -92,13 +92,13 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
     SECTION("test yield within branches for boxable vars.") {
         auto t = EmissionTest("def f():\n"
                               "  def cr():\n"
-                              "     x = 2\n"
-                              "     if x == 2:\n"
-                              "         yield 'a'\n"
+                              "     x = 3\n"
+                              "     if x == 3:\n"
+                              "         yield 'a', x\n"
                               "     else:\n"
                               "         yield 'b'\n"
                               "     yield 'c'\n"
-                              "     x = x + 2\n"
+                              "     x = x + 1\n"
                               "     if x == 4:\n"
                               "         yield 'd'\n"
                               "     else:\n"
@@ -106,7 +106,7 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
                               "     yield 'c'\n"
                               "  gen = cr()\n"
                               "  return next(gen), next(gen), next(gen)\n");
-        CHECK(t.returns() == "('a', 'c', 'd')");
+        CHECK(t.returns() == "(('a', 3), 'c', 'd')");
     }
     SECTION("test yield within branches for boxable vars as iter.") {
         auto t = EmissionTest("def f():\n"

@@ -92,9 +92,3 @@ Configuration
 -------------
 
 This optimization is enabled at **level 1** by default. See :ref:`Optimizations <optimizations>` for help on changing runtime optimization settings.
-
-+------------------------------+---------------------------------------+
-| Compile-time flag            |  ``OPTIMIZE_KNOWN_BINARY_SUBSCR=OFF`` |
-+------------------------------+---------------------------------------+
-| Default optimization level   |  ``1``                                |
-+------------------------------+---------------------------------------+

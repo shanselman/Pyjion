@@ -56,7 +56,7 @@ public:
             Py_DECREF(pyCode);
             FAIL("Failed to interpret code");
         }
-        m_graph = m_absint->buildInstructionGraph();
+        m_graph = m_absint->buildInstructionGraph(true);
         auto result = m_graph->makeGraph(name);
         printf("%s", PyUnicode_AsUTF8(result));
     }

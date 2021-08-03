@@ -42,10 +42,8 @@ int main(int argc, char* const argv[]) {
     g_pyjionSettings.debug = true;
     g_pyjionSettings.tracing = true;
     g_pyjionSettings.codeObjectSizeLimit = 1000000;
-    setOptimizationLevel(0);
+    setOptimizationLevel(1);
     int result = Catch::Session().run(argc, argv);
-
     Py_Finalize();
-
     return result;
 }

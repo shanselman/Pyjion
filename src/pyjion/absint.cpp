@@ -1628,6 +1628,13 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         FLAG_OPT_USAGE(InlineDecref);
     }
 
+    if (graph->isValid()) {
+        for (auto &fastLocal : graph->getUnboxedFastLocals()) {
+            m_fastNativeLocals[fastLocal.first] = m_comp->emit_define_local(fastLocal.second);
+            m_fastNativeLocalKinds[fastLocal.first] = avkAsStackEntryKind(fastLocal.second);
+        }
+    }
+
     if (mCode->co_flags & CO_GENERATOR){
         m_comp->emit_init_stacktop_local();
         yieldJumps();
@@ -1636,13 +1643,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     auto rootHandlerLabel = m_comp->emit_define_label();
 
     m_comp->emit_init_instr_counter();
-
-    if (graph->isValid()) {
-        for (auto &fastLocal : graph->getUnboxedFastLocals()) {
-            m_fastNativeLocals[fastLocal.first] = m_comp->emit_define_local(fastLocal.second);
-            m_fastNativeLocalKinds[fastLocal.first] = avkAsStackEntryKind(fastLocal.second);
-        }
-    }
 
     if (mTracingEnabled){
         // push initial trace on entry to frame
@@ -2538,12 +2538,12 @@ void AbstractInterpreter::updateIntermediateSources(){
     }
 }
 
-InstructionGraph* AbstractInterpreter::buildInstructionGraph() {
+InstructionGraph* AbstractInterpreter::buildInstructionGraph(bool escapeLocals) {
     unordered_map<py_opindex, const InterpreterStack*> stacks;
     for (const auto &state: mStartStates){
         stacks[state.first] = &state.second.mStack;
     }
-    auto* graph = new InstructionGraph(mCode, stacks);
+    auto* graph = new InstructionGraph(mCode, stacks, escapeLocals);
     updateIntermediateSources();
     return graph;
 }
@@ -2554,7 +2554,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         return {nullptr, interpreted};
     }
     try {
-        auto instructionGraph = buildInstructionGraph();
+        auto instructionGraph = buildInstructionGraph(OPT_ENABLED(Unboxing) && pgc_status != PgcStatus::Uncompiled );
         auto result = compileWorker(pgc_status, instructionGraph);
         if (g_pyjionSettings.graph) {
             result.instructionGraph = instructionGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));

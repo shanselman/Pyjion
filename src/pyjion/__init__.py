@@ -143,5 +143,5 @@ def info(f) -> JitInfo:
                    CompilationResult(d['compile_result']),
                    d['compiled'],
                    OptimizationFlags(d['optimizations']),
-                   d['pgc'],
+                   PgcStatus(d['pgc']),
                    d['run_count'])

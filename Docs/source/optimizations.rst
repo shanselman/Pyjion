@@ -178,11 +178,19 @@ Setting to level 2 will enable **all** optimizations.
 
 Level 0 disables all optimizations.
 
-Compile-time configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Runtime information
+~~~~~~~~~~~~~~~~~~~
 
-Optimizations are set in the ``CMakeOptimizations.txt`` file and can be individually set.
+You can see which optimizations were applied by accessing the ``optimizations`` property of the ``JitInfo`` class returned from ``pyjion.info(func)``:
 
-For example, to disable the OPTIMIZE_DECREF (OPT-1) at level 1 (default):
+.. code-block:: Python
 
-``cmake -OPTIMIZE_DECREF=OFF``
+    >>> import pyjion
+    >>> pyjion.enable()
+    >>> def half(x):
+    ...    return x/2
+    >>> half(2)
+    1.0
+    >>> pyjion.info(half).optimizations
+    <OptimizationFlags.InlineFramePushPop|InlineDecref: 10>
+
