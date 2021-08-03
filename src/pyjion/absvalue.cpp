@@ -1432,6 +1432,10 @@ AbstractValueKind VolatileValue::kind() {
     return GetAbstractType(this->_type, this->lastValue());
 }
 
+AbstractValueKind PgcValue::kind() {
+    return this->_kind;
+}
+
 AbstractValue* VolatileValue::binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {
     auto my_kind = GetAbstractType(_type, lastValue());
 
