@@ -2794,6 +2794,7 @@ long long PyJit_LongAsLongLong(PyObject* vv){
 }
 
 void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
+    assert(PyjionUnboxingError != nullptr);
     PyErr_Format(PyjionUnboxingError,
                  "Pyjion PGC expected %s, but %s is a %s.",
                  expected,

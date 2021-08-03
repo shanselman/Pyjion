@@ -1150,6 +1150,10 @@ void PythonCompiler::emit_delete_subscr() {
     m_il.emit_call(METHOD_DELETESUBSCR_TOKEN);
 }
 
+void PythonCompiler::emit_binary_subscr() {
+    m_il.emit_call(METHOD_SUBSCR_OBJ);
+}
+
 void PythonCompiler::emit_binary_subscr(AbstractValueWithSources container, AbstractValueWithSources key) {
     bool constIndex = false;
     ConstSource* constSource = nullptr;
@@ -1843,10 +1847,6 @@ LocalKind PythonCompiler::emit_binary_int(uint16_t opcode) {
             throw UnexpectedValueException();
     }
     return LK_Int;
-}
-
-void PythonCompiler::emit_binary_subscr() {
-    m_il.emit_call(METHOD_SUBSCR_OBJ);
 }
 
 void PythonCompiler::emit_is(bool isNot) {

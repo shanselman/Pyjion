@@ -316,12 +316,15 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
                 PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.index + node.second.oparg));
                 break;
             case JUMP_ABSOLUTE:
+                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.oparg));
+                break;
             case JUMP_IF_FALSE_OR_POP:
             case JUMP_IF_TRUE_OR_POP:
             case JUMP_IF_NOT_EXC_MATCH:
             case POP_JUMP_IF_TRUE:
             case POP_JUMP_IF_FALSE:
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.oparg));
+                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.index + 2));
+                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.oparg));
                 break;
         }
     }
