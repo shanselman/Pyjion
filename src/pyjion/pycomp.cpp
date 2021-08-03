@@ -531,15 +531,6 @@ void PythonCompiler::emit_store_fast(py_oparg local) {
     decref();
 }
 
-void PythonCompiler::emit_store_fast_nodec(py_oparg local) {
-    /// Like emit_store_fast, but dont decref the current value.
-    /// Used by the unboxed->boxed fast locals code.
-    load_frame();
-    m_il.ld_i(offsetof(PyFrameObject, f_localsplus) + local * sizeof(size_t));
-    m_il.add();
-    m_il.st_ind_i();
-}
-
 void PythonCompiler::emit_rot_two(LocalKind kind) {
     auto top = m_il.define_local(Parameter(to_clr_type(kind)));
     auto second = m_il.define_local(Parameter(to_clr_type(kind)));

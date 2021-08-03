@@ -430,7 +430,6 @@ public:
     void emit_compare_ints(uint16_t compareType) override;
 
     void emit_store_fast(py_oparg local) override;
-    void emit_store_fast_nodec(py_oparg local) override;
     void emit_unbound_local_check() override;
     void emit_load_fast(py_oparg local) override;
     void emit_delete_fast(py_oparg index) override;

@@ -430,8 +430,6 @@ private:
     void emitRaise(ExceptionHandler *handler);
     void updateIntermediateSources();
     void escapeEdges(const vector<Edge>& edges, py_opindex curByte);
-    void dumpEscapedLocalsToFrame(const unordered_map<py_oparg, AbstractValueKind>& locals, py_opindex at);
-    void loadEscapedLocalsFromFrame(const unordered_map<py_oparg, AbstractValueKind>& locals, py_opindex at);
     void yieldJumps();
 };
 bool canReturnInfinity(py_opcode opcode);
