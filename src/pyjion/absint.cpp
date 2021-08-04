@@ -159,7 +159,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
                     // optimize your code, and if you alias them you won't get the correct behavior.
                     // Longer term we should patch vars/dir/_getframe and be able to provide the
                     // correct values from generated code.
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
                     printf("Skipping function because it contains frame globals.");
 #endif
                     return IncompatibleFrameGlobal;
@@ -1236,7 +1236,7 @@ void AbstractInterpreter::branchRaise(const char *reason, const char* context, p
     auto ehBlock = currentHandler();
     auto& entryStack = ehBlock->EntryStack;
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
     if (reason != nullptr) {
         m_comp->emit_debug_fault(reason, context, curByte);
     }
@@ -2550,7 +2550,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         delete instructionGraph;
         return result;
     } catch (const exception& e){
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         printf("Error whilst compiling : %s\n", e.what());
 #endif
         return {nullptr, CompilationException};

@@ -145,7 +145,7 @@ void InstructionGraph::deoptimizeInstructions() {
         auto edgesOut = getEdgesFrom(instruction.first);
         // If the stack effect is wrong..
         if (PyCompile_OpcodeStackEffect(instruction.second.opcode, instruction.second.oparg) != (edgesOut.size() - edgesIn.size())) {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
             printf("Warning, instruction has invalid stack effect %s %d\n", opcodeName(instruction.second.opcode), instruction.second.index);
 #endif
             invalid = true;

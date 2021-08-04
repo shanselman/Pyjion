@@ -49,7 +49,7 @@
 #include <sys/mman.h>
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
 #define WARN(msg, ...) printf(#msg, ##__VA_ARGS__);
 #else
 #define WARN(msg, ...) 
@@ -256,7 +256,7 @@ public:
     }
 
     void reportFatalError(CorJitResult result) override {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         printf("Fatal error from .NET JIT %X\r\n", result);
 #endif
     }
@@ -1465,7 +1465,7 @@ public:
 
     // Returns name of the JIT timer log
     const char16_t * getJitTimeLogFilename() override {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         return u"pyjion_timings.log";
 #else
         return nullptr;

@@ -1417,7 +1417,7 @@ PyTypeObject* GetPyType(AbstractValueKind type) {
         case AVK_Zip: return &PyZip_Type;
         case AVK_Iterable: return nullptr; // Could be anything
         default:
-        #ifdef DEBUG
+        #ifdef DEBUG_VERBOSE
             printf("Warning: Missing GetPyType for %d", type);
         #endif
             return nullptr;

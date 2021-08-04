@@ -1758,7 +1758,7 @@ void PythonCompiler::emit_for_next(AbstractValueWithSources iterator) {
 }
 
 void PythonCompiler::emit_debug_msg(const char* msg) {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
     m_il.ld_i((void*)msg);
     m_il.emit_call(METHOD_DEBUG_TRACE);
 #endif
@@ -1769,7 +1769,7 @@ void PythonCompiler::emit_debug_pyobject() {
 }
 
 void PythonCompiler::emit_debug_fault(const char* msg, const char* context, py_opindex index) {
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
     m_il.ld_i((void*)msg);
     m_il.ld_i((void*)context);
     m_il.ld_i4(index);
