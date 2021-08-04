@@ -1417,7 +1417,7 @@ PyTypeObject* GetPyType(AbstractValueKind type) {
         case AVK_Zip: return &PyZip_Type;
         case AVK_Iterable: return nullptr; // Could be anything
         default:
-        #ifdef DEBUG
+        #ifdef DEBUG_VERBOSE
             printf("Warning: Missing GetPyType for %d", type);
         #endif
             return nullptr;
@@ -1430,6 +1430,10 @@ PyTypeObject* VolatileValue::pythonType() {
 
 AbstractValueKind VolatileValue::kind() {
     return GetAbstractType(this->_type, this->lastValue());
+}
+
+AbstractValueKind PgcValue::kind() {
+    return this->_kind;
 }
 
 AbstractValue* VolatileValue::binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {

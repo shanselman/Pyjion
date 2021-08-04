@@ -159,7 +159,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
                     // optimize your code, and if you alias them you won't get the correct behavior.
                     // Longer term we should patch vars/dir/_getframe and be able to provide the
                     // correct values from generated code.
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
                     printf("Skipping function because it contains frame globals.");
 #endif
                     return IncompatibleFrameGlobal;
@@ -1236,7 +1236,7 @@ void AbstractInterpreter::branchRaise(const char *reason, const char* context, p
     auto ehBlock = currentHandler();
     auto& entryStack = ehBlock->EntryStack;
 
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
     if (reason != nullptr) {
         m_comp->emit_debug_fault(reason, context, curByte);
     }
@@ -1506,23 +1506,6 @@ void AbstractInterpreter::emitRaise(ExceptionHandler * handler) {
     m_comp->emit_load_local(handler->ExVars.FinallyExc);
 }
 
-void AbstractInterpreter::dumpEscapedLocalsToFrame(const unordered_map<py_oparg, AbstractValueKind>& locals, py_opindex at){
-    for (auto &loc: locals){
-        m_comp->emit_load_local(m_fastNativeLocals[loc.first]);
-        m_comp->emit_box(loc.second);
-        m_comp->emit_store_fast(loc.first);
-    }
-}
-
-void AbstractInterpreter::loadEscapedLocalsFromFrame(const unordered_map<py_oparg, AbstractValueKind>& locals, py_opindex at){
-    Local failFlag = m_comp->emit_define_local();
-    for (auto &loc: locals){
-        m_comp->emit_load_fast(loc.first);
-        m_comp->emit_unbox(loc.second, false, failFlag);
-        m_comp->emit_store_local(m_fastNativeLocals[loc.first]);
-    }
-}
-
 void AbstractInterpreter::escapeEdges(const vector<Edge>& edges, py_opindex curByte) {
     // Check if edges need boxing/unboxing
     // If none of the edges need escaping, skip
@@ -1595,7 +1578,7 @@ void AbstractInterpreter::yieldJumps(){
 
 void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, InstructionGraph* graph) {
     m_comp->emit_lasti_update(index);
-    dumpEscapedLocalsToFrame(graph->getUnboxedFastLocals(), index);
+    assert (graph->getUnboxedFastLocals().empty());
 
     // incref and send top of stack
     m_comp->emit_dup();
@@ -1609,7 +1592,6 @@ void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, Instruc
     m_comp->emit_branch(BranchAlways, m_retLabel);
     // ^ Exit Frame || 🔽 Enter frame from next()
     m_comp->emit_mark_label(m_yieldOffsets[index]);
-    loadEscapedLocalsFromFrame(graph->getUnboxedFastLocals(), index);
     for (size_t i = stackSize; i > 0 ; --i) {
         m_comp->emit_load_from_frame_value_stack(i);
     }
@@ -2554,7 +2536,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         return {nullptr, interpreted};
     }
     try {
-        auto instructionGraph = buildInstructionGraph(OPT_ENABLED(Unboxing) && pgc_status != PgcStatus::Uncompiled );
+        bool unboxVars = OPT_ENABLED(Unboxing) && !(mCode->co_flags & CO_GENERATOR);
+        auto instructionGraph = buildInstructionGraph(unboxVars);
         auto result = compileWorker(pgc_status, instructionGraph);
         if (g_pyjionSettings.graph) {
             result.instructionGraph = instructionGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));
@@ -2567,7 +2550,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         delete instructionGraph;
         return result;
     } catch (const exception& e){
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
         printf("Error whilst compiling : %s\n", e.what());
 #endif
         return {nullptr, CompilationException};

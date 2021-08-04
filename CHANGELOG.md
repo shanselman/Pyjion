@@ -6,12 +6,15 @@
 * Instruction graphs will include the name of fast locals
 * Instruction graph const values are capped to 40 characters 
 * Added abstract types for all builtins (#339)
-* Pyjion.info will now return a JitInfo object
-* Optimization flags that were applied to a function during compilation are available in JitInfo.optimizations
-* All optimizations are now runtime flags instead of compile-time features.
-* Unboxing PGC errors will raise pyjion.PyjionUnboxingError (ValueError) instead of ValueError
+* `pyjion.info()` will now return a JitInfo object
+* Optimization flags that were applied to a function during compilation are available in `JitInfo.optimizations`
+* All optimizations are now runtime flags instead of compile-time features
+* Unboxing PGC errors will raise `pyjion.PyjionUnboxingError` (ValueError) instead of ValueError
 * Instruction graphs will show conditional branches (in orange)
 * Fixed a bug in generators where mixed unboxed/boxed fast locals would yield the wrong values with PGC between the first and second compilation stages
+* Fixed a de-optimization that happened in rc1 due to PGC asserting the abstract kind on the profiling phase and then always asserting that integers were big-integers
+* Fixed a bug where unboxed locals were decrefing frame locals on yield
+* Generators will not unbox fast locals for stability reasons
 
 ## 1.0.0 (rc1)
 

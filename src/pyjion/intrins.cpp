@@ -2781,6 +2781,11 @@ double PyJit_DoublePow(double iv, double iw)
 }
 
 long long PyJit_LongAsLongLong(PyObject* vv){
+    if (vv == nullptr) {
+        PyErr_SetString(PyExc_ValueError,
+                     "Pyjion failed to unbox the integer because it is not initialized.");
+        return MAXLONG;
+    }
     long long result = PyLong_AsLongLong(vv);
     if (result == -1 && PyErr_Occurred()){
         PyErr_Clear();

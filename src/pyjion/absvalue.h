@@ -667,8 +667,10 @@ class ZipValue : public AbstractValue {
 class VolatileValue: public AbstractValue{
     PyTypeObject* _type;
     PyObject* _object;
+protected:
     AbstractValueKind _kind;
 public:
+
     VolatileValue(PyTypeObject* type, PyObject* object, AbstractValueKind kind){
         _type = type;
         _object = object;
@@ -701,6 +703,7 @@ public:
 class PgcValue : public VolatileValue {
 public:
     PgcValue(PyTypeObject* type, AbstractValueKind kind) : VolatileValue(type, nullptr, kind){}
+    AbstractValueKind kind() override;
 };
 
 class ArgumentValue: public VolatileValue {

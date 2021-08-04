@@ -115,7 +115,7 @@ public:
         else {
             localList = &(existing->second);
         }
-#if DEBUG
+#ifdef DEBUG
         for (auto & i : *localList) {
             if (i.m_index == local.m_index) {
                 // locals shouldn't be double freed...
@@ -623,30 +623,32 @@ public:
                 res.m_addr = nativeEntry;
                 break;
             case CORJIT_BADCODE:
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
                 printf("JIT failed to compile the submitted method.\n");
 #endif
                 res.m_addr = nullptr;
                 break;
             case CORJIT_OUTOFMEM:
+#ifdef DEBUG_VERBOSE
                 printf("out of memory.\n");
+#endif
                 res.m_addr = nullptr;
                 break;
             case CORJIT_IMPLLIMITATION:
             case CORJIT_INTERNALERROR:
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
                 printf("internal error code.\n");
 #endif
                 res.m_addr = nullptr;
                 break;
             case CORJIT_SKIPPED:
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
                 printf("skipped code.\n");
 #endif
                 res.m_addr = nullptr;
                 break;
             case CORJIT_RECOVERABLEERROR:
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
                 printf("recoverable error code.\n");
 #endif
                 res.m_addr = nullptr;
