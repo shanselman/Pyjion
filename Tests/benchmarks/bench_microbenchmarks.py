@@ -24,7 +24,7 @@ if __name__ == "__main__":
         print("{0} took {1} min, {2} max, {3} mean without Pyjion".format(str(test), min(without_result), max(without_result), fmean(without_result)))
         pyjion.enable()
         pyjion.enable_graphs()
-        pyjion.set_optimization_level(1)
+        pyjion.set_optimization_level(2)
         with_result = timeit.repeat(test, repeat=5, number=1000)
         pyjion.disable()
         print("{0} took {1} min, {2} max, {3} mean with Pyjion".format(str(test), min(with_result), max(with_result), fmean(with_result)))

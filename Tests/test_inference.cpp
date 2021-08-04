@@ -899,7 +899,7 @@ TEST_CASE("int binary op type inference", "[int][binary op][inference]") {
 				new VariableVerifier(6, 1, AVK_Undefined, true),    // y not assigned yet
 				new VariableVerifier(8, 1, AVK_Bool),              // y assigned
 				new VariableVerifier(14, 2, AVK_Undefined, true),   // z not assigned yet
-				new VariableVerifier(16, 2, AVK_Integer),           // z assigned
+				new VariableVerifier(16, 2, AVK_BigInteger),           // z assigned
             }
         ));
     }
@@ -930,6 +930,20 @@ TEST_CASE("int binary op type inference", "[int][binary op][inference]") {
 				new VariableVerifier(16, 2, AVK_Integer),           // z assigned
             }
         ));
+    }
+
+    SECTION("int ** int  # type: int") {
+        VerifyOldTest(AITestCase(
+                "def f():\n    x = 42\n    y = 43\n    z = x ** y",
+                {
+                    new VariableVerifier(2, 0, AVK_Undefined, true),    // x not assigned yet
+                    new VariableVerifier(4, 0, AVK_Integer),            // x assigned
+                    new VariableVerifier(6, 1, AVK_Undefined, true),    // y not assigned yet
+                    new VariableVerifier(8, 1, AVK_Bool),              // y assigned
+                    new VariableVerifier(14, 2, AVK_Undefined, true),   // z not assigned yet
+                    new VariableVerifier(16, 2, AVK_BigInteger),           // z assigned
+                }
+            ));
     }
 
     SECTION("int >> bool  # type: int") {
@@ -1060,7 +1074,7 @@ TEST_CASE("int binary op type inference", "[int][binary op][inference]") {
 				new VariableVerifier(4, 0, AVK_Integer),            // x assigned
 				new VariableVerifier(6, 1, AVK_Undefined, true),    // y not assigned yet
 				new VariableVerifier(12, 1, AVK_Bool),              // y assigned
-				new VariableVerifier(16, 0, AVK_Integer)            // x assigned in-place
+				new VariableVerifier(16, 0, AVK_BigInteger)            // x assigned in-place
             }
         ));
     }
@@ -1157,7 +1171,7 @@ TEST_CASE("int binary op type inference", "[int][binary op][inference]") {
         ));
     }
 
-    SECTION("int + complext  # type: complex") {
+    SECTION("int + complex  # type: complex") {
         VerifyOldTest(AITestCase(
             "def f():\n    x = 42\n    y = 3j\n    z = x + y",
             {
