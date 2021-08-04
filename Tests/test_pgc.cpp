@@ -321,3 +321,21 @@ TEST_CASE("test STORE_SUBSCR PGC") {
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
 }
+
+TEST_CASE("Test PGC integer logic"){
+    SECTION("test unboxed locals for int calculations") {
+        auto t = PgcProfilingTest(
+                "def f():\n"
+                "  for y in range(100):\n"
+                "     x = 2\n"
+                "     z = y * y + x - y\n"
+                "     x *= z\n"
+                "  return\n"
+                );
+        CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
+        CHECK(t.returns() == "None");
+        CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
+        CHECK(t.returns() == "None");
+        CHECK(t.pgcStatus() == PgcStatus::Optimized);
+    };
+}

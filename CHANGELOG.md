@@ -15,6 +15,7 @@
 * Fixed a de-optimization that happened in rc1 due to PGC asserting the abstract kind on the profiling phase and then always asserting that integers were big-integers
 * Fixed a bug where unboxed locals were decrefing frame locals on yield
 * Generators will not unbox fast locals for stability reasons
+* Fixed a regression on unboxed integers, caused by PGC values being set as Any
 
 ## 1.0.0 (rc1)
 
