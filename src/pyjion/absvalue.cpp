@@ -1437,9 +1437,7 @@ AbstractValueKind PgcValue::kind() {
 }
 
 AbstractValue* VolatileValue::binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {
-    auto my_kind = GetAbstractType(_type, lastValue());
-
-    switch(my_kind){
+    switch(this->kind()){
         case AVK_Float:
             return FloatValue::binary(op, other);
         case AVK_Integer:
