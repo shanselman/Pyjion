@@ -16,6 +16,7 @@
 * Fixed a bug where unboxed locals were decrefing frame locals on yield
 * Generators will not unbox fast locals for stability reasons
 * Fixed a regression on unboxed integers, caused by PGC values being set as Any
+* Assert return types for float object methods (as_integer_ratio, conjugate, is_integer, hex)
 
 ## 1.0.0 (rc1)
 

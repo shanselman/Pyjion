@@ -252,4 +252,11 @@ unordered_map<const char*, AbstractValueKind> intMethodReturnTypes = {
         {"as_integer_ratio", AVK_Tuple},
 };
 
+unordered_map<const char*, AbstractValueKind> floatMethodReturnTypes = {
+        {"as_integer_ratio", AVK_Tuple},
+        {"conjugate", AVK_Float},
+        {"is_integer", AVK_Bool},
+        {"hex", AVK_String},
+};
+
 #endif // PYJION_KNOWNMETHODS_H

@@ -802,6 +802,14 @@ const char* FloatValue::describe() {
     return "float";
 }
 
+AbstractValueKind FloatValue::resolveMethod(const char *name) {
+    for (auto const &b: floatMethodReturnTypes){
+        if (strcmp(name, b.first) == 0)
+            return b.second;
+    }
+    return AVK_Any;
+}
+
 // TupleValue methods
 AbstractValueKind TupleValue::kind() {
     return AVK_Tuple;

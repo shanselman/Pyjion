@@ -144,12 +144,14 @@ def test_variance2():
     assert result == 0.5
 
 
-@pytest.mark.skip(reason='TODO: Fix variance overflows.')
+#@pytest.mark.graph
 def test_variance_slow():
     data = [0, 0, 1]
     c = statistics.mean(data)
     assert c == 0.3333333333333333
-    T, total, count = statistics._sum((x - c) ** 2 for x in data)
+    l = [(x - c) ** 2 for x in data]
+    [print(f.as_integer_ratio()) for f in l]
+    T, total, count = statistics._sum(l)
     assert T == float
     assert total == Fraction(3002399751580331, 4503599627370496)
 
