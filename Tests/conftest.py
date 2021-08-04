@@ -14,7 +14,6 @@ def pytest_runtest_call(item: pytest.Item) -> None:
             pyjion.enable_profiling()
         elif mark.name == "tracing":
             pyjion.enable_tracing()
-
     pyjion.enable_debug()
     item.runtest()
     pyjion.disable()

@@ -73,12 +73,12 @@ typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadStat
 
 enum OptimizationFlags
 {
-    InlineIs = 1, // OPTIMIZE_IS; // OPT-1
-    InlineDecref = 2, // OPTIMIZE_DECREF; // OPT-2
-    InternRichCompare = 4, // OPTIMIZE_INTERN_COMPARE; // OPT-3
-    InlineFramePushPop = 8, // OPTIMIZE_PUSH_FRAME; // OPT-5
-    KnownStoreSubscr = 16, // OPTIMIZE_KNOWN_STORE_SUBSCR; // OPT-6
-    KnownBinarySubscr = 32, // OPTIMIZE_KNOWN_BINARY_SUBSCR; // OPT-7
+    InlineIs = 1, // OPT-1
+    InlineDecref = 2,  // OPT-2
+    InternRichCompare = 4, // OPT-3
+    InlineFramePushPop = 8, // OPT-5
+    KnownStoreSubscr = 16, // OPT-6
+    KnownBinarySubscr = 32,  // OPT-7
     InlineIterators = 64, // OPTIMIZE_ITERATORS; // OPT-9
     HashedNames = 128, // OPTIMIZE_HASHED_NAMES; // OPT-10
     BuiltinMethods = 256, // OPTIMIZE_BUILTIN_METHODS; // OPT-12
@@ -86,7 +86,9 @@ enum OptimizationFlags
     FunctionCalls = 1024, // OPTIMIZE_FUNCTION_CALLS; // OPT-14
     LoadAttr = 2056, // OPTIMIZE_LOAD_ATTR; // OPT-15
     Unboxing = 4092, // OPTIMIZE_UNBOXING; // OPT-16
-    IsNone = 8184 // OPTIMIZE_ISNONE; // OPT-17
+    IsNone = 8184, // OPTIMIZE_ISNONE; // OPT-17
+    IntegerUnboxingMultiply = 16368,
+    IntegerUnboxingPower = 32736,
 };
 
 inline OptimizationFlags operator|(OptimizationFlags a, OptimizationFlags b)
@@ -121,7 +123,7 @@ static PY_UINT64_T HOT_CODE = 0;
 
 extern PyjionSettings g_pyjionSettings;
 
-#define OPT_ENABLED(opt) (g_pyjionSettings.optimizations & (opt))
+#define OPT_ENABLED(opt) ((g_pyjionSettings.optimizations & (opt)) == (opt))
 void PyjionJitFree(void* obj);
 
 int Pyjit_CheckRecursiveCall(PyThreadState *tstate, const char *where);
