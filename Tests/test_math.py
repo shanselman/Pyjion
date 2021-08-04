@@ -128,8 +128,6 @@ def test_mean():
     answer = statistics.mean([1, 2, 3, 4, 4])
     assert answer == 2.8
 
-
-@pytest.mark.skip(reason='TODO: Fix variance overflows.')
 def test_variance():
     data = [0, 0, 1]
     result = statistics.variance(data)

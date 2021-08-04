@@ -113,7 +113,10 @@ void InstructionGraph::fixInstructions(){
 
         // Check that all inbound edges can be escaped.
         bool allEdgesEscapable = true;
-        for (auto & edgeIn: getEdges(instruction.first)){
+        auto edgesIn = getEdges(instruction.first);
+        vector<AbstractValueKind> typesIn;
+        for (auto & edgeIn: edgesIn){
+            typesIn.push_back(edgeIn.kind);
             if (!supportsEscaping(edgeIn.kind))
                 allEdgesEscapable = false;
         }
@@ -127,6 +130,10 @@ void InstructionGraph::fixInstructions(){
                 allOutputsEscapable = false;
         }
         if (!allOutputsEscapable)
+            continue;
+
+        // Check the specifics of this opcode.
+        if (!supportsUnboxing(instruction.second.opcode, typesIn))
             continue;
 
         // Otherwise, we can escape this instruction..
