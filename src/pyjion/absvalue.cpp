@@ -570,12 +570,14 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
                 if (OPT_ENABLED(IntegerUnboxingMultiply))
                     return &Integer;
                 else
+                    // TODO: assert Integer if the values are known (const)
                     return &BigInteger;
             case BINARY_POWER:
             case INPLACE_POWER:
                 if (OPT_ENABLED(IntegerUnboxingPower))
                     return &Integer;
                 else
+                    // TODO: assert Integer if the values are known (const)
                     return &BigInteger;
             case BINARY_ADD:
             case BINARY_AND:
