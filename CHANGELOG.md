@@ -1,6 +1,6 @@
 # Release notes
 
-## master
+## 1.0.0 (rc2)
 
 * BINARY_MULTIPLY and BINARY_POWER will assume the resulting integer is a big integer (not unboxed)
 * Introduced two optimizations IntegerUnboxingMultiply and IntegerUnboxingPower which are applied at optimization level 2. Try level two if you work with integers, but at smaller values to see better performance.
