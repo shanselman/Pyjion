@@ -128,6 +128,7 @@ def test_mean():
     answer = statistics.mean([1, 2, 3, 4, 4])
     assert answer == 2.8
 
+@pytest.mark.optimization(1)
 def test_variance():
     data = [0, 0, 1]
     result = statistics.variance(data)
@@ -138,6 +139,7 @@ def test_variance2():
     result = statistics.variance(data)
     assert result == 0.5
 
+@pytest.mark.optimization(1)
 def test_float_fraction_arithmetic():
     f1 = Fraction(0.3333333333333333)
     assert f1 == Fraction(6004799503160661, 18014398509481984)

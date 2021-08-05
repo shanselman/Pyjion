@@ -45,5 +45,11 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "external" in item.keywords and not config.getoption("--external"):
             item.add_marker(skip_external)
-        if "optimization" in item.keywords and config.getoption("--opt-level") == 0:
-            item.add_marker(skip_optimization)
+        if "optimization" in item.keywords:
+            args = item.get_closest_marker(name="optimization").args
+            if len(args) == 0:
+                level = 1
+            else:
+                level = args[0]
+            if config.getoption("--opt-level") != level:
+                item.add_marker(skip_optimization)
