@@ -140,7 +140,6 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
             case SETUP_WITH:
             case SETUP_ASYNC_WITH:
             case SETUP_FINALLY:
-                return IncompatibleOpcode_WithExcept;
             case FOR_ITER:
                 blockStarts.emplace_back(opcodeIndex, oparg + curByte + SIZEOF_CODEUNIT);
                 ehKind.push_back(true);
