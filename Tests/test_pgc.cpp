@@ -330,12 +330,12 @@ TEST_CASE("Test PGC integer logic"){
                 "     x = 2\n"
                 "     z = y * y + x - y\n"
                 "     x *= z\n"
-                "  return\n"
+                "  return x\n"
                 );
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
-        CHECK(t.returns() == "None");
+        CHECK(t.returns() == "19408");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
-        CHECK(t.returns() == "None");
+        CHECK(t.returns() == "19408");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
 }
