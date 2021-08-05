@@ -628,6 +628,6 @@ def delta_blue(n=100):
 if __name__ == "__main__":
     print("Deltablue took {0} without Pyjion".format(timeit.repeat(delta_blue, repeat=5, number=1)))
     pyjion.enable()
-    pyjion.set_optimization_level(1)
+    pyjion.set_optimization_level(2)
     print("Deltablue took {0} with Pyjion".format(timeit.repeat(delta_blue, repeat=5, number=1)))
     pyjion.disable()

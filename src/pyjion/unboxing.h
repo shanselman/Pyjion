@@ -31,6 +31,7 @@
 #include "absvalue.h"
 
 bool supportsUnboxing(py_opcode opcode);
+bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn);
 
 bool supportsEscaping(AbstractValueKind kind);
 

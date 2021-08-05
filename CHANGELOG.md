@@ -2,6 +2,8 @@
 
 ## master
 
+* BINARY_MULTIPLY and BINARY_POWER will assume the resulting integer is a big integer (not unboxed)
+* Introduced two optimizations IntegerUnboxingMultiply and IntegerUnboxingPower which are applied at optimization level 2. Try level two if you work with integers, but at smaller values to see better performance.
 * LOAD_BUILD_CLASS will infer a function type instead of Any (#42)
 * Instruction graphs will include the name of fast locals
 * Instruction graph const values are capped to 40 characters 
@@ -16,6 +18,7 @@
 * Fixed a bug where unboxed locals were decrefing frame locals on yield
 * Generators will not unbox fast locals for stability reasons
 * Fixed a regression on unboxed integers, caused by PGC values being set as Any
+* Assert return types for float object methods (as_integer_ratio, conjugate, is_integer, hex)
 
 ## 1.0.0 (rc1)
 

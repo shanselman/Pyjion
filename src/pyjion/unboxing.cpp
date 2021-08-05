@@ -23,6 +23,7 @@
 *
 */
 
+#include "pyjit.h"
 #include "unboxing.h"
 
 bool supportsUnboxing(py_opcode opcode){
@@ -51,6 +52,36 @@ bool supportsUnboxing(py_opcode opcode){
             return true;
         default:
             return false;
+    }
+}
+
+bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn){
+    switch (opcode){
+        case BINARY_POWER:
+        case INPLACE_POWER:
+            if (OPT_ENABLED(IntegerUnboxingPower)){
+                return true;
+            } else {
+                for (auto &t: edgesIn){
+                    if (t == AVK_Integer)
+                        return false;
+                }
+                return true;
+            }
+
+        case INPLACE_MULTIPLY:
+        case BINARY_MULTIPLY:
+            if (OPT_ENABLED(IntegerUnboxingMultiply)){
+                return true;
+            } else {
+                for (auto &t: edgesIn){
+                    if (t == AVK_Integer)
+                        return false;
+                }
+                return true;
+            }
+        default:
+            return true;
     }
 }
 

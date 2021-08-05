@@ -59,6 +59,8 @@ void setOptimizationLevel(unsigned short level){
     SET_OPT(LoadAttr, level, 1);
     SET_OPT(Unboxing, level, 1);
     SET_OPT(IsNone, level, 1);
+    SET_OPT(IntegerUnboxingMultiply, level, 2);
+    SET_OPT(IntegerUnboxingPower, level, 2);
 }
 
 PgcStatus nextPgcStatus(PgcStatus status){

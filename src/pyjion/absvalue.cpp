@@ -25,6 +25,7 @@
 
 #include "absvalue.h"
 #include "knownmethods.h"
+#include "pyjit.h"
 
 AnyValue Any;
 UndefinedValue Undefined;
@@ -564,15 +565,25 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             {
                 return &Float;
             }
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+                if (OPT_ENABLED(IntegerUnboxingMultiply))
+                    return &Integer;
+                else
+                    // TODO: assert Integer if the values are known (const)
+                    return &BigInteger;
             case BINARY_POWER:
             case INPLACE_POWER:
-                return &BigInteger;
+                if (OPT_ENABLED(IntegerUnboxingPower))
+                    return &Integer;
+                else
+                    // TODO: assert Integer if the values are known (const)
+                    return &BigInteger;
             case BINARY_ADD:
             case BINARY_AND:
             case BINARY_FLOOR_DIVIDE:
             case BINARY_LSHIFT:
             case BINARY_MODULO:
-            case BINARY_MULTIPLY:
             case BINARY_OR:
             case BINARY_RSHIFT:
             case BINARY_SUBTRACT:
@@ -582,7 +593,6 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_FLOOR_DIVIDE:
             case INPLACE_LSHIFT:
             case INPLACE_MODULO:
-            case INPLACE_MULTIPLY:
             case INPLACE_OR:
             case INPLACE_RSHIFT:
             case INPLACE_SUBTRACT:
@@ -800,6 +810,14 @@ AbstractValue* FloatValue::unary(AbstractSource* selfSources, int op) {
 
 const char* FloatValue::describe() {
     return "float";
+}
+
+AbstractValueKind FloatValue::resolveMethod(const char *name) {
+    for (auto const &b: floatMethodReturnTypes){
+        if (strcmp(name, b.first) == 0)
+            return b.second;
+    }
+    return AVK_Any;
 }
 
 // TupleValue methods
