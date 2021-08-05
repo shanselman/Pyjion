@@ -265,7 +265,7 @@ class AbstractInterpreter {
     AbstractValue* mReturnValue;
     // ** Inputs:
     PyCodeObject* mCode;
-    _Py_CODEUNIT *mByteCode;
+    _Py_CODEUNIT *mByteCode; // Used by macros
     size_t mSize;
     Local mErrorCheckLocal;
     bool mTracingEnabled;
@@ -427,7 +427,6 @@ private:
 
     void unwindHandlers();
 
-    void emitRaise(ExceptionHandler *handler);
     void updateIntermediateSources();
     void escapeEdges(const vector<Edge>& edges, py_opindex curByte);
     void yieldJumps();
