@@ -53,6 +53,7 @@ MethodValue Method;
 CodeObjectValue CodeObject;
 EnumeratorValue Enumerator;
 RangeIteratorValue RangeIterator;
+RangeValue Range;
 MemoryViewValue MemoryView;
 ClassMethodValue ClassMethod;
 FilterValue Filter;
@@ -75,6 +76,14 @@ AbstractValue* AbstractValue::binary(AbstractSource* selfSources, int op, Abstra
 }
 
 AbstractValue* AbstractValue::unary(AbstractSource* selfSources, int op) {
+    return &Any;
+}
+
+AbstractValue* AbstractValue::iter(AbstractSource* selfSources) {
+    return &Any;
+}
+
+AbstractValue* AbstractValue::next(AbstractSource* selfSources) {
     return &Any;
 }
 
@@ -1197,6 +1206,16 @@ const char *CodeObjectValue::describe() {
     return "codeobject";
 }
 
+// Iterators
+
+AbstractValue* RangeValue::iter(AbstractSource* selfSources) {
+    return &RangeIterator;
+}
+
+AbstractValue* RangeIteratorValue::next(AbstractSource* selfSources) {
+    return &Integer;
+}
+
 AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source){
     // IS this a builtin?
     if (source.hasSource() && source.Sources->isBuiltin())
@@ -1260,6 +1279,8 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind){
             return &Method;
         case AVK_BigInteger:
             return &Integer;
+        case AVK_Range:
+            return &Range;
         case AVK_RangeIterator:
             return &RangeIterator;
         case AVK_MemoryView:
@@ -1362,6 +1383,9 @@ AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
     }
     else if (type == &PyModule_Type) {
         return AVK_Module;
+    }
+    else if (type == &PyRange_Type) {
+        return AVK_Range;
     }
     else if (type == &PyRangeIter_Type) {
         return AVK_RangeIterator;

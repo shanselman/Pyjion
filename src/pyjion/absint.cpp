@@ -770,12 +770,10 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     // about their deletion.
                     break;
                 case GET_ITER: {
-                    auto iteratorType = POP_VALUE();
-                    // TODO : Allow guarded/PGC sources to be optimized.
-                    auto source = AbstractValueWithSources(
-                            &Iterable,
-                            newSource(new IteratorSource(iteratorType.Value->needsGuard() ? AVK_Any: iteratorType.Value->kind(), curByte)));
-                    lastState.push(source);
+                    auto in = POP_VALUE();
+                    auto out = in.Value->iter(in.Sources);
+                    PUSH_INTERMEDIATE(out);
+                    break;
                 }
                     break;
                 case FOR_ITER: {
@@ -789,7 +787,8 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     // When we compile this we don't actually leave the value on the stack,
                     // but the sequence of opcodes assumes that happens.  to keep our stack
                     // properly balanced we match what's really going on.
-                    PUSH_INTERMEDIATE(&Any);
+                    auto out = iterator.Value->next(iterator.Sources);
+                    PUSH_INTERMEDIATE(out);
                     break;
                 }
                 case POP_BLOCK: {

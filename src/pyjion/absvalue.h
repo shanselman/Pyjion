@@ -65,17 +65,18 @@ enum AbstractValueKind {
     AVK_Module = 21,
     AVK_Method = 22,
     AVK_BigInteger = 23,
-    AVK_RangeIterator = 24,
-    AVK_MemoryView = 25,
-    AVK_Classmethod = 26,
-    AVK_Filter = 27,
-    AVK_Property = 28,
-    AVK_Map = 29,
-    AVK_Baseobject = 30,
-    AVK_Reversed = 31,
-    AVK_Staticmethod = 32,
-    AVK_Super = 33,
-    AVK_Zip = 34,
+    AVK_Range = 24,
+    AVK_RangeIterator = 25,
+    AVK_MemoryView = 26,
+    AVK_Classmethod = 27,
+    AVK_Filter = 28,
+    AVK_Property = 29,
+    AVK_Map = 30,
+    AVK_Baseobject = 31,
+    AVK_Reversed = 32,
+    AVK_Staticmethod = 33,
+    AVK_Super = 34,
+    AVK_Zip = 35,
 };
 
 static bool isKnownType(AbstractValueKind kind) {
@@ -297,6 +298,8 @@ public:
     virtual AbstractValue* unary(AbstractSource* selfSources, int op);
     virtual AbstractValue* binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other);
     virtual AbstractValue* compare(AbstractSource* selfSources, int op, AbstractValueWithSources& other);
+    virtual AbstractValue* iter(AbstractSource* selfSources);
+    virtual AbstractValue* next(AbstractSource* selfSources);
 
     virtual bool isAlwaysTrue() {
         return false;
@@ -566,6 +569,16 @@ class EnumeratorValue : public AbstractValue {
     const char* describe() override;
 };
 
+class RangeValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_Range;
+    }
+    const char* describe() override {
+        return "range";
+    }
+    AbstractValue* iter(AbstractSource* selfSources) override;
+};
+
 class RangeIteratorValue : public AbstractValue {
     AbstractValueKind kind() override {
         return AVK_RangeIterator;
@@ -573,6 +586,7 @@ class RangeIteratorValue : public AbstractValue {
     const char* describe() override {
         return "range iterator";
     }
+    AbstractValue* next(AbstractSource* selfSources) override;
 };
 
 class MemoryViewValue : public AbstractValue {
@@ -740,6 +754,7 @@ extern MethodValue Method;
 extern CodeObjectValue CodeObject;
 extern EnumeratorValue Enumerator;
 extern RangeIteratorValue RangeIterator;
+extern RangeValue Range;
 extern MemoryViewValue MemoryView;
 extern ClassMethodValue ClassMethod;
 extern FilterValue Filter;
