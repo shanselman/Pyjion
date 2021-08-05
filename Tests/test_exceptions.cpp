@@ -52,7 +52,6 @@ private:
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();
         printf("Collected %zu values\n", collected);
-        printf("%s\n", PyUnicode_AsUTF8(m_jittedcode->j_graph));
         REQUIRE(!m_jittedcode->j_failed);
         return res;
     }
