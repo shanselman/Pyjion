@@ -98,7 +98,7 @@ public:
     }
 };
 
-TEST_CASE("Test exception handling", "[!mayfail]") {
+TEST_CASE("Test exception handling") {
     SECTION("test UnboundLocalError") {
         auto t = ExceptionTest(
                 "def f():\n  x = y\n  y = 1"
@@ -413,7 +413,7 @@ TEST_CASE("Test exception handling", "[!mayfail]") {
         }
     }
 
-    SECTION("try else", "[!mayfail]"){
+    SECTION("try else"){
         SECTION("test try except keep scope to else") {
             auto t = ExceptionTest(
                     "def f():\n  try:\n    a = 1\n  except:\n    a = 2\n  else:\n    a += 4\n  return a"

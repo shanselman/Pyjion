@@ -253,6 +253,15 @@ public:
     }
 };
 
+class InvalidStackEffectException: public std::exception {
+public:
+    InvalidStackEffectException() : std::exception() {};
+    const char * what () const noexcept override
+    {
+        return "Invalid stack effect";
+    }
+};
+
 #ifdef _WIN32
 class __declspec(dllexport) AbstractInterpreter {
 #pragma warning (disable:4251)

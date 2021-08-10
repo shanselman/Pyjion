@@ -988,8 +988,11 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     break;
             }
 #ifdef DEBUG
-            assert(skipEffect || 
-                static_cast<size_t>(PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump)) == (lastState.stackSize() - curStackLen));
+            if(!skipEffect){
+                if (static_cast<size_t>(PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump)) != (lastState.stackSize() - curStackLen)){
+                    throw InvalidStackEffectException();
+                }
+            }
 #endif
             updateStartState(lastState, curByte + SIZEOF_CODEUNIT);
             mStartStates[curByte].pgcProbeSize = pgcSize;

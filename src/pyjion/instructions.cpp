@@ -288,7 +288,7 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
             blockColor = "black";
         }
         if (exceptionHandlers.find(node.second.index) != exceptionHandlers.end()){
-            PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\n", node.first));
+            PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\nlabel=\"except block\"\n", node.first));
         }
 
         PyObject* op;
@@ -324,10 +324,13 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
                 break;
             case SETUP_FINALLY:
                 exceptionHandlers.insert(node.second.index + node.second.oparg + SIZEOF_CODEUNIT);
+                op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
+                PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\nlabel = \"try block\";\n", node.first));
+                break;
             case SETUP_WITH:
             case SETUP_ASYNC_WITH:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
-                PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\n", node.first));
+                PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\nlabel = \"with block\";\n", node.first));
                 break;
             default:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
