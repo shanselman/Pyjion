@@ -33,6 +33,7 @@
 
 #include "absint.h"
 #include "pyjit.h"
+#include "pycomp.h"
 
 #define PGC_READY() g_pyjionSettings.pgc && profile != nullptr
 
@@ -261,7 +262,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
             short pgcSize = 0;
             oparg = GET_OPARG(curByte);
         processOpCode:
-
             size_t curStackLen = lastState.stackSize();
             int jump = 0;
             bool skipEffect = false;
@@ -438,11 +438,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back(oparg);
                     }
 
-                    if (value.Value->isAlwaysFalse()) {
-                        // We're always jumping, we don't need to process the following opcodes...
-                        goto next;
-                    }
-
                     // we'll continue processing after the jump with our new state...
                     break;
                 }
@@ -452,11 +447,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     // merge our current state into the branched to location...
                     if (updateStartState(lastState, oparg)) {
                         queue.push_back(oparg);
-                    }
-
-                    if (value.Value->isAlwaysTrue()) {
-                        // We're always jumping, we don't need to process the following opcodes...
-                        goto next;
                     }
 
                     // we'll continue processing after the jump with our new state...
@@ -471,10 +461,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back(oparg);
                     }
                     auto value = POP_VALUE();
-                    if (value.Value->isAlwaysTrue()) {
-                        // we always jump, no need to analyze the following instructions...
-                        goto next;
-                    }
                 }
                     break;
                 case JUMP_IF_FALSE_OR_POP: {
@@ -486,10 +472,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back(oparg);
                     }
                     auto value = POP_VALUE();
-                    if (value.Value->isAlwaysFalse()) {
-                        // we always jump, no need to analyze the following instructions...
-                        goto next;
-                    }
                 }
                     break;
                 case JUMP_IF_NOT_EXC_MATCH:
@@ -499,26 +481,26 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     if (updateStartState(lastState, oparg)) {
                         queue.push_back(oparg);
                     }
-                    goto next;
+                    goto next_block;
                 case JUMP_ABSOLUTE:
                     if (updateStartState(lastState, oparg)) {
                         queue.push_back(oparg);
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
-                    goto next;
+                    goto next_block;
                 case JUMP_FORWARD:
                     if (updateStartState(lastState, (size_t) oparg + curByte + SIZEOF_CODEUNIT)) {
                         queue.push_back((size_t) oparg + curByte + SIZEOF_CODEUNIT);
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
-                    goto next;
+                    goto next_block;
                 case RETURN_VALUE: {
                     auto retValue = POP_VALUE();
                     mReturnValue = mReturnValue->mergeWith(retValue.Value);
                     }
-                    goto next;
+                    goto next_block;
                 case LOAD_NAME: {
                     // Used to load __name__ for a class def
                     PUSH_INTERMEDIATE(&Any);
@@ -809,12 +791,12 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                 }
                 case POP_BLOCK:
                     lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
-                    break;
+                    goto next_block;
                 case POP_EXCEPT:
                     POP_VALUE();
                     POP_VALUE();
                     POP_VALUE();
-                    lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
+                    //lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
                     break;
                 case LOAD_BUILD_CLASS: {
                     PUSH_INTERMEDIATE(&Function);
@@ -990,6 +972,7 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
 #ifdef DEBUG
             if(!skipEffect){
                 if (static_cast<size_t>(PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump)) != (lastState.stackSize() - curStackLen)){
+                    printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(opcode), curByte, PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump), (lastState.stackSize() - curStackLen));
                     throw InvalidStackEffectException();
                 }
             }
@@ -999,7 +982,7 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
             mStartStates[curByte].requiresPgcProbe = pgcRequired;
         }
 
-    next:;
+    next_block:;
     } while (!queue.empty());
 
     return Success;
