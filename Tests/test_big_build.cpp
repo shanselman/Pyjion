@@ -27,7 +27,7 @@
 #include "testing_util.h"
 #include <Python.h>
 
-TEST_CASE("Test big const builds") {
+TEST_CASE("Test big const builds", "[slow]") {
 
     SECTION("test BUILD_CONST_KEY_MAP") {
         auto n_keys = GENERATE(100, 1000, 10000);

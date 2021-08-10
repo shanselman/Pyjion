@@ -27,6 +27,7 @@
 #include <opcode.h>
 #include <object.h>
 #include <deque>
+#include <set>
 #include <unordered_map>
 #include <algorithm>
 
@@ -95,7 +96,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
 
     py_oparg oparg;
     vector<bool> ehKind;
-    vector<AbsIntBlockInfo> blockStarts;
+    AbstractBlockList blockStarts;
     for (py_opindex curByte = 0; curByte < mSize; curByte += SIZEOF_CODEUNIT) {
         py_opindex opcodeIndex = curByte;
         py_opcode byte = GET_OPCODE(curByte);
@@ -110,6 +111,23 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
         }
 
         switch (byte) { // NOLINT(hicpp-multiway-paths-covered)
+            case EXTENDED_ARG:
+            {
+                curByte += SIZEOF_CODEUNIT;
+                oparg = (oparg << 8) | GET_OPARG(curByte);
+                byte = GET_OPCODE(curByte);
+                goto processOpCode;
+            }
+
+            // Opcodes that push basic blocks
+            case SETUP_FINALLY:
+            case SETUP_WITH:
+            case SETUP_ASYNC_WITH:
+            case FOR_ITER:
+                blockStarts.emplace_back(opcodeIndex, oparg + curByte + SIZEOF_CODEUNIT);
+                ehKind.push_back(true);
+                break;
+            // Opcodes that pop basic blocks
             case POP_EXCEPT:
             case POP_BLOCK:
             {
@@ -120,13 +138,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
                 }
                 break;
             }
-            case EXTENDED_ARG:
-            {
-                curByte += SIZEOF_CODEUNIT;
-                oparg = (oparg << 8) | GET_OPARG(curByte);
-                byte = GET_OPCODE(curByte);
-                goto processOpCode;
-            }
+
             case YIELD_VALUE:
                 m_yieldOffsets[opcodeIndex] = m_comp->emit_define_label();
                 break;
@@ -138,13 +150,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
                     m_assignmentState[oparg] = false;
                 }
                 break;
-            case SETUP_FINALLY:
-            case SETUP_WITH:
-            case SETUP_ASYNC_WITH:
-            case FOR_ITER:
-                blockStarts.emplace_back(opcodeIndex, oparg + curByte + SIZEOF_CODEUNIT);
-                ehKind.push_back(true);
-                break;
+
             case LOAD_GLOBAL:
             {
                 auto name = PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg));
@@ -239,7 +245,8 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
     vector<const char*> utf8_names ;
     for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++)
         utf8_names.push_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
-
+    // Keep a list of SETUP_FINALLY instructions and their offsets, to push the exception values onto the stack
+    unordered_map<py_opindex, py_opindex> tryExceptMarkers;
     do {
         py_oparg oparg;
         py_opindex cur = queue.front();
@@ -259,6 +266,15 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
             int jump = 0;
             bool skipEffect = false;
             size_t stackPosition = 0;
+            if (tryExceptMarkers.find(curByte) != tryExceptMarkers.end()){
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                skipEffect = true;
+            }
 
             switch (opcode) {
                 case EXTENDED_ARG: {
@@ -735,7 +751,7 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     for (int i = 0; i < oparg; i++) {
                         POP_VALUE();
                     }
-                    goto next;
+                    break;
                 case STORE_SUBSCR:
                     if (PGC_READY()){
                         PGC_PROBE(3);
@@ -791,14 +807,14 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     PUSH_INTERMEDIATE(out);
                     break;
                 }
-                case POP_BLOCK: {
+                case POP_BLOCK:
                     lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
-                    PUSH_INTERMEDIATE(&Any);
-                    PUSH_INTERMEDIATE(&Any);
-                    PUSH_INTERMEDIATE(&Any);
-                }
+                    break;
                 case POP_EXCEPT:
-                    skipEffect = true;
+                    POP_VALUE();
+                    POP_VALUE();
+                    POP_VALUE();
+                    lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
                     break;
                 case LOAD_BUILD_CLASS: {
                     PUSH_INTERMEDIATE(&Function);
@@ -847,18 +863,12 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back((size_t) oparg + curByte + SIZEOF_CODEUNIT);
                     }
                     PUSH_INTERMEDIATE(&Any);
-                    goto next;
+                    break;
                 }
                 case SETUP_FINALLY: {
+                    // Capture where the except block starts.
+                    tryExceptMarkers[(size_t)oparg + curByte + SIZEOF_CODEUNIT] = curByte;
                     auto ehState = lastState;
-                    // Except is entered with the exception object, traceback, and exception
-                    // type.  TODO: We could type these stronger then they currently are typed
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
                     if (updateStartState(ehState, (size_t) oparg + curByte + SIZEOF_CODEUNIT)) {
                         queue.push_back((size_t)oparg + curByte + SIZEOF_CODEUNIT);
                     }

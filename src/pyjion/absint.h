@@ -52,7 +52,7 @@ struct AbsIntBlockInfo {
         BlockEnd = blockEnd;
     }
 };
-
+typedef vector<AbsIntBlockInfo> AbstractBlockList;
 // The abstract interpreter implementation.  The abstract interpreter performs
 // static analysis of the Python byte code to determine what types are known.
 // Ultimately this information will feedback into code generation allowing
