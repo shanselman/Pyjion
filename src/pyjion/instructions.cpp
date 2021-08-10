@@ -26,7 +26,7 @@
 #include "instructions.h"
 #include "pycomp.h"
 #include "unboxing.h"
-
+#include <set>
 
 InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex , const InterpreterStack*> stacks, bool escapeLocals) {
     this->code = code;
@@ -277,7 +277,7 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx){
 PyObject* InstructionGraph::makeGraph(const char* name) {
     PyObject* g = PyUnicode_FromFormat("digraph %s { \n", name);
     PyUnicode_AppendAndDel(&g, PyUnicode_FromString("\tnode [shape=box];\n\tFRAME [label=FRAME];\n"));
-
+    set<py_opindex> exceptionHandlers ;
     for (const auto & node: instructions){
         const char* blockColor;
         if (node.second.escape) {
@@ -287,6 +287,10 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
         } else {
             blockColor = "black";
         }
+        if (exceptionHandlers.find(node.second.index) != exceptionHandlers.end()){
+            PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\n", node.first));
+        }
+
         PyObject* op;
         switch(node.second.opcode){
             case LOAD_ATTR:
@@ -314,6 +318,17 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
                        PyUnicode_AsUTF8(PyObject_Repr(PyTuple_GetItem(this->code->co_varnames, node.second.oparg))), blockColor);
                 break;
+            case POP_EXCEPT:
+            case POP_BLOCK:
+                op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n}\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
+                break;
+            case SETUP_FINALLY:
+                exceptionHandlers.insert(node.second.index + node.second.oparg + SIZEOF_CODEUNIT);
+            case SETUP_WITH:
+            case SETUP_ASYNC_WITH:
+                op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
+                PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\n", node.first));
+                break;
             default:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
                 break;
@@ -322,7 +337,7 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
 
         switch(node.second.opcode){
             case JUMP_FORWARD:
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.index + node.second.oparg));
+                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.index + node.second.oparg + SIZEOF_CODEUNIT));
                 break;
             case JUMP_ABSOLUTE:
                 PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.oparg));
