@@ -796,8 +796,8 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     POP_VALUE();
                     POP_VALUE();
                     POP_VALUE();
-                    //lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
-                    break;
+                    lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
+                    goto next_block;
                 case LOAD_BUILD_CLASS: {
                     PUSH_INTERMEDIATE(&Function);
                     break;
