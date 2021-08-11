@@ -2223,8 +2223,12 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             break;
             case RERAISE:{
                 m_comp->emit_restore_err();
-                unwindHandlers();
-                skipEffect=true;
+                skipEffect = true;
+                if (m_stack.size() >= 3)
+                    decStack(3);
+                else
+                    printf("empty stack?");
+                branchRaise("reraise error",  "", curByte);
                 break;
             }
             case POP_EXCEPT:
@@ -2233,7 +2237,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 m_comp->pop_top();
                 m_comp->pop_top();
                 decStack(3);
-                skipEffect = true;
                 break;
             case POP_BLOCK:
                 m_blockStack.pop_back();

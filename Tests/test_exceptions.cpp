@@ -162,11 +162,18 @@ TEST_CASE("Test exception handling") {
         CHECK(t.raises() == PyExc_ZeroDivisionError);
     }
 
-    SECTION("test simple exception filters") {
+    SECTION("test simple exception filters not matching") {
         auto t = ExceptionTest(
                 "def f():\n  try:\n    raise TypeError('err')\n  except ValueError:\n    pass\n  return 2\n"
                 );
         CHECK(t.raises() == PyExc_TypeError);
+    }
+
+    SECTION("test simple exception filters matching") {
+        auto t = ExceptionTest(
+                "def f():\n  try:\n    raise TypeError('err')\n  except TypeError:\n    pass\n  return 2\n"
+                );
+        CHECK(t.returns() == "2");
     }
 
     SECTION("test exception filters") {
