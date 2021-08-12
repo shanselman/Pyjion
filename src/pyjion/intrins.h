@@ -203,7 +203,7 @@ void PyJit_PopFrame(PyFrameObject* frame);
 
 void PyJit_EhTrace(PyFrameObject *f);
 
-int PyJit_Raise(PyObject *exc, PyObject *cause);
+void PyJit_Raise(PyObject *exc, PyObject *cause);
 
 PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg);
 

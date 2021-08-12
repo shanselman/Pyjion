@@ -176,7 +176,7 @@ TEST_CASE("Test exception handling") {
         CHECK(t.returns() == "2");
     }
 
-    SECTION("test exception filters") {
+    SECTION("test nested exception filters") {
         auto t = ExceptionTest(
                 "def f():\n    try:\n        try:\n             try:\n                  raise TypeError('err')\n             except BaseException:\n                  raise\n        finally:\n             pass\n    finally:\n        return 42\n"
                 );

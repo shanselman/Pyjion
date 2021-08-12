@@ -1179,7 +1179,7 @@ void PyJit_EhTrace(PyFrameObject *f) {
     PyTraceBack_Here(f);
 }
 
-int PyJit_Raise(PyObject *exc, PyObject *cause) {
+void PyJit_Raise(PyObject *exc, PyObject *cause) {
     PyObject *type = nullptr, *value = nullptr;
 
     if (exc == nullptr) {
@@ -1192,13 +1192,13 @@ int PyJit_Raise(PyObject *exc, PyObject *cause) {
         if (type == Py_None || type == nullptr) {
             PyErr_SetString(PyExc_RuntimeError,
                 "No active exception to reraise");
-            return 0;
+            return ; // 0;
         }
         Py_XINCREF(type);
         Py_XINCREF(value);
         Py_XINCREF(tb);
         PyErr_Restore(type, value, tb);
-        return 1;
+        return ; // 1;
     }
 
     /* We support the following forms of raise:
@@ -1261,13 +1261,13 @@ int PyJit_Raise(PyObject *exc, PyObject *cause) {
     /* PyErr_SetObject incref's its arguments */
     Py_XDECREF(value);
     Py_XDECREF(type);
-    return 0;
+    return ;//0;
 
 raise_error:
     Py_XDECREF(value);
     Py_XDECREF(type);
     Py_XDECREF(cause);
-    return 0;
+    return ; //0;
 }
 
 PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {

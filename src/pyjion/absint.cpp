@@ -2180,15 +2180,14 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         auto curHandler = currentHandler();
                         // raise exc
                         m_comp->emit_raise_varargs();
+
                         if (oparg == 0) {
                                 // The stack actually ended up being empty - either because we didn't
                                 // have any values, or the values were all non-objects that we could
                                 // spill eagerly.
                                 m_comp->emit_branch(BranchAlways, curHandler->ErrorTarget);
-                        }
-                        else {
+                        } else {
                             // if we have args we'll always return 0...
-                            m_comp->emit_pop();
                             branchRaise("hit native error",  "", curByte);
                         }
                         break;
