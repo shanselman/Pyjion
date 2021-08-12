@@ -1661,7 +1661,17 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             m_stack = curStackDepth->second;
         }
         if (m_exceptionHandler.IsHandlerAtOffset(curByte)){
+
             ExceptionHandler* handler = m_exceptionHandler.HandlerAtOffset(curByte);
+
+            auto newBlock = BlockInfo(
+                    0,
+                    SETUP_FINALLY,
+                    handler->BackHandler,
+                    EhfInExceptHandler);
+
+            m_blockStack.push_back(newBlock);
+
             m_comp->emit_mark_label(handler->ErrorTarget);
             m_comp->emit_fetch_err(handler->ExVars.FinallyExc,
                                    handler->ExVars.FinallyValue,
@@ -2225,8 +2235,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 skipEffect = true;
                 if (m_stack.size() >= 3)
                     decStack(3);
-                else
-                    printf("empty stack?");
                 branchRaise("reraise error",  "", curByte);
                 break;
             }

@@ -52,6 +52,7 @@ private:
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();
         printf("Collected %zu values\n", collected);
+        printf("Result %d\n", m_jittedcode->j_compile_result);
         REQUIRE(!m_jittedcode->j_failed);
         return res;
     }
