@@ -437,9 +437,9 @@ TEST_CASE("Test exception handling") {
 
         SECTION("test try except keep scope to else with raise and filter") {
             auto t = ExceptionTest(
-                    "def f():\n  try:\n    a = 1/0\n  except OSError:\n    a = 2\n  else:\n    a += 4\n  return a"
+                    "def f():\n  try:\n    a = 1/0\n  except ZeroDivisionError:\n    a = 2\n  else:\n    a += 4\n  return a"
                     );
-            CHECK(t.returns() == "5");
+            CHECK(t.returns() == "2");
         }
     }
 }
