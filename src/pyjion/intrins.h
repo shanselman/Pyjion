@@ -167,6 +167,7 @@ PyObject* PyJit_InplaceOr(PyObject *left, PyObject *right);
 int PyJit_PrintExpr(PyObject *value);
 
 void PyJit_PrepareException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldVal, PyObject** oldTb);
+void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldVal, PyObject** oldTb);
 void PyJit_UnwindEh(PyObject*exc, PyObject*val, PyObject*tb);
 
 #define CANNOT_CATCH_MSG "catching classes that do not inherit from "\

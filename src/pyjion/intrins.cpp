@@ -760,6 +760,42 @@ void PyJit_PrepareException(PyObject** exc, PyObject**val, PyObject** tb, PyObje
     Py_INCREF(*tb);
 }
 
+void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldVal, PyObject** oldTb) {
+    auto tstate = PyThreadState_GET();
+    _PyErr_StackItem *exc_info = tstate->exc_info;
+    // we take ownership of these into locals...
+    if (tstate->curexc_type != nullptr) {
+        *oldexc = exc_info->exc_type;
+    }
+    else {
+        *oldexc = Py_None;
+        Py_INCREF(Py_None);
+    }
+    *oldVal = exc_info->exc_value;
+    *oldTb = exc_info->exc_traceback;
+
+    PyErr_Fetch(exc, val, tb);
+    /* Make the raw exception data
+    available to the handler,
+    so a program can emulate the
+    Python main loop. */
+    PyErr_NormalizeException(
+            exc, val, tb);
+    if (tb != nullptr)
+        PyException_SetTraceback(*val, *tb);
+    else
+        PyException_SetTraceback(*val, Py_None);
+    Py_INCREF(*exc);
+    exc_info->exc_type = *exc;
+    Py_INCREF(*val);
+    exc_info->exc_value = *val;
+    exc_info->exc_traceback = *tb;
+    if (*tb == nullptr)
+        *tb = Py_None;
+    Py_INCREF(*tb);
+}
+
+
 void PyJit_UnwindEh(PyObject*exc, PyObject*val, PyObject*tb) {
     auto tstate = PyThreadState_GET();
     if (val != nullptr && !PyExceptionInstance_Check(val)){

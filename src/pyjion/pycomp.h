@@ -118,7 +118,7 @@
 #define METHOD_ISNOT                             0x0000004A
 #define METHOD_IS_BOOL                           0x0000004B
 #define METHOD_ISNOT_BOOL                        0x0000004C
-
+#define METHOD_HANDLE_EXCEPTION                  0x0000004D
 #define METHOD_FLOAT_FROM_DOUBLE                 0x00000053
 #define METHOD_BOOL_FROM_LONG                    0x00000054
 #define METHOD_PYERR_SETSTRING                   0x00000055
