@@ -462,7 +462,7 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     }
                     auto value = POP_VALUE();
                 }
-                    break;
+                break;
                 case JUMP_IF_FALSE_OR_POP: {
                     auto curState = lastState;
                     auto top = POP_VALUE();
@@ -2837,9 +2837,6 @@ void AbstractInterpreter::jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo
     errorCheck("failed to compare exceptions","", opcodeIndex);
     m_comp->emit_ptr(Py_True);
     m_comp->emit_branch(BranchEqual, handle);
-    m_comp->emit_pop();
-    m_comp->emit_pop();
-    m_comp->emit_pop();
     m_comp->emit_branch(BranchAlways, target);
     m_comp->emit_mark_label(handle);
     m_offsetStack[jumpTo] = ValueStack(m_stack);
