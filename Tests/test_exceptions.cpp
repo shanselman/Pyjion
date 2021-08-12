@@ -234,9 +234,9 @@ TEST_CASE("Test exception handling") {
 
     SECTION("test exception raise inside finally") {
         auto t = ExceptionTest(
-                "def f():\n    try:\n         raise Exception()\n    finally:\n        raise Exception()"
+                "def f():\n    try:\n         raise Exception()\n    finally:\n        raise ValueError()"
                 );
-        CHECK(t.raises() == PyExc_SystemError);
+        CHECK(t.raises() == PyExc_ValueError);
     }
 
     SECTION("test raise in finally causes runtime error") {
