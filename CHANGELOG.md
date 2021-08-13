@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.0 (master)
+
+* Implemented `try..except` statements, stacked exception handlers and exception filtering.
+
 ## 1.0.0 (rc2)
 
 * BINARY_MULTIPLY and BINARY_POWER will assume the resulting integer is a big integer (not unboxed)
