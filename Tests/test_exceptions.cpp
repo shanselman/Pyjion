@@ -254,13 +254,6 @@ TEST_CASE("Test exception handling") {
         CHECK(t.raises() == PyExc_OSError);
     }
 
-    SECTION("test stack dump") {
-        auto t = ExceptionTest(
-                "def x():\n     try:\n         b\n     except:\n         c\n\ndef f():\n    try:\n        x()\n    except:\n        pass\n    return sys.exc_info()[0]\n\n"
-                );
-        CHECK(t.returns() == "None");
-    }
-
     SECTION("test handle in finally") {
         auto t = ExceptionTest(
                 "def f():\n    try:\n        min(1,2)\n    finally:\n        try:\n            min(1,2)\n        finally:\n            pass\n    return 1"
