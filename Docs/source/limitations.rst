@@ -3,16 +3,6 @@
 Known Limitations
 =================
 
-Exception Handling
-------------------
-
-Pyjion does not currently support ``try..except`` blocks. 
-
-Initial implementations were buggy, due to CPython being tightly coupled to fields inside frame objects. Ceval's frame evaluation loop keeps two stacks, a value stack and an exception block handler stack.
-Have both Pyjion and CPython evaluate frames causes a number of issues.
-
-Some work has been done to support this.
-
 With statements
 ---------------
 

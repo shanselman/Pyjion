@@ -2181,18 +2181,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         // returns 1 if we're doing a re-raise in which case we don't need
                         // to update the traceback.  Otherwise returns 0.
                         auto curHandler = currentHandler();
-                        // raise exc
                         m_comp->emit_raise_varargs();
-
-                        if (oparg == 0) {
-                                // The stack actually ended up being empty - either because we didn't
-                                // have any values, or the values were all non-objects that we could
-                                // spill eagerly.
-                                m_comp->emit_branch(BranchAlways, curHandler->ErrorTarget);
-                        } else {
-                            // if we have args we'll always return 0...
-                            branchRaise("hit native error",  "", curByte);
-                        }
+                        // TODO : Handle raise/re-raise, there is no return value at the moment, but I've commented it out.
+                        branchRaise("hit native error",  "", curByte);
                         break;
                 }
                 break;
@@ -2225,9 +2216,12 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             break;
             case RERAISE:{
                 m_comp->emit_restore_err();
-                skipEffect = true;
+                // TODO: Both RERAISE and POP_EXCEPT are unreachable in some scenarios.
+                // Potentially mark these instructions and skip them.
                 if (m_stack.size() >= 3)
                     decStack(3);
+                else
+                    skipEffect = true;
                 branchRaise("reraise error",  "", curByte);
                 break;
             }
@@ -2236,7 +2230,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 m_comp->pop_top();
                 m_comp->pop_top();
                 m_comp->pop_top();
-                decStack(3);
+                if (m_stack.size() >= 3)
+                    decStack(3);
+                else
+                    skipEffect = true;
                 break;
             case POP_BLOCK:
                 m_blockStack.pop_back();
