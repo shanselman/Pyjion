@@ -271,7 +271,6 @@ class AbstractInterpreter {
     // ** Results produced:
     // Tracks the interpreter state before each opcode
     unordered_map<py_opindex, InterpreterState> mStartStates;
-    AbstractValue* mReturnValue;
     // ** Inputs:
     PyCodeObject* mCode;
     _Py_CODEUNIT *mByteCode; // Used by macros
@@ -347,7 +346,6 @@ public:
     // Returns information about the stack at the specific byte code index.
     InterpreterStack& getStackInfo(py_opindex byteCodeIndex);
 
-    AbstractValue* getReturnInfo();
     bool pgcProbeRequired(py_opindex byteCodeIndex, PgcStatus status);
     short pgcProbeSize(py_opindex byteCodeIndex);
     void enableTracing();

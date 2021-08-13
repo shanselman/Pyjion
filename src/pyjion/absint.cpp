@@ -59,7 +59,7 @@
     (to).push(AbstractValueWithSources((ty), newSource(new IntermediateSource(curByte))));
 #define FLAG_OPT_USAGE(opt) (optimizationsMade = optimizationsMade | (opt))
 
-AbstractInterpreter::AbstractInterpreter(PyCodeObject *code, IPythonCompiler* comp) : mReturnValue(&Undefined), mCode(code), m_comp(comp) {
+AbstractInterpreter::AbstractInterpreter(PyCodeObject *code, IPythonCompiler* comp) : mCode(code), m_comp(comp) {
     mByteCode = (_Py_CODEUNIT *)PyBytes_AS_STRING(code->co_code);
     mSize = PyBytes_Size(code->co_code);
     mTracingEnabled = false;
@@ -498,9 +498,8 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     goto next_block;
                 case RETURN_VALUE: {
                     auto retValue = POP_VALUE();
-                    mReturnValue = mReturnValue->mergeWith(retValue.Value);
-                    }
-                    goto next_block;
+                }
+                goto next_block;
                 case LOAD_NAME: {
                     // Used to load __name__ for a class def
                     PUSH_INTERMEDIATE(&Any);
@@ -1103,10 +1102,6 @@ bool AbstractInterpreter::pgcProbeRequired(py_opindex byteCodeIndex, PgcStatus s
     if (status == PgcStatus::Uncompiled)
         return mStartStates[byteCodeIndex].requiresPgcProbe;
     return false;
-}
-
-AbstractValue* AbstractInterpreter::getReturnInfo() {
-    return mReturnValue;
 }
 
 AbstractSource* AbstractInterpreter::addLocalSource(py_opindex opcodeIndex, py_oparg localIndex) {

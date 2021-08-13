@@ -8,6 +8,8 @@
 #include <util.h>
 #include <pyjit.h>
 
+#include <utility>
+
 PyCodeObject* CompileCode(const char*);
 PyCodeObject* CompileCode(const char* code, vector<const char*> locals, vector<const char*> globals);
 PyObject* CompileFunction(const char* code);
@@ -23,7 +25,7 @@ public:
 
     TestInput(const char* expected, vector<PyObject*> args) {
         m_expected = expected;
-        m_args = args;
+        m_args = std::move(args);
     }
 };
 
@@ -34,28 +36,23 @@ public:
 
     TestCase(const char *code, const char* expected) {
         m_code = code;
-        m_inputs.push_back(TestInput(expected));
+        m_inputs.emplace_back(expected);
 
     }
 
-    TestCase(const char *code, TestInput input) {
+    TestCase(const char *code, const TestInput& input) {
         m_code = code;
         m_inputs.push_back(input);
     }
 
     TestCase(const char *code, vector<TestInput> inputs) {
         m_code = code;
-        m_inputs = inputs;
+        m_inputs = std::move(inputs);
     }
 };
 
-class AIVerifier {
-public:
-    virtual void verify(AbstractInterpreter& interpreter) = 0;
-};
-
 /* Verify the inferred type stored in the locals array before a specified bytecode executes. */
-class VariableVerifier : public AIVerifier {
+class VariableVerifier {
 private:
     // The bytecode whose locals state we are checking *before* execution.
     size_t m_byteCodeIndex;
@@ -67,35 +64,26 @@ private:
     bool m_undefined;
 public:
     VariableVerifier(size_t byteCodeIndex, size_t localIndex, AbstractValueKind kind, bool undefined = false) ;
-
-    void verify(AbstractInterpreter& interpreter) override;
-};
-
-class ReturnVerifier : public AIVerifier {
-    AbstractValueKind m_kind;
-public:
-    explicit ReturnVerifier(AbstractValueKind kind);
-
-    void verify(AbstractInterpreter& interpreter) override;
+    void verify(AbstractInterpreter& interpreter);
 };
 
 class AITestCase {
 private:
 public:
     const char* m_code;
-    vector<AIVerifier*> m_verifiers;
+    vector<VariableVerifier*> m_verifiers;
 
-    AITestCase(const char *code, AIVerifier* verifier) {
+    AITestCase(const char *code, VariableVerifier* verifier) {
         m_code = code;
         m_verifiers.push_back(verifier);
     }
 
-    AITestCase(const char *code, vector<AIVerifier*> verifiers) {
+    AITestCase(const char *code, vector<VariableVerifier*> verifiers) {
         m_code = code;
         m_verifiers = std::move(verifiers);
     }
 
-    AITestCase(const char *code, std::initializer_list<AIVerifier*> list) {
+    AITestCase(const char *code, std::initializer_list<VariableVerifier*> list) {
         m_code = code;
         m_verifiers = list;
     }
