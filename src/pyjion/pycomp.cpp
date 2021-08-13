@@ -95,6 +95,19 @@ bool PythonCompiler::emit_pop_frame() {
     }
 }
 
+void PythonCompiler::emit_push_block(int32_t type, int32_t handler, int32_t level) {
+    load_frame();
+    m_il.ld_i4(type);
+    m_il.ld_i4(type);
+    m_il.ld_i4(type);
+    m_il.emit_call(METHOD_BLOCK_PUSH);
+}
+
+void PythonCompiler::emit_pop_block() {
+    load_frame();
+    m_il.emit_call(METHOD_BLOCK_POP);
+}
+
 void PythonCompiler::emit_eh_trace() {
     load_frame();
     m_il.emit_call(METHOD_EH_TRACE);
@@ -2637,6 +2650,8 @@ GLOBAL_METHOD(METHOD_LIST_ITEM_FROM_BACK, &PyJit_GetListItemReversed, CORINFO_TY
 GLOBAL_METHOD(METHOD_GIL_ENSURE, &PyGILState_Ensure, CORINFO_TYPE_NATIVEINT);
 GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 
+GLOBAL_METHOD(METHOD_BLOCK_POP, &PyFrame_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT));
 
 const char* opcodeName(py_opcode opcode) {
 #define OP_TO_STR(x)   case x: return #x;

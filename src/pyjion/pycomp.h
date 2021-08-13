@@ -50,12 +50,12 @@
 #define METHOD_FLOORDIVIDE_TOKEN                 0x00000004
 #define METHOD_POWER_TOKEN                       0x00000005
 #define METHOD_MODULO_TOKEN                      0x00000006
-// Unused                                        0x00000007
+#define METHOD_BLOCK_PUSH                        0x00000007
 #define METHOD_STOREMAP_TOKEN                    0x00000008
 #define METHOD_RICHCMP_TOKEN                     0x00000009
 #define METHOD_CONTAINS_TOKEN                    0x0000000A
 #define METHOD_NOTCONTAINS_TOKEN                 0x0000000B
-// Unused                                        0x0000000C
+#define METHOD_BLOCK_POP                         0x0000000C
 #define METHOD_DELETESUBSCR_TOKEN                0x0000000D
 #define METHOD_NEWFUNCTION_TOKEN                 0x0000000E
 #define METHOD_GETITER_TOKEN                     0x0000000F
@@ -289,6 +289,10 @@ public:
 
     bool emit_push_frame() override;
     bool emit_pop_frame() override;
+
+    void emit_push_block(int32_t type, int32_t handler, int32_t level) override;
+    void emit_pop_block() override;
+
     void emit_eh_trace() override;
 
     void emit_lasti_init() override;

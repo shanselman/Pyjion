@@ -2218,6 +2218,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         newHandler);
 
                 m_blockStack.push_back(newBlock);
+                m_comp->emit_push_block(SETUP_FINALLY, jumpTo, 0);
 
                 ValueStack newStack = ValueStack(m_stack);
                 newStack.inc(6, STACK_KIND_OBJECT);
@@ -2238,6 +2239,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 break;
             }
             case POP_EXCEPT:
+                m_comp->emit_pop_block();
+                m_comp->emit_pop(); // Dont do anything with the block atm
                 popExcept();
                 m_comp->pop_top();
                 m_comp->pop_top();
@@ -2248,6 +2251,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                     skipEffect = true;
                 break;
             case POP_BLOCK:
+                m_comp->emit_pop_block();
+                m_comp->emit_pop(); // Dont do anything with the block atm
                 m_blockStack.pop_back();
                 break;
             case SETUP_WITH:
