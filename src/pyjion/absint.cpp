@@ -2608,39 +2608,6 @@ void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcod
     }
 }
 
-void AbstractInterpreter::unwindHandlers(){
-    // for each exception handler we need to load the exception
-    // information onto the stack, and then branch to the correct
-    // handler.  When we take an error we'll branch down to this
-    // little stub and then back up to the correct handler.
-    if (!m_exceptionHandler.Empty()) {
-        // TODO: Unify the first handler with this loop
-        for (auto handler: m_exceptionHandler.GetHandlers()) {
-            //emitRaiseAndFree(handler);
-
-            if (handler->HasErrorTarget()) {
-                m_comp->emit_prepare_exception(
-                        handler->ExVars.PrevExc,
-                        handler->ExVars.PrevExcVal,
-                        handler->ExVars.PrevTraceback
-                );
-                if (handler->IsTryFinally()) {
-                    auto tmpEx = m_comp->emit_spill();
-
-                    auto root = handler->GetRootOf();
-                    auto& vars = handler->ExVars;
-
-                    m_comp->emit_store_local(vars.FinallyValue);
-                    m_comp->emit_store_local(vars.FinallyTb);
-
-                    m_comp->emit_load_and_free_local(tmpEx);
-                }
-                m_comp->emit_branch(BranchAlways, handler->ErrorTarget);
-            }
-        }
-    }
-}
-
 void AbstractInterpreter::returnValue(py_opindex opcodeIndex) {
     m_comp->emit_store_local(m_retValue);
     m_comp->emit_branch(BranchAlways, m_retLabel);

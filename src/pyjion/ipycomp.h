@@ -411,8 +411,6 @@ public:
     virtual void emit_eh_trace() = 0;
     // Performs exception handling unwind as we go through loops
     virtual void emit_unwind_eh(Local prevExc, Local prevExcVal, Local prevTraceback) = 0;
-    // Prepares to raise an exception, storing the existing exceptions
-    virtual void emit_prepare_exception(Local prevExc, Local prevExcVal, Local prevTraceback) = 0;
     // Restores the previous exception for nested exception handling
     virtual void emit_restore_err() = 0;
     virtual void emit_fetch_err(Local Exc, Local ExcVal, Local Traceback, Local prevExc, Local prevExcVal, Local prevTraceback) = 0;

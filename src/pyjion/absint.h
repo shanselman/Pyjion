@@ -432,8 +432,6 @@ private:
     void jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo);
     void testBoolAndBranch(Local value, bool isTrue, Label target);
 
-    void unwindHandlers();
-
     void updateIntermediateSources();
     void escapeEdges(const vector<Edge>& edges, py_opindex curByte);
     void yieldJumps();

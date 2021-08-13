@@ -1523,25 +1523,6 @@ void PythonCompiler::emit_unwind_eh(Local prevExc, Local prevExcVal, Local prevT
     m_il.emit_call(METHOD_UNWIND_EH);
 }
 
-void PythonCompiler::emit_prepare_exception(Local prevExc, Local prevExcVal, Local prevTraceback) {
-    auto excType = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-    auto ehVal = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-    auto tb = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-    m_il.ld_loca(excType);
-    m_il.ld_loca(ehVal);
-    m_il.ld_loca(tb);
-
-    m_il.ld_loca(prevExc);
-    m_il.ld_loca(prevExcVal);
-    m_il.ld_loca(prevTraceback);
-
-    m_il.emit_call(METHOD_PREPARE_EXCEPTION);
-
-    m_il.free_local(excType);
-    m_il.free_local(ehVal);
-    m_il.free_local(tb);
-}
-
 void PythonCompiler::emit_int(int value) {
     m_il.ld_i4(value);
 }
@@ -2560,8 +2541,6 @@ GLOBAL_METHOD(METHOD_PRINT_EXPR_TOKEN, &PyJit_PrintExpr, CORINFO_TYPE_INT, Param
 
 GLOBAL_METHOD(METHOD_LOAD_CLASSDEREF_TOKEN, &PyJit_LoadClassDeref, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
-GLOBAL_METHOD(METHOD_PREPARE_EXCEPTION, &PyJit_PrepareException, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT),
-    Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_HANDLE_EXCEPTION, &PyJit_HandleException, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT),
     Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 

@@ -97,7 +97,7 @@
 #define METHOD_MAP_ADD_TOKEN                     0x00000033
 #define METHOD_PRINT_EXPR_TOKEN                  0x00000034
 #define METHOD_LOAD_CLASSDEREF_TOKEN             0x00000035
-#define METHOD_PREPARE_EXCEPTION                 0x00000036
+// Unused                                        0x00000036
 #define METHOD_DO_RAISE                          0x00000037
 #define METHOD_EH_TRACE                          0x00000038
 #define METHOD_COMPARE_EXCEPTIONS                0x00000039
@@ -446,7 +446,6 @@ public:
     void emit_bool(bool value) override;
 
     void emit_unwind_eh(Local prevExc, Local prevExcVal, Local prevTraceback) override;
-    void emit_prepare_exception(Local prevExc, Local prevExcVal, Local prevTraceback) override;
     void emit_reraise() override;
     void emit_restore_err() override;
     void emit_fetch_err(Local Exc, Local ExcVal, Local Traceback, Local prevExc, Local prevExcVal, Local prevTraceback) override;
