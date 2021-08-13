@@ -963,19 +963,17 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     PUSH_INTERMEDIATE(&Any);
                     break;  // No stack effect
                 default:
-                    PyErr_Format(PyExc_ValueError,
-                                 "Unknown unsupported opcode: %d", opcode);
                     return IncompatibleOpcode_Unknown;
                     break;
             }
-#ifdef DEBUG
             if(!skipEffect){
                 if (static_cast<size_t>(PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump)) != (lastState.stackSize() - curStackLen)){
+#ifdef DEBUG_VERBOSE
                     printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(opcode), curByte, PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump), (lastState.stackSize() - curStackLen));
-                    throw InvalidStackEffectException();
+#endif
+                    return CompilationException;
                 }
             }
-#endif
             updateStartState(lastState, curByte + SIZEOF_CODEUNIT);
             mStartStates[curByte].pgcProbeSize = pgcSize;
             mStartStates[curByte].requiresPgcProbe = pgcRequired;
