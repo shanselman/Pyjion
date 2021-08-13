@@ -398,7 +398,7 @@ private:
 
     void ensureLabels(vector<Label>& labels, size_t count);
 
-    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force=false);
+    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force=false, bool trace=true);
     void raiseOnNegativeOne(py_opindex curByte);
 
     void unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler = nullptr);

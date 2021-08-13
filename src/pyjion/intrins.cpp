@@ -1140,26 +1140,27 @@ void PyJit_EhTrace(PyFrameObject *f) {
     PyTraceBack_Here(f);
 }
 
-void PyJit_Raise(PyObject *exc, PyObject *cause) {
+bool PyJit_Raise(PyObject *exc, PyObject *cause) {
     PyObject *type = nullptr, *value = nullptr;
 
     if (exc == nullptr) {
         /* Reraise */
         PyThreadState *tstate = PyThreadState_GET();
+        auto exc_info = _PyErr_GetTopmostException(tstate);
         PyObject *tb;
-        type = tstate->curexc_type;
-        value = tstate->curexc_value;
-        tb = tstate->curexc_traceback;
+        type = exc_info->exc_type;
+        value = exc_info->exc_value;
+        tb = exc_info->exc_traceback;
         if (type == Py_None || type == nullptr) {
             PyErr_SetString(PyExc_RuntimeError,
                 "No active exception to reraise");
-            return ; // 0;
+            return false;
         }
         Py_XINCREF(type);
         Py_XINCREF(value);
         Py_XINCREF(tb);
         PyErr_Restore(type, value, tb);
-        return ; // 1;
+        return true;
     }
 
     /* We support the following forms of raise:
@@ -1169,7 +1170,7 @@ void PyJit_Raise(PyObject *exc, PyObject *cause) {
 
     if (PyExceptionClass_Check(exc)) {
         type = exc;
-        value = PyObject_CallObject(exc, nullptr);
+        value = _PyObject_CallNoArg(exc);
         if (value == nullptr)
             goto raise_error;
         if (!PyExceptionInstance_Check(value)) {
@@ -1197,7 +1198,7 @@ void PyJit_Raise(PyObject *exc, PyObject *cause) {
     if (cause) {
         PyObject *fixed_cause;
         if (PyExceptionClass_Check(cause)) {
-            fixed_cause = PyObject_CallObject(cause, nullptr);
+            fixed_cause = _PyObject_CallNoArg(cause);
             if (fixed_cause == nullptr)
                 goto raise_error;
             Py_DECREF(cause);
@@ -1222,13 +1223,13 @@ void PyJit_Raise(PyObject *exc, PyObject *cause) {
     /* PyErr_SetObject incref's its arguments */
     Py_XDECREF(value);
     Py_XDECREF(type);
-    return ;//0;
+    return false;
 
 raise_error:
     Py_XDECREF(value);
     Py_XDECREF(type);
     Py_XDECREF(cause);
-    return ; //0;
+    return false;
 }
 
 PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {

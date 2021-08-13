@@ -1220,7 +1220,7 @@ void AbstractInterpreter::ensureLabels(vector<Label>& labels, size_t count) {
     }
 }
 
-void AbstractInterpreter::branchRaise(const char *reason, const char* context, py_opindex curByte, bool force) {
+void AbstractInterpreter::branchRaise(const char *reason, const char* context, py_opindex curByte, bool force, bool trace) {
     auto ehBlock = currentHandler();
     auto& entryStack = ehBlock->EntryStack;
 
@@ -1230,7 +1230,8 @@ void AbstractInterpreter::branchRaise(const char *reason, const char* context, p
     }
 #endif
 
-    m_comp->emit_eh_trace();
+    if (trace)
+        m_comp->emit_eh_trace();
 
     if (mTracingEnabled)
         m_comp->emit_trace_exception();
@@ -2182,8 +2183,19 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         // to update the traceback.  Otherwise returns 0.
                         auto curHandler = currentHandler();
                         m_comp->emit_raise_varargs();
-                        // TODO : Handle raise/re-raise, there is no return value at the moment, but I've commented it out.
-                        branchRaise("hit native error",  "", curByte);
+                        if (oparg == 0){
+                            Label reraise = m_comp->emit_define_label();
+                            Label done = m_comp->emit_define_label();
+                            m_comp->emit_branch(BranchTrue, reraise);
+                            branchRaise("hit native error",  "", curByte);
+                            m_comp->emit_branch(BranchAlways, done);
+                            m_comp->emit_mark_label(reraise);
+                            branchRaise("hit reraise",  "", curByte, false, false);
+                            m_comp->emit_mark_label(done);
+                        } else {
+                            m_comp->emit_pop();
+                            branchRaise("hit native error",  "", curByte);
+                        }
                         break;
                 }
                 break;
