@@ -437,4 +437,10 @@ TEST_CASE("Test exception handling") {
             CHECK(t.returns() == "2");
         }
     }
+    SECTION("test nested try block and a for loop") {
+        auto t = ExceptionTest(
+                "def f():\n  try:\n    a = 1/0\n  except ZeroDivisionError:\n    a = 2\n  else:\n    a += 4\n  return a"
+                );
+        CHECK(t.returns() == "2");
+    }
 }

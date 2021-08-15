@@ -1232,6 +1232,28 @@ raise_error:
     return false;
 }
 
+void PyJit_PopExcept(PyObject* exc_type, PyObject* exc_value, PyObject* exc_traceback, PyFrameObject* frame){
+    PyObject *type, *value, *traceback;
+    _PyErr_StackItem *exc_info;
+    auto tstate = PyThreadState_GET();
+    PyTryBlock *b = PyFrame_BlockPop(frame);
+    if (b->b_type != EXCEPT_HANDLER) {
+        PyErr_SetString(PyExc_SystemError,
+                         "popped block is not an except handler");
+        return; // TODO : Throw this back up to the frame block
+    }
+    exc_info = tstate->exc_info;
+    type = exc_info->exc_type;
+    value = exc_info->exc_value;
+    traceback = exc_info->exc_traceback;
+    exc_info->exc_type = exc_type;
+    exc_info->exc_value = exc_value;
+    exc_info->exc_traceback = exc_traceback;
+    Py_XDECREF(type);
+    Py_XDECREF(value);
+    Py_XDECREF(traceback);
+}
+
 PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {
     PyObject* value;
     PyCodeObject* co = frame->f_code;

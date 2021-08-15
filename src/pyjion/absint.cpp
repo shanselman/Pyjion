@@ -1655,18 +1655,17 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             m_stack = curStackDepth->second;
         }
         if (m_exceptionHandler.IsHandlerAtOffset(curByte)){
-
             ExceptionHandler* handler = m_exceptionHandler.HandlerAtOffset(curByte);
-
             auto newBlock = BlockInfo(
                     0,
-                    SETUP_FINALLY,
+                    EXCEPT_HANDLER,
                     handler->BackHandler,
                     EhfInExceptHandler);
-
             m_blockStack.push_back(newBlock);
-
             m_comp->emit_mark_label(handler->ErrorTarget);
+            m_comp->emit_pop_block();
+            m_comp->emit_pop();
+            m_comp->emit_push_block(EXCEPT_HANDLER, -1, 0);
             m_comp->emit_fetch_err(handler->ExVars.FinallyExc,
                                    handler->ExVars.FinallyValue,
                                    handler->ExVars.FinallyTb,
@@ -2239,12 +2238,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 break;
             }
             case POP_EXCEPT:
-                m_comp->emit_pop_block();
-                m_comp->emit_pop(); // Dont do anything with the block atm
-                popExcept();
-                m_comp->pop_top();
-                m_comp->pop_top();
-                m_comp->pop_top();
+                m_comp->emit_pop_except();
                 if (m_stack.size() >= 3)
                     decStack(3);
                 else
@@ -2473,7 +2467,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         }
         if(!skipEffect && static_cast<size_t>(PyCompile_OpcodeStackEffect(byte, oparg)) != (m_stack.size() - curStackSize)){
 #ifdef DEBUG_VERBOSE
-            printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(opcode), curByte, PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump), (lastState.stackSize() - curStackLen));
+            printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(byte), curByte, PyCompile_OpcodeStackEffect(byte, oparg), (m_stack.size() - curStackSize));
 #endif
             return {nullptr, CompilationException};
         }

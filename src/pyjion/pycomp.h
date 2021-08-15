@@ -97,7 +97,7 @@
 #define METHOD_MAP_ADD_TOKEN                     0x00000033
 #define METHOD_PRINT_EXPR_TOKEN                  0x00000034
 #define METHOD_LOAD_CLASSDEREF_TOKEN             0x00000035
-// Unused                                        0x00000036
+#define METHOD_POP_EXCEPT                        0x00000036
 #define METHOD_DO_RAISE                          0x00000037
 #define METHOD_EH_TRACE                          0x00000038
 #define METHOD_COMPARE_EXCEPTIONS                0x00000039
@@ -292,6 +292,7 @@ public:
 
     void emit_push_block(int32_t type, int32_t handler, int32_t level) override;
     void emit_pop_block() override;
+    void emit_pop_except() override;
 
     void emit_eh_trace() override;
 

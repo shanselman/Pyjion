@@ -108,6 +108,12 @@ void PythonCompiler::emit_pop_block() {
     m_il.emit_call(METHOD_BLOCK_POP);
 }
 
+void PythonCompiler::emit_pop_except() {
+    load_frame();
+    m_il.emit_call(METHOD_POP_EXCEPT);
+}
+
+
 void PythonCompiler::emit_eh_trace() {
     load_frame();
     m_il.emit_call(METHOD_EH_TRACE);
@@ -2559,6 +2565,7 @@ GLOBAL_METHOD(METHOD_HANDLE_EXCEPTION, &PyJit_HandleException, CORINFO_TYPE_VOID
 
 GLOBAL_METHOD(METHOD_DO_RAISE, &PyJit_Raise, CORINFO_TYPE_BOOL, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_EH_TRACE, &PyJit_EhTrace, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_POP_EXCEPT, &PyJit_PopExcept, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_COMPARE_EXCEPTIONS, &PyJit_CompareExceptions, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
