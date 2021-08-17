@@ -2238,6 +2238,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 break;
             }
             case POP_EXCEPT:
+                popExcept();
                 m_comp->emit_pop_except();
                 if (m_stack.size() >= 3)
                     decStack(3);
@@ -2827,9 +2828,10 @@ void AbstractInterpreter::unwindEh(ExceptionHandler* fromHandler, ExceptionHandl
     do {
         auto& exVars = cur->ExVars;
 
-        if (exVars.PrevExc.is_valid()) {
-            m_comp->emit_unwind_eh(exVars.PrevExc, exVars.PrevExcVal, exVars.PrevTraceback);
-        }
+        // TODO : Skip for now, this does nothing useful.
+//        if (exVars.PrevExc.is_valid()) {
+//            m_comp->emit_unwind_eh(exVars.PrevExc, exVars.PrevExcVal, exVars.PrevTraceback);
+//        }
         if (cur->IsRootHandler())
             break;
         cur = cur->BackHandler;

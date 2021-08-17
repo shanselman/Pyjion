@@ -756,22 +756,22 @@ void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObjec
     Py_INCREF(*tb);
 }
 
-
 void PyJit_UnwindEh(PyObject*exc, PyObject*val, PyObject*tb) {
     auto tstate = PyThreadState_GET();
     if (val != nullptr && !PyExceptionInstance_Check(val)){
         PyErr_SetString(PyExc_RuntimeError,  "Error unwinding exception data");
         return;
     }
-    auto oldtb = tstate->curexc_traceback;
-    auto oldtype = tstate->curexc_type;
-    auto oldvalue = tstate->curexc_value;
-    tstate->curexc_traceback = tb;
-    tstate->curexc_type = exc;
-    tstate->curexc_value = val;
-    Py_XDECREF(oldtb);
+    auto exc_info = tstate->exc_info;
+    auto oldtype = exc_info->exc_type;
+    auto oldvalue = exc_info->exc_value;
+    auto oldtraceback = exc_info->exc_traceback;
+    exc_info->exc_type = exc;
+    exc_info->exc_value = val;
+    exc_info->exc_traceback = tb;
     Py_XDECREF(oldtype);
     Py_XDECREF(oldvalue);
+    Py_XDECREF(oldtraceback);
 }
 
 #define CANNOT_CATCH_MSG "catching classes that do not inherit from "\

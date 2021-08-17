@@ -60,8 +60,8 @@ private:
 public:
     explicit ExceptionTest(const char *code) {
         PyErr_Clear();
-        printf("--- Executing Code ---\n%s \n-----------------\n", code);
         PyErr_SetExcInfo(nullptr, nullptr, nullptr);
+        printf("--- Executing Code ---\n%s \n-----------------\n", code);
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile code");
@@ -87,17 +87,18 @@ public:
         if (tstate->curexc_type != nullptr) {
             REQUIRE(tstate->curexc_type == Py_None);
         }
-        if (tstate->exc_info->exc_type != nullptr) {
+        auto exc_info = _PyErr_GetTopmostException(tstate);
+        if (exc_info->exc_type != nullptr) {
             printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_type)));
             FAIL("tstate->exc_info->exc_type is not cleared");
             return "failure";
         }
-        if (tstate->exc_info->exc_value != nullptr) {
+        if (exc_info->exc_value != nullptr) {
             printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_value)));
             FAIL("tstate->exc_info->exc_value is not cleared");
             return "failure";
         }
-        if (tstate->exc_info->exc_traceback != nullptr) {
+        if (exc_info->exc_traceback != nullptr) {
             printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_traceback)));
             FAIL("tstate->exc_info->exc_traceback is not cleared");
             return "failure";

@@ -451,7 +451,6 @@ public:
     void emit_bool(bool value) override;
 
     void emit_unwind_eh(Local prevExc, Local prevExcVal, Local prevTraceback) override;
-    void emit_reraise() override;
     void emit_restore_err() override;
     void emit_fetch_err(Local Exc, Local ExcVal, Local Traceback, Local prevExc, Local prevExcVal, Local prevTraceback) override;
     void emit_pyerr_setstring(void* exception, const char*msg) override;
