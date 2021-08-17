@@ -1232,7 +1232,7 @@ raise_error:
     return false;
 }
 
-void PyJit_PopExcept(PyObject* exc_type, PyObject* exc_value, PyObject* exc_traceback, PyFrameObject* frame){
+void PyJit_PopExcept(PyObject* exc_traceback, PyObject* exc_value, PyObject* exc_type, PyFrameObject* frame){
     PyObject *type, *value, *traceback;
     _PyErr_StackItem *exc_info;
     auto tstate = PyThreadState_GET();
