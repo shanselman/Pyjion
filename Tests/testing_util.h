@@ -122,7 +122,7 @@ private:
         auto res = PyJit_ExecuteAndCompileFrame(m_jittedcode, frame, tstate, profile);
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), prev);
         Py_DECREF(frame);
-        size_t collected = PyGC_Collect();
+        PyGC_Collect();
         if (m_jittedcode->j_failed){
             printf("Failure code : %d \n", m_jittedcode->j_compile_result);
         }

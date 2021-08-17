@@ -60,6 +60,7 @@ private:
 public:
     explicit ExceptionTest(const char *code) {
         PyErr_Clear();
+        printf("--- Executing Code ---\n%s \n-----------------\n", code);
         PyErr_SetExcInfo(nullptr, nullptr, nullptr);
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
@@ -86,17 +87,36 @@ public:
         if (tstate->curexc_type != nullptr) {
             REQUIRE(tstate->curexc_type == Py_None);
         }
-
-        return std::string(repr);
+        if (tstate->exc_info->exc_type != nullptr) {
+            printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_type)));
+            FAIL("tstate->exc_info->exc_type is not cleared");
+            return "failure";
+        }
+        if (tstate->exc_info->exc_value != nullptr) {
+            printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_value)));
+            FAIL("tstate->exc_info->exc_value is not cleared");
+            return "failure";
+        }
+        if (tstate->exc_info->exc_traceback != nullptr) {
+            printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_traceback)));
+            FAIL("tstate->exc_info->exc_traceback is not cleared");
+            return "failure";
+        }
+        return {repr};
     }
 
     PyObject *raises() {
         auto res = run();
         REQUIRE(res == nullptr);
         auto excType = PyErr_Occurred();
-        PyErr_Print();
-        PyErr_Clear();
         return excType;
+    }
+
+    PyObject* tb() {
+        PyObject *exc, *val, *tb;
+        PyErr_Fetch(&exc, &val, &tb);
+        PyTraceBack_Print(tb, nullptr);
+        return nullptr;
     }
 };
 
@@ -106,6 +126,7 @@ TEST_CASE("Test exception handling") {
                 "def f():\n  x = y\n  y = 1"
                 );
         CHECK(t.raises() == PyExc_UnboundLocalError);
+        CHECK(t.tb() == nullptr);
     }
 
     SECTION("test simply try catch") {

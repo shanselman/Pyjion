@@ -2826,3 +2826,11 @@ void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
                  PyUnicode_AsUTF8(PyObject_Repr(obj)),
                  obj->ob_type->tp_name);
 }
+
+PyObject* PyJit_BlockPop(PyFrameObject* frame){
+    if (frame->f_iblock <= 0) {
+        printf("Warning: block underflow at %d, \n", frame->f_lasti);
+        return nullptr;
+    }
+    return reinterpret_cast<PyObject *>(PyFrame_BlockPop(frame));
+}

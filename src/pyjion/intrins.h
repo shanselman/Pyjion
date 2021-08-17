@@ -200,7 +200,7 @@ PyObject* PyJit_KwCallN(PyObject *target, PyObject* args, PyObject* names);
 void PyJit_PushFrame(PyFrameObject* frame);
 void PyJit_PopFrame(PyFrameObject* frame);
 void PyJit_PopExcept(PyObject* exc_type, PyObject* exc_value, PyObject* exc_traceback, PyFrameObject* frame);
-
+PyObject* PyJit_BlockPop(PyFrameObject* frame);
 void PyJit_EhTrace(PyFrameObject *f);
 
 bool PyJit_Raise(PyObject *exc, PyObject *cause);
