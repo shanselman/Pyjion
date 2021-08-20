@@ -40,44 +40,20 @@ using namespace std;
 ehFlags operator | (ehFlags lhs, ehFlags rhs);
 ehFlags operator |= (ehFlags& lhs, ehFlags rhs);
 
-struct ExceptionVars {
-    // The previous exception value before we took the exception we're currently
-    // handling.  These correspond with the values in tstate->exc_* and will be
-    // restored back to their current values if the exception is handled.
-    // When we're generating the try portion of the block these are new locals, when
-    // we're generating the finally/except portion of the block these hold the values
-    // for the handler so we can unwind from the correct variables.
-    Local PrevExc, PrevExcVal, PrevTraceback;
-    // The previous traceback and exception values if we're handling a finally block.
-    // We store these in locals and keep only the exception type on the stack so that
-    // we don't enter the finally handler with multiple stack depths.
-    Local FinallyExc, FinallyTb, FinallyValue;
-
-    explicit ExceptionVars(IPythonCompiler* comp, bool isFinally = false) {
-        PrevExc = comp->emit_define_local(false);
-        PrevExcVal = comp->emit_define_local(false);
-        PrevTraceback = comp->emit_define_local(false);
-        FinallyExc = comp->emit_define_local(false);
-        FinallyTb = comp->emit_define_local(false);
-        FinallyValue = comp->emit_define_local(false);
-    }
-};
 
 // Exception Handling information
 struct ExceptionHandler {
     size_t RaiseAndFreeId;
     ehFlags Flags;
     Label ErrorTarget;    // The place to branch to for handling errors
-    ExceptionVars ExVars;
     ValueStack EntryStack;
     ExceptionHandler* BackHandler;
 
     ExceptionHandler(size_t raiseAndFreeId,
-                     ExceptionVars exceptionVars,
                      Label errorTarget,
                      ValueStack entryStack,
                      ehFlags flags = EhfNone,
-                     ExceptionHandler *backHandler = nullptr) : ExVars(exceptionVars) {
+                     ExceptionHandler *backHandler = nullptr) {
         RaiseAndFreeId = raiseAndFreeId;
         Flags = flags;
         EntryStack = entryStack;
@@ -90,7 +66,7 @@ struct ExceptionHandler {
     }
 
     bool IsTryFinally() {
-        return Flags & EhfTryFinally && ExVars.FinallyValue.is_valid();
+        return Flags & EhfTryFinally ;
     }
 
     ExceptionHandler* GetRootOf(){
@@ -123,10 +99,10 @@ public:
     }
 
     bool Empty();
-    ExceptionHandler* SetRootHandler(Label handlerLabel, ExceptionVars vars);
+    ExceptionHandler* SetRootHandler(Label handlerLabel);
     ExceptionHandler* GetRootHandler();
     ExceptionHandler *AddSetupFinallyHandler(Label handlerLabel, ValueStack stack,
-                                             ExceptionHandler *currentHandler, ExceptionVars vars, py_opindex handlerIndex);
+                                             ExceptionHandler *currentHandler, py_opindex handlerIndex);
 
     vector<ExceptionHandler*> GetHandlers();
 

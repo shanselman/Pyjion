@@ -418,7 +418,7 @@ public:
     virtual void emit_pop_except() = 0;
     // Restores the previous exception for nested exception handling
     virtual void emit_restore_err() = 0;
-    virtual void emit_fetch_err(Local Exc, Local ExcVal, Local Traceback, Local prevExc, Local prevExcVal, Local prevTraceback) = 0;
+    virtual void emit_fetch_err() = 0;
     // Compares to see if an exception is handled, pushing a Python bool onto the stack
     virtual void emit_compare_exceptions() = 0;
     // Sets the current exception type and text

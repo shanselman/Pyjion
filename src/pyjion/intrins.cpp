@@ -721,8 +721,9 @@ int PyJit_PrintExpr(PyObject *value) {
     return 0;
 }
 
-void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldVal, PyObject** oldTb) {
+void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldval, PyObject** oldtb) {
     auto tstate = PyThreadState_GET();
+
     _PyErr_StackItem *exc_info = tstate->exc_info;
     // we take ownership of these into locals...
     if (tstate->curexc_type != nullptr) {
@@ -732,8 +733,8 @@ void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObjec
         *oldexc = Py_None;
         Py_INCREF(Py_None);
     }
-    *oldVal = exc_info->exc_value;
-    *oldTb = exc_info->exc_traceback;
+    *oldval = exc_info->exc_value;
+    *oldtb = exc_info->exc_traceback;
 
     PyErr_Fetch(exc, val, tb);
     /* Make the raw exception data

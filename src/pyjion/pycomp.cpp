@@ -1504,7 +1504,12 @@ void PythonCompiler::emit_restore_err() {
     m_il.emit_call(METHOD_PYERR_RESTORE);
 }
 
-void PythonCompiler::emit_fetch_err(Local Exc, Local ExcVal, Local Traceback, Local PrevExc, Local PrevExcVal, Local PrevTraceback) {
+void PythonCompiler::emit_fetch_err() {
+    Local PrevExc = emit_define_local(LK_Pointer), PrevExcVal = emit_define_local(LK_Pointer), PrevTraceback = emit_define_local(LK_Pointer);
+    // The previous traceback and exception values if we're handling a finally block.
+    // We store these in locals and keep only the exception type on the stack so that
+    // we don't enter the finally handler with multiple stack depths.
+    Local Exc = emit_define_local(LK_Pointer), Traceback = emit_define_local(LK_Pointer), ExcVal = emit_define_local(LK_Pointer);
     emit_load_local_addr(Exc);
     emit_load_local_addr(ExcVal);
     emit_load_local_addr(Traceback);
@@ -1513,12 +1518,12 @@ void PythonCompiler::emit_fetch_err(Local Exc, Local ExcVal, Local Traceback, Lo
     emit_load_local_addr(PrevTraceback);
 
     m_il.emit_call(METHOD_HANDLE_EXCEPTION);
-    emit_load_local(PrevTraceback);
-    emit_load_local(PrevExcVal);
-    emit_load_local(PrevExc);
-    emit_load_local(Traceback);
-    emit_load_local(ExcVal);
-    emit_load_local(Exc);
+    emit_load_and_free_local(PrevTraceback);
+    emit_load_and_free_local(PrevExcVal);
+    emit_load_and_free_local(PrevExc);
+    emit_load_and_free_local(Traceback);
+    emit_load_and_free_local(ExcVal);
+    emit_load_and_free_local(Exc);
 }
 
 void PythonCompiler::emit_compare_exceptions() {

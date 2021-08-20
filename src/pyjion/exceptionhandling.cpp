@@ -26,10 +26,9 @@
 #include "exceptionhandling.h"
 #include "stack.h"
 
-ExceptionHandler* ExceptionHandlerManager::SetRootHandler(Label handlerLabel, ExceptionVars vars) {
+ExceptionHandler* ExceptionHandlerManager::SetRootHandler(Label handlerLabel) {
     auto rootHandler = new ExceptionHandler(
             0,
-            vars,
             handlerLabel,
             ValueStack(),
             EhfNone,
@@ -41,11 +40,10 @@ ExceptionHandler* ExceptionHandlerManager::SetRootHandler(Label handlerLabel, Ex
 }
 
 ExceptionHandler * ExceptionHandlerManager::AddSetupFinallyHandler(Label handlerLabel, ValueStack stack,
-                                                                   ExceptionHandler *currentHandler, ExceptionVars vars,
+                                                                   ExceptionHandler *currentHandler,
                                                                    py_opindex handlerIndex) {
     auto newHandler = new ExceptionHandler(
             m_exceptionHandlers.size(),
-            vars,
             handlerLabel,
             stack,
             EhfTryFinally,

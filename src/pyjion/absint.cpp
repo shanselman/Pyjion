@@ -1626,7 +1626,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     if (mProfilingEnabled) { m_comp->emit_profile_frame_entry(); }
 
     // Push a catch-all error handler onto the handler list
-    auto rootHandler = m_exceptionHandler.SetRootHandler(rootHandlerLabel, ExceptionVars(m_comp));
+    auto rootHandler = m_exceptionHandler.SetRootHandler(rootHandlerLabel);
 
     // Push root block to stack, has no end offset
     m_blockStack.push_back(BlockInfo(-1, NOP, rootHandler));
@@ -1666,12 +1666,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             m_comp->emit_pop_block();
             m_comp->emit_pop();
             m_comp->emit_push_block(EXCEPT_HANDLER, -1, 0);
-            m_comp->emit_fetch_err(handler->ExVars.FinallyExc,
-                                   handler->ExVars.FinallyValue,
-                                   handler->ExVars.FinallyTb,
-                                   handler->ExVars.PrevExc,
-                                   handler->ExVars.PrevExcVal,
-                                   handler->ExVars.PrevTraceback);
+            m_comp->emit_fetch_err();
         }
 
         if (!canSkipLastiUpdate(curByte)) {
@@ -2208,7 +2203,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         handlerLabel,
                         m_stack,
                         current.CurrentHandler,
-                        ExceptionVars(m_comp, true),
                         jumpTo);
 
                 auto newBlock = BlockInfo(
@@ -2826,8 +2820,6 @@ void AbstractInterpreter::jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo
 void AbstractInterpreter::unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler) {
     auto cur = fromHandler;
     do {
-        auto& exVars = cur->ExVars;
-
         // TODO : Skip for now, this does nothing useful.
 //        if (exVars.PrevExc.is_valid()) {
 //            m_comp->emit_unwind_eh(exVars.PrevExc, exVars.PrevExcVal, exVars.PrevTraceback);
