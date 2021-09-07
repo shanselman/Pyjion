@@ -1,5 +1,9 @@
 # Release notes
 
+## master
+
+* Updated to .NET 6 preview 7
+
 ## 1.0.0 (rc2)
 
 * BINARY_MULTIPLY and BINARY_POWER will assume the resulting integer is a big integer (not unboxed)
