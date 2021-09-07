@@ -92,11 +92,11 @@ public:
         auto exc_info = _PyErr_GetTopmostException(tstate);
         if (exc_info->exc_type != nullptr) {
             printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_type)));
-            WARN("tstate->exc_info->exc_type is not cleared");
+            FAIL("tstate->exc_info->exc_type is not cleared");
         }
         if (exc_info->exc_value != nullptr) {
             printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_value)));
-            WARN("tstate->exc_info->exc_value is not cleared");
+            FAIL("tstate->exc_info->exc_value is not cleared");
         }
         if (exc_info->exc_traceback != nullptr) {
 //            printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_traceback)));
@@ -422,7 +422,7 @@ TEST_CASE("Test exception handling") {
         CHECK(t.returns() == "2");
     }
 }
-TEST_CASE("Test nesting exception handlers", "[!mayfail]") {
+TEST_CASE("Test nesting exception handlers") {
     SECTION("test double nested exception filters and return from finally"){
         auto t = ExceptionTest(
                 "def f():\n    try:\n        try:\n             try:\n                  raise TypeError('err')\n             except BaseException:\n                  raise\n        finally:\n             pass\n    finally:\n        return 42\n"
