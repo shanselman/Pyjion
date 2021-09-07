@@ -31,7 +31,7 @@ def _which_dotnet() -> str:
             _dotnet_root = pathlib.Path('/usr/local/share/dotnet/')
             if not _dotnet_root.exists():
                 _no_dotnet(_dotnet_root)
-        lib_path = list(_dotnet_root.glob('shared/Microsoft.NETCore.App*/6.0.*/libclrjit.dylib'))
+        lib_path = list(_dotnet_root.glob('shared/Microsoft.NETCore.App*/6.0.100*/libclrjit.dylib'))
         if len(lib_path) > 0:
             clrjitlib = str(lib_path[0])
             ctypes.cdll.LoadLibrary(clrjitlib)
@@ -48,7 +48,7 @@ def _which_dotnet() -> str:
                     _dotnet_root = path
         if not _dotnet_root:
             _no_dotnet(_dotnet_root)
-        lib_path = list(_dotnet_root.glob('shared/Microsoft.NETCore.App*/6.0.*/libclrjit.so'))
+        lib_path = list(_dotnet_root.glob('shared/Microsoft.NETCore.App*/6.0.100*/libclrjit.so'))
         if len(lib_path) > 0:
             clrjitlib = str(lib_path[0])
             ctypes.cdll.LoadLibrary(clrjitlib)
@@ -60,7 +60,7 @@ def _which_dotnet() -> str:
             _dotnet_root = pathlib.WindowsPath(os.path.expandvars(r'%ProgramFiles%\dotnet'))
             if not _dotnet_root.exists():
                 _no_dotnet(_dotnet_root)
-        lib_path = list(_dotnet_root.glob('shared/Microsoft.NETCore.App*/6.0.*/clrjit.dll'))
+        lib_path = list(_dotnet_root.glob('shared/Microsoft.NETCore.App*/6.0.100*/clrjit.dll'))
         if len(lib_path) > 0:
             clrjitlib = str(lib_path[0])
             ctypes.cdll.LoadLibrary(clrjitlib)
