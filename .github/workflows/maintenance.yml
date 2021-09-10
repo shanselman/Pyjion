@@ -1,9 +1,9 @@
 name: "Maintenance"
 on:
   push:
-    branches: [ master ]
+    branches: [ develop/main, develop/3.9, develop/3.10 ]
   pull_request:
-    branches: [ master ]
+    branches: [ develop/main, develop/3.9, develop/3.10 ]
 
 jobs:
   build:
