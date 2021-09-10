@@ -122,6 +122,8 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
 
             // Opcodes that push basic blocks
             case SETUP_FINALLY:
+                if (!g_pyjionSettings.exceptionHandling)
+                    return IncompatibleOpcode_WithExcept;
             case SETUP_WITH:
             case SETUP_ASYNC_WITH:
             case FOR_ITER:

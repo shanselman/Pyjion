@@ -113,6 +113,7 @@ typedef struct PyjionSettings {
 #else
     bool debug = false;
 #endif
+    bool exceptionHandling = false;
     const wchar_t * clrjitpath = L"";
 
     // Optimizations
