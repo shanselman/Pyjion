@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: [3.10-dev]
         dot-net-version: [ 6.0.100-preview.7.21379.14 ]
 
     steps:
@@ -56,7 +56,7 @@ jobs:
     runs-on: macos-11.0
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: [3.10-dev]
         dot-net-version: [ 6.0.100-preview.7.21379.14 ]
 
     steps:
@@ -95,7 +95,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: [3.10-dev]
         dot-net-version: [ 6.0.100-preview.7.21379.14 ]
 
     steps:
