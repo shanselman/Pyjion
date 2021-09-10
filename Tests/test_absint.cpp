@@ -26,37 +26,6 @@
 #include <catch2/catch.hpp>
 #include "testing_util.h"
 
-
-TEST_CASE("Basic typing tests", "[float][binary op][inference]") {
-    SECTION("const int") {
-        VerifyOldTest(
-                //
-                AITestCase(
-                        "def f(): return 42",
-                        {
-                                new ReturnVerifier(AVK_Integer),    // VC 2013 ICE's with only a single value here...
-                                new ReturnVerifier(AVK_Integer)
-                        }));
-    }SECTION("conditional const int") {
-        VerifyOldTest(AITestCase(
-                "def f(x):\n    if x:    return 42\n    return 'abc'",
-                {
-                        new ReturnVerifier(AVK_Any),    // VC 2013 ICE's with only a single value here...
-                        new ReturnVerifier(AVK_Any)
-                }));
-    }
-}
-TEST_CASE("Follow block tests", "[float][binary op][inference]") {
-    SECTION("conditional return ") {
-        VerifyOldTest(
-                // We won't follow blocks following a return statement...
-                AITestCase(
-                        "def f(x):\n    return 42\n    if 'abc': return 'abc'",
-                        {
-                                new ReturnVerifier(AVK_Integer),    // VC 2013 ICE's with only a single value here...
-                                new ReturnVerifier(AVK_Integer)
-                        }));
-    }};
 TEST_CASE("Basic delete tests", "[float][binary op][inference]") {
     SECTION("delete int") {
         VerifyOldTest(

@@ -27,11 +27,13 @@
 #include <opcode.h>
 #include <object.h>
 #include <deque>
+#include <set>
 #include <unordered_map>
 #include <algorithm>
 
 #include "absint.h"
 #include "pyjit.h"
+#include "pycomp.h"
 
 #define PGC_READY() g_pyjionSettings.pgc && profile != nullptr
 
@@ -57,7 +59,7 @@
     (to).push(AbstractValueWithSources((ty), newSource(new IntermediateSource(curByte))));
 #define FLAG_OPT_USAGE(opt) (optimizationsMade = optimizationsMade | (opt))
 
-AbstractInterpreter::AbstractInterpreter(PyCodeObject *code, IPythonCompiler* comp) : mReturnValue(&Undefined), mCode(code), m_comp(comp) {
+AbstractInterpreter::AbstractInterpreter(PyCodeObject *code, IPythonCompiler* comp) : mCode(code), m_comp(comp) {
     mByteCode = (_Py_CODEUNIT *)PyBytes_AS_STRING(code->co_code);
     mSize = PyBytes_Size(code->co_code);
     mTracingEnabled = false;
@@ -95,20 +97,40 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
 
     py_oparg oparg;
     vector<bool> ehKind;
-    vector<AbsIntBlockInfo> blockStarts;
+    AbstractBlockList blockStarts;
     for (py_opindex curByte = 0; curByte < mSize; curByte += SIZEOF_CODEUNIT) {
         py_opindex opcodeIndex = curByte;
         py_opcode byte = GET_OPCODE(curByte);
         oparg = GET_OPARG(curByte);
     processOpCode:
         while (!blockStarts.empty() &&
-            opcodeIndex >= blockStarts[blockStarts.size() - 1].BlockEnd) {
+                opcodeIndex >= blockStarts[blockStarts.size() - 1].BlockEnd)
+        {
             auto blockStart = blockStarts.back();
             blockStarts.pop_back();
             m_blockStarts[opcodeIndex] = blockStart.BlockStart;
         }
 
         switch (byte) { // NOLINT(hicpp-multiway-paths-covered)
+            case EXTENDED_ARG:
+            {
+                curByte += SIZEOF_CODEUNIT;
+                oparg = (oparg << 8) | GET_OPARG(curByte);
+                byte = GET_OPCODE(curByte);
+                goto processOpCode;
+            }
+
+            // Opcodes that push basic blocks
+            case SETUP_FINALLY:
+                if (!g_pyjionSettings.exceptionHandling)
+                    return IncompatibleOpcode_WithExcept;
+            case SETUP_WITH:
+            case SETUP_ASYNC_WITH:
+            case FOR_ITER:
+                blockStarts.emplace_back(opcodeIndex, oparg + curByte + SIZEOF_CODEUNIT);
+                ehKind.push_back(true);
+                break;
+            // Opcodes that pop basic blocks
             case POP_EXCEPT:
             case POP_BLOCK:
             {
@@ -119,13 +141,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
                 }
                 break;
             }
-            case EXTENDED_ARG:
-            {
-                curByte += SIZEOF_CODEUNIT;
-                oparg = (oparg << 8) | GET_OPARG(curByte);
-                byte = GET_OPCODE(curByte);
-                goto processOpCode;
-            }
+
             case YIELD_VALUE:
                 m_yieldOffsets[opcodeIndex] = m_comp->emit_define_label();
                 break;
@@ -137,14 +153,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
                     m_assignmentState[oparg] = false;
                 }
                 break;
-            case SETUP_WITH:
-            case SETUP_ASYNC_WITH:
-            case SETUP_FINALLY:
-                return IncompatibleOpcode_WithExcept;
-            case FOR_ITER:
-                blockStarts.emplace_back(opcodeIndex, oparg + curByte + SIZEOF_CODEUNIT);
-                ehKind.push_back(true);
-                break;
+
             case LOAD_GLOBAL:
             {
                 auto name = PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg));
@@ -239,7 +248,8 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
     vector<const char*> utf8_names ;
     for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++)
         utf8_names.push_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
-
+    // Keep a list of SETUP_FINALLY instructions and their offsets, to push the exception values onto the stack
+    unordered_map<py_opindex, py_opindex> tryExceptMarkers;
     do {
         py_oparg oparg;
         py_opindex cur = queue.front();
@@ -254,11 +264,19 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
             short pgcSize = 0;
             oparg = GET_OPARG(curByte);
         processOpCode:
-
             size_t curStackLen = lastState.stackSize();
             int jump = 0;
             bool skipEffect = false;
             size_t stackPosition = 0;
+            if (tryExceptMarkers.find(curByte) != tryExceptMarkers.end()){
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                lastState.push(AbstractValueWithSources(&Any, newSource(new IntermediateSource(tryExceptMarkers[curByte]))));
+                skipEffect = true;
+            }
 
             switch (opcode) {
                 case EXTENDED_ARG: {
@@ -422,11 +440,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back(oparg);
                     }
 
-                    if (value.Value->isAlwaysFalse()) {
-                        // We're always jumping, we don't need to process the following opcodes...
-                        goto next;
-                    }
-
                     // we'll continue processing after the jump with our new state...
                     break;
                 }
@@ -436,11 +449,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     // merge our current state into the branched to location...
                     if (updateStartState(lastState, oparg)) {
                         queue.push_back(oparg);
-                    }
-
-                    if (value.Value->isAlwaysTrue()) {
-                        // We're always jumping, we don't need to process the following opcodes...
-                        goto next;
                     }
 
                     // we'll continue processing after the jump with our new state...
@@ -455,12 +463,8 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back(oparg);
                     }
                     auto value = POP_VALUE();
-                    if (value.Value->isAlwaysTrue()) {
-                        // we always jump, no need to analyze the following instructions...
-                        goto next;
-                    }
                 }
-                    break;
+                break;
                 case JUMP_IF_FALSE_OR_POP: {
                     auto curState = lastState;
                     auto top = POP_VALUE();
@@ -470,10 +474,6 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back(oparg);
                     }
                     auto value = POP_VALUE();
-                    if (value.Value->isAlwaysFalse()) {
-                        // we always jump, no need to analyze the following instructions...
-                        goto next;
-                    }
                 }
                     break;
                 case JUMP_IF_NOT_EXC_MATCH:
@@ -483,26 +483,25 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     if (updateStartState(lastState, oparg)) {
                         queue.push_back(oparg);
                     }
-                    goto next;
+                    goto next_block;
                 case JUMP_ABSOLUTE:
                     if (updateStartState(lastState, oparg)) {
                         queue.push_back(oparg);
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
-                    goto next;
+                    goto next_block;
                 case JUMP_FORWARD:
                     if (updateStartState(lastState, (size_t) oparg + curByte + SIZEOF_CODEUNIT)) {
                         queue.push_back((size_t) oparg + curByte + SIZEOF_CODEUNIT);
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
-                    goto next;
+                    goto next_block;
                 case RETURN_VALUE: {
                     auto retValue = POP_VALUE();
-                    mReturnValue = mReturnValue->mergeWith(retValue.Value);
-                    }
-                    goto next;
+                }
+                goto next_block;
                 case LOAD_NAME: {
                     // Used to load __name__ for a class def
                     PUSH_INTERMEDIATE(&Any);
@@ -735,7 +734,7 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     for (int i = 0; i < oparg; i++) {
                         POP_VALUE();
                     }
-                    goto next;
+                    break;
                 case STORE_SUBSCR:
                     if (PGC_READY()){
                         PGC_PROBE(3);
@@ -791,15 +790,15 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     PUSH_INTERMEDIATE(out);
                     break;
                 }
-                case POP_BLOCK: {
+                case POP_BLOCK:
                     lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
-                    PUSH_INTERMEDIATE(&Any);
-                    PUSH_INTERMEDIATE(&Any);
-                    PUSH_INTERMEDIATE(&Any);
-                }
+                    goto next_block;
                 case POP_EXCEPT:
-                    skipEffect = true;
-                    break;
+                    POP_VALUE();
+                    POP_VALUE();
+                    POP_VALUE();
+                    lastState.mStack = mStartStates[m_blockStarts[opcodeIndex]].mStack;
+                    goto next_block;
                 case LOAD_BUILD_CLASS: {
                     PUSH_INTERMEDIATE(&Function);
                     break;
@@ -847,18 +846,12 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back((size_t) oparg + curByte + SIZEOF_CODEUNIT);
                     }
                     PUSH_INTERMEDIATE(&Any);
-                    goto next;
+                    break;
                 }
                 case SETUP_FINALLY: {
+                    // Capture where the except block starts.
+                    tryExceptMarkers[(size_t)oparg + curByte + SIZEOF_CODEUNIT] = curByte;
                     auto ehState = lastState;
-                    // Except is entered with the exception object, traceback, and exception
-                    // type.  TODO: We could type these stronger then they currently are typed
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
-                    PUSH_INTERMEDIATE_TO(&Any, ehState);
                     if (updateStartState(ehState, (size_t) oparg + curByte + SIZEOF_CODEUNIT)) {
                         queue.push_back((size_t)oparg + curByte + SIZEOF_CODEUNIT);
                     }
@@ -972,21 +965,23 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     PUSH_INTERMEDIATE(&Any);
                     break;  // No stack effect
                 default:
-                    PyErr_Format(PyExc_ValueError,
-                                 "Unknown unsupported opcode: %d", opcode);
                     return IncompatibleOpcode_Unknown;
                     break;
             }
-#ifdef DEBUG
-            assert(skipEffect || 
-                static_cast<size_t>(PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump)) == (lastState.stackSize() - curStackLen));
+            if(!skipEffect){
+                if (static_cast<size_t>(PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump)) != (lastState.stackSize() - curStackLen)){
+#ifdef DEBUG_VERBOSE
+                    printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(opcode), curByte, PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump), (lastState.stackSize() - curStackLen));
 #endif
+                    return CompilationException;
+                }
+            }
             updateStartState(lastState, curByte + SIZEOF_CODEUNIT);
             mStartStates[curByte].pgcProbeSize = pgcSize;
             mStartStates[curByte].requiresPgcProbe = pgcRequired;
         }
 
-    next:;
+    next_block:;
     } while (!queue.empty());
 
     return Success;
@@ -1109,10 +1104,6 @@ bool AbstractInterpreter::pgcProbeRequired(py_opindex byteCodeIndex, PgcStatus s
     return false;
 }
 
-AbstractValue* AbstractInterpreter::getReturnInfo() {
-    return mReturnValue;
-}
-
 AbstractSource* AbstractInterpreter::addLocalSource(py_opindex opcodeIndex, py_oparg localIndex) {
     auto store = m_opcodeSources.find(opcodeIndex);
     if (store == m_opcodeSources.end()) {
@@ -1231,7 +1222,7 @@ void AbstractInterpreter::ensureLabels(vector<Label>& labels, size_t count) {
     }
 }
 
-void AbstractInterpreter::branchRaise(const char *reason, const char* context, py_opindex curByte, bool force) {
+void AbstractInterpreter::branchRaise(const char *reason, const char* context, py_opindex curByte, bool force, bool trace) {
     auto ehBlock = currentHandler();
     auto& entryStack = ehBlock->EntryStack;
 
@@ -1241,7 +1232,8 @@ void AbstractInterpreter::branchRaise(const char *reason, const char* context, p
     }
 #endif
 
-    m_comp->emit_eh_trace();
+    if (trace)
+        m_comp->emit_eh_trace();
 
     if (mTracingEnabled)
         m_comp->emit_trace_exception();
@@ -1496,15 +1488,6 @@ void AbstractInterpreter::raiseOnNegativeOne(py_opindex curByte) {
     m_comp->emit_mark_label(noErr);
 }
 
-void AbstractInterpreter::emitRaise(ExceptionHandler * handler) {
-    m_comp->emit_load_local(handler->ExVars.PrevTraceback);
-    m_comp->emit_load_local(handler->ExVars.PrevExcVal);
-    m_comp->emit_load_local(handler->ExVars.PrevExc);
-    m_comp->emit_load_local(handler->ExVars.FinallyTb);
-    m_comp->emit_load_local(handler->ExVars.FinallyValue);
-    m_comp->emit_load_local(handler->ExVars.FinallyExc);
-}
-
 void AbstractInterpreter::escapeEdges(const vector<Edge>& edges, py_opindex curByte) {
     // Check if edges need boxing/unboxing
     // If none of the edges need escaping, skip
@@ -1601,6 +1584,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     Label ok;
     OptimizationFlags optimizationsMade = OptimizationFlags();
     m_comp->emit_lasti_init();
+
+    auto rootHandlerLabel = m_comp->emit_define_label();
+
     if (m_comp->emit_push_frame()) {
         FLAG_OPT_USAGE(InlineFramePushPop);
     }
@@ -1620,8 +1606,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         m_comp->emit_init_stacktop_local();
         yieldJumps();
     }
-
-    auto rootHandlerLabel = m_comp->emit_define_label();
 
     m_comp->emit_init_instr_counter();
 
@@ -1644,7 +1628,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     if (mProfilingEnabled) { m_comp->emit_profile_frame_entry(); }
 
     // Push a catch-all error handler onto the handler list
-    auto rootHandler = m_exceptionHandler.SetRootHandler(rootHandlerLabel, ExceptionVars(m_comp));
+    auto rootHandler = m_exceptionHandler.SetRootHandler(rootHandlerLabel);
 
     // Push root block to stack, has no end offset
     m_blockStack.push_back(BlockInfo(-1, NOP, rootHandler));
@@ -1674,8 +1658,17 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         }
         if (m_exceptionHandler.IsHandlerAtOffset(curByte)){
             ExceptionHandler* handler = m_exceptionHandler.HandlerAtOffset(curByte);
+            auto newBlock = BlockInfo(
+                    0,
+                    EXCEPT_HANDLER,
+                    handler->BackHandler,
+                    EhfInExceptHandler);
+            m_blockStack.push_back(newBlock);
             m_comp->emit_mark_label(handler->ErrorTarget);
-            emitRaise(handler);
+            m_comp->emit_pop_block();
+            m_comp->emit_pop();
+            m_comp->emit_push_block(EXCEPT_HANDLER, -1, 0);
+            m_comp->emit_fetch_err();
         }
 
         if (!canSkipLastiUpdate(curByte)) {
@@ -2182,19 +2175,20 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                     case 1: m_comp->emit_null();
                     case 2:
                         decStack(oparg);
-                        // raise exc
-                        m_comp->emit_raise_varargs();
                         // returns 1 if we're doing a re-raise in which case we don't need
                         // to update the traceback.  Otherwise returns 0.
                         auto curHandler = currentHandler();
-                        if (oparg == 0) {
-                                // The stack actually ended up being empty - either because we didn't
-                                // have any values, or the values were all non-objects that we could
-                                // spill eagerly.
-                                m_comp->emit_branch(BranchAlways, curHandler->ErrorTarget);
-                        }
-                        else {
-                            // if we have args we'll always return 0...
+                        m_comp->emit_raise_varargs();
+                        if (oparg == 0){
+                            Label reraise = m_comp->emit_define_label();
+                            Label done = m_comp->emit_define_label();
+                            m_comp->emit_branch(BranchTrue, reraise);
+                            branchRaise("hit native error",  "", curByte);
+                            m_comp->emit_branch(BranchAlways, done);
+                            m_comp->emit_mark_label(reraise);
+                            branchRaise("hit reraise",  "", curByte, false, false);
+                            m_comp->emit_mark_label(done);
+                        } else {
                             m_comp->emit_pop();
                             branchRaise("hit native error",  "", curByte);
                         }
@@ -2211,7 +2205,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         handlerLabel,
                         m_stack,
                         current.CurrentHandler,
-                        ExceptionVars(m_comp, true),
                         jumpTo);
 
                 auto newBlock = BlockInfo(
@@ -2220,6 +2213,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         newHandler);
 
                 m_blockStack.push_back(newBlock);
+                m_comp->emit_push_block(SETUP_FINALLY, jumpTo, 0);
 
                 ValueStack newStack = ValueStack(m_stack);
                 newStack.inc(6, STACK_KIND_OBJECT);
@@ -2230,19 +2224,26 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             break;
             case RERAISE:{
                 m_comp->emit_restore_err();
-                unwindHandlers();
-                skipEffect = true;
+                // TODO: Both RERAISE and POP_EXCEPT are unreachable in some scenarios.
+                // Potentially mark these instructions and skip them.
+                if (m_stack.size() >= 3)
+                    decStack(3);
+                else
+                    skipEffect = true;
+                branchRaise("reraise error",  "", curByte);
                 break;
             }
             case POP_EXCEPT:
                 popExcept();
-                m_comp->pop_top();
-                m_comp->pop_top();
-                m_comp->pop_top();
-                decStack(3);
-                skipEffect = true;
+                m_comp->emit_pop_except();
+                if (m_stack.size() >= 3)
+                    decStack(3);
+                else
+                    skipEffect = true;
                 break;
             case POP_BLOCK:
+                m_comp->emit_pop_block();
+                m_comp->emit_pop(); // Dont do anything with the block atm
                 m_blockStack.pop_back();
                 break;
             case SETUP_WITH:
@@ -2461,10 +2462,12 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             default:
                 return {nullptr, IncompatibleOpcode_Unknown};
         }
-#ifdef DEBUG
-        assert(skipEffect ||
-            static_cast<size_t>(PyCompile_OpcodeStackEffect(byte, oparg)) == (m_stack.size() - curStackSize));
+        if(!skipEffect && static_cast<size_t>(PyCompile_OpcodeStackEffect(byte, oparg)) != (m_stack.size() - curStackSize)){
+#ifdef DEBUG_VERBOSE
+            printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(byte), curByte, PyCompile_OpcodeStackEffect(byte, oparg), (m_stack.size() - curStackSize));
 #endif
+            return {nullptr, CompilationException};
+        }
     }
 
     // label branch for error handling when we have no EH handlers, (return NULL).
@@ -2612,39 +2615,6 @@ void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcod
                 m_comp->emit_int(0);
             incStack(1, STACK_KIND_VALUE_INT);
             break;
-    }
-}
-
-void AbstractInterpreter::unwindHandlers(){
-    // for each exception handler we need to load the exception
-    // information onto the stack, and then branch to the correct
-    // handler.  When we take an error we'll branch down to this
-    // little stub and then back up to the correct handler.
-    if (!m_exceptionHandler.Empty()) {
-        // TODO: Unify the first handler with this loop
-        for (auto handler: m_exceptionHandler.GetHandlers()) {
-            //emitRaiseAndFree(handler);
-
-            if (handler->HasErrorTarget()) {
-                m_comp->emit_prepare_exception(
-                        handler->ExVars.PrevExc,
-                        handler->ExVars.PrevExcVal,
-                        handler->ExVars.PrevTraceback
-                );
-                if (handler->IsTryFinally()) {
-                    auto tmpEx = m_comp->emit_spill();
-
-                    auto root = handler->GetRootOf();
-                    auto& vars = handler->ExVars;
-
-                    m_comp->emit_store_local(vars.FinallyValue);
-                    m_comp->emit_store_local(vars.FinallyTb);
-
-                    m_comp->emit_load_and_free_local(tmpEx);
-                }
-                m_comp->emit_branch(BranchAlways, handler->ErrorTarget);
-            }
-        }
     }
 }
 
@@ -2831,16 +2801,18 @@ void AbstractInterpreter::jumpAbsolute(py_opindex index, py_opindex from) {
 }
 
 void AbstractInterpreter::jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo) {
+    Label handle = m_comp->emit_define_label();
     if (jumpTo <= opcodeIndex){
         m_comp->emit_pending_calls();
     }
     auto target = getOffsetLabel(jumpTo);
     m_comp->emit_compare_exceptions();
     decStack(2);
-    errorCheck("failed to compare exceptions", "", opcodeIndex);
-    m_comp->emit_ptr(Py_False);
-    m_comp->emit_branch(BranchEqual, target);
-
+    errorCheck("failed to compare exceptions","", opcodeIndex);
+    m_comp->emit_ptr(Py_True);
+    m_comp->emit_branch(BranchEqual, handle);
+    m_comp->emit_branch(BranchAlways, target);
+    m_comp->emit_mark_label(handle);
     m_offsetStack[jumpTo] = ValueStack(m_stack);
 }
 
@@ -2850,11 +2822,10 @@ void AbstractInterpreter::jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo
 void AbstractInterpreter::unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler) {
     auto cur = fromHandler;
     do {
-        auto& exVars = cur->ExVars;
-
-        if (exVars.PrevExc.is_valid()) {
-            m_comp->emit_unwind_eh(exVars.PrevExc, exVars.PrevExcVal, exVars.PrevTraceback);
-        }
+        // TODO : Skip for now, this does nothing useful.
+//        if (exVars.PrevExc.is_valid()) {
+//            m_comp->emit_unwind_eh(exVars.PrevExc, exVars.PrevExcVal, exVars.PrevTraceback);
+//        }
         if (cur->IsRootHandler())
             break;
         cur = cur->BackHandler;
@@ -2885,7 +2856,6 @@ void AbstractInterpreter::popExcept() {
     // we made it to the end of an EH block w/o throwing,
     // clear the exception.
     auto block = m_blockStack.back();
-    assert (block.CurrentHandler);
     unwindEh(block.CurrentHandler, block.CurrentHandler->BackHandler);
 }
 

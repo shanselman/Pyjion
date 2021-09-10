@@ -721,19 +721,20 @@ int PyJit_PrintExpr(PyObject *value) {
     return 0;
 }
 
-void PyJit_PrepareException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldVal, PyObject** oldTb) {
+void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldval, PyObject** oldtb) {
     auto tstate = PyThreadState_GET();
 
+    _PyErr_StackItem *exc_info = tstate->exc_info;
     // we take ownership of these into locals...
     if (tstate->curexc_type != nullptr) {
-        *oldexc = tstate->curexc_type;
+        *oldexc = exc_info->exc_type;
     }
     else {
         *oldexc = Py_None;
         Py_INCREF(Py_None);
     }
-    *oldVal = tstate->curexc_value;
-    *oldTb = tstate->curexc_traceback;
+    *oldval = exc_info->exc_value;
+    *oldtb = exc_info->exc_traceback;
 
     PyErr_Fetch(exc, val, tb);
     /* Make the raw exception data
@@ -741,20 +742,16 @@ void PyJit_PrepareException(PyObject** exc, PyObject**val, PyObject** tb, PyObje
     so a program can emulate the
     Python main loop. */
     PyErr_NormalizeException(
-        exc, val, tb);
+            exc, val, tb);
     if (tb != nullptr)
         PyException_SetTraceback(*val, *tb);
     else
         PyException_SetTraceback(*val, Py_None);
     Py_INCREF(*exc);
-    tstate->curexc_type = *exc;
+    exc_info->exc_type = *exc;
     Py_INCREF(*val);
-    tstate->curexc_value = *val;
-    if (!PyExceptionInstance_Check(*val)){
-        PyErr_SetString(PyExc_RuntimeError,  "Error unwinding exception data");
-        return;
-    }
-    tstate->curexc_traceback = *tb;
+    exc_info->exc_value = *val;
+    exc_info->exc_traceback = *tb;
     if (*tb == nullptr)
         *tb = Py_None;
     Py_INCREF(*tb);
@@ -766,15 +763,16 @@ void PyJit_UnwindEh(PyObject*exc, PyObject*val, PyObject*tb) {
         PyErr_SetString(PyExc_RuntimeError,  "Error unwinding exception data");
         return;
     }
-    auto oldtb = tstate->curexc_traceback;
-    auto oldtype = tstate->curexc_type;
-    auto oldvalue = tstate->curexc_value;
-    tstate->curexc_traceback = tb;
-    tstate->curexc_type = exc;
-    tstate->curexc_value = val;
-    Py_XDECREF(oldtb);
+    auto exc_info = tstate->exc_info;
+    auto oldtype = exc_info->exc_type;
+    auto oldvalue = exc_info->exc_value;
+    auto oldtraceback = exc_info->exc_traceback;
+    exc_info->exc_type = exc;
+    exc_info->exc_value = val;
+    exc_info->exc_traceback = tb;
     Py_XDECREF(oldtype);
     Py_XDECREF(oldvalue);
+    Py_XDECREF(oldtraceback);
 }
 
 #define CANNOT_CATCH_MSG "catching classes that do not inherit from "\
@@ -1143,26 +1141,27 @@ void PyJit_EhTrace(PyFrameObject *f) {
     PyTraceBack_Here(f);
 }
 
-int PyJit_Raise(PyObject *exc, PyObject *cause) {
+bool PyJit_Raise(PyObject *exc, PyObject *cause) {
     PyObject *type = nullptr, *value = nullptr;
 
     if (exc == nullptr) {
         /* Reraise */
         PyThreadState *tstate = PyThreadState_GET();
+        auto exc_info = _PyErr_GetTopmostException(tstate);
         PyObject *tb;
-        type = tstate->curexc_type;
-        value = tstate->curexc_value;
-        tb = tstate->curexc_traceback;
+        type = exc_info->exc_type;
+        value = exc_info->exc_value;
+        tb = exc_info->exc_traceback;
         if (type == Py_None || type == nullptr) {
             PyErr_SetString(PyExc_RuntimeError,
                 "No active exception to reraise");
-            return 0;
+            return false;
         }
         Py_XINCREF(type);
         Py_XINCREF(value);
         Py_XINCREF(tb);
         PyErr_Restore(type, value, tb);
-        return 1;
+        return true;
     }
 
     /* We support the following forms of raise:
@@ -1172,7 +1171,7 @@ int PyJit_Raise(PyObject *exc, PyObject *cause) {
 
     if (PyExceptionClass_Check(exc)) {
         type = exc;
-        value = PyObject_CallObject(exc, nullptr);
+        value = _PyObject_CallNoArg(exc);
         if (value == nullptr)
             goto raise_error;
         if (!PyExceptionInstance_Check(value)) {
@@ -1200,7 +1199,7 @@ int PyJit_Raise(PyObject *exc, PyObject *cause) {
     if (cause) {
         PyObject *fixed_cause;
         if (PyExceptionClass_Check(cause)) {
-            fixed_cause = PyObject_CallObject(cause, nullptr);
+            fixed_cause = _PyObject_CallNoArg(cause);
             if (fixed_cause == nullptr)
                 goto raise_error;
             Py_DECREF(cause);
@@ -1225,13 +1224,35 @@ int PyJit_Raise(PyObject *exc, PyObject *cause) {
     /* PyErr_SetObject incref's its arguments */
     Py_XDECREF(value);
     Py_XDECREF(type);
-    return 0;
+    return false;
 
 raise_error:
     Py_XDECREF(value);
     Py_XDECREF(type);
     Py_XDECREF(cause);
-    return 0;
+    return false;
+}
+
+void PyJit_PopExcept(PyObject* exc_traceback, PyObject* exc_value, PyObject* exc_type, PyFrameObject* frame){
+    PyObject *type, *value, *traceback;
+    _PyErr_StackItem *exc_info;
+    auto tstate = PyThreadState_GET();
+    PyTryBlock *b = PyFrame_BlockPop(frame);
+    if (b->b_type != EXCEPT_HANDLER) {
+        PyErr_SetString(PyExc_SystemError,
+                         "popped block is not an except handler");
+        return; // TODO : Throw this back up to the frame block
+    }
+    exc_info = tstate->exc_info;
+    type = exc_info->exc_type;
+    value = exc_info->exc_value;
+    traceback = exc_info->exc_traceback;
+    exc_info->exc_type = exc_type;
+    exc_info->exc_value = exc_value;
+    exc_info->exc_traceback = exc_traceback;
+    Py_XDECREF(type);
+    Py_XDECREF(value);
+    Py_XDECREF(traceback);
 }
 
 PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {
@@ -2805,4 +2826,13 @@ void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
                  expected,
                  PyUnicode_AsUTF8(PyObject_Repr(obj)),
                  obj->ob_type->tp_name);
+}
+
+PyObject* PyJit_BlockPop(PyFrameObject* frame){
+    if (frame->f_iblock <= 0) {
+        printf("Warning: block underflow at %d %s %s line %d\n", frame->f_lasti, PyUnicode_AsUTF8(frame->f_code->co_filename),
+               PyUnicode_AsUTF8(frame->f_code->co_name), frame->f_lineno);
+        return nullptr;
+    }
+    return reinterpret_cast<PyObject *>(PyFrame_BlockPop(frame));
 }

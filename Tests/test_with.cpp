@@ -23,26 +23,25 @@
 *
 */
 
-#define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
+#include "testing_util.h"
 
-#include <Python.h>
-#include <pyjit.h>
-
-int main(int argc, char* const argv[]) {
-    Py_Initialize();
-#ifdef WINDOWS
-    JitInit(L"clrjit.dll");
-#else
-    JitInit(L"libclrjit.so");
-#endif
-    g_pyjionSettings.graph = true;
-    g_pyjionSettings.debug = true;
-    g_pyjionSettings.tracing = true;
-    g_pyjionSettings.codeObjectSizeLimit = 1000000;
-    g_pyjionSettings.exceptionHandling = true;
-    setOptimizationLevel(1);
-    int result = Catch::Session().run(argc, argv);
-    Py_Finalize();
-    return result;
+TEST_CASE("Test with statement", "[!mayfail]") {
+    SECTION("custom context manager case") {
+        auto t = EmissionTest("def f():\n"
+                              " class Context:\n"
+                              "   def __init__(self):\n"
+                              "       self.entered = False\n"
+                              "       self.exited = False\n"
+                              "   def __enter__(self):\n"
+                              "       self.entered = True \n"
+                              "       return self\n"
+                              "   def __exit__(self, *exc):\n"
+                              "       self.exited = True\n"
+                              "       return True\n"
+                              " with Context() as c:\n"
+                              "    pass\n"
+                              " return c.entered, c.exited\n");
+        CHECK(t.returns() == "(True, True)");
+    }
 }

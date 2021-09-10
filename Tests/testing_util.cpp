@@ -126,12 +126,3 @@ void VariableVerifier::verify(AbstractInterpreter& interpreter) {
     CHECK(local.IsMaybeUndefined == m_undefined);
     CHECK(local.ValueInfo.Value->kind() == m_kind);
 };
-
-
-ReturnVerifier::ReturnVerifier(AbstractValueKind kind) {
-    m_kind = kind;
-};
-
-void ReturnVerifier::verify(AbstractInterpreter& interpreter) {
-    CHECK(m_kind == interpreter.getReturnInfo()->kind());
-};

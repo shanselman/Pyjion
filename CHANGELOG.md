@@ -1,7 +1,8 @@
 # Release notes
 
-## master
+## 1.0.0 (master)
 
+* Experimental `try..except` statements, stacked exception handlers and exception filtering. Disabled by default
 * Updated to .NET 6 preview 7
 
 ## 1.0.0 (rc2)

@@ -166,7 +166,7 @@ PyObject* PyJit_InplaceOr(PyObject *left, PyObject *right);
 
 int PyJit_PrintExpr(PyObject *value);
 
-void PyJit_PrepareException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldVal, PyObject** oldTb);
+void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldVal, PyObject** oldTb);
 void PyJit_UnwindEh(PyObject*exc, PyObject*val, PyObject*tb);
 
 #define CANNOT_CATCH_MSG "catching classes that do not inherit from "\
@@ -199,10 +199,11 @@ PyObject* PyJit_KwCallN(PyObject *target, PyObject* args, PyObject* names);
 
 void PyJit_PushFrame(PyFrameObject* frame);
 void PyJit_PopFrame(PyFrameObject* frame);
-
+void PyJit_PopExcept(PyObject* exc_traceback, PyObject* exc_value, PyObject* exc_type, PyFrameObject* frame);
+PyObject* PyJit_BlockPop(PyFrameObject* frame);
 void PyJit_EhTrace(PyFrameObject *f);
 
-int PyJit_Raise(PyObject *exc, PyObject *cause);
+bool PyJit_Raise(PyObject *exc, PyObject *cause);
 
 PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg);
 

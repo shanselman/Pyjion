@@ -185,6 +185,10 @@ public:
     virtual bool emit_push_frame() = 0;
     // Pops the current Python frame from the list of frames
     virtual bool emit_pop_frame() = 0;
+
+    virtual void emit_push_block(int32_t type, int32_t handler, int32_t level) = 0;
+    virtual void emit_pop_block() = 0;
+
     // Returns from the current function
     virtual void emit_ret() = 0;
     // Initializes state associated with updating the frames lasti value
@@ -411,12 +415,10 @@ public:
     virtual void emit_eh_trace() = 0;
     // Performs exception handling unwind as we go through loops
     virtual void emit_unwind_eh(Local prevExc, Local prevExcVal, Local prevTraceback) = 0;
-    // Prepares to raise an exception, storing the existing exceptions
-    virtual void emit_prepare_exception(Local prevExc, Local prevExcVal, Local prevTraceback) = 0;
+    virtual void emit_pop_except() = 0;
     // Restores the previous exception for nested exception handling
     virtual void emit_restore_err() = 0;
-    // Restores the previous exception from the top 3 values on the stack
-    virtual void emit_reraise() = 0;
+    virtual void emit_fetch_err() = 0;
     // Compares to see if an exception is handled, pushing a Python bool onto the stack
     virtual void emit_compare_exceptions() = 0;
     // Sets the current exception type and text

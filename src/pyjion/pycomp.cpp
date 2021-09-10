@@ -95,6 +95,25 @@ bool PythonCompiler::emit_pop_frame() {
     }
 }
 
+void PythonCompiler::emit_push_block(int32_t type, int32_t handler, int32_t level) {
+    load_frame();
+    m_il.ld_i4(type);
+    m_il.ld_i4(type);
+    m_il.ld_i4(type);
+    m_il.emit_call(METHOD_BLOCK_PUSH);
+}
+
+void PythonCompiler::emit_pop_block() {
+    load_frame();
+    m_il.emit_call(METHOD_BLOCK_POP);
+}
+
+void PythonCompiler::emit_pop_except() {
+    load_frame();
+    m_il.emit_call(METHOD_POP_EXCEPT);
+}
+
+
 void PythonCompiler::emit_eh_trace() {
     load_frame();
     m_il.emit_call(METHOD_EH_TRACE);
@@ -1485,6 +1504,28 @@ void PythonCompiler::emit_restore_err() {
     m_il.emit_call(METHOD_PYERR_RESTORE);
 }
 
+void PythonCompiler::emit_fetch_err() {
+    Local PrevExc = emit_define_local(LK_Pointer), PrevExcVal = emit_define_local(LK_Pointer), PrevTraceback = emit_define_local(LK_Pointer);
+    // The previous traceback and exception values if we're handling a finally block.
+    // We store these in locals and keep only the exception type on the stack so that
+    // we don't enter the finally handler with multiple stack depths.
+    Local Exc = emit_define_local(LK_Pointer), Traceback = emit_define_local(LK_Pointer), ExcVal = emit_define_local(LK_Pointer);
+    emit_load_local_addr(Exc);
+    emit_load_local_addr(ExcVal);
+    emit_load_local_addr(Traceback);
+    emit_load_local_addr(PrevExc);
+    emit_load_local_addr(PrevExcVal);
+    emit_load_local_addr(PrevTraceback);
+
+    m_il.emit_call(METHOD_HANDLE_EXCEPTION);
+    emit_load_and_free_local(PrevTraceback);
+    emit_load_and_free_local(PrevExcVal);
+    emit_load_and_free_local(PrevExc);
+    emit_load_and_free_local(Traceback);
+    emit_load_and_free_local(ExcVal);
+    emit_load_and_free_local(Exc);
+}
+
 void PythonCompiler::emit_compare_exceptions() {
     m_il.emit_call(METHOD_COMPARE_EXCEPTIONS);
 }
@@ -1506,28 +1547,6 @@ void PythonCompiler::emit_unwind_eh(Local prevExc, Local prevExcVal, Local prevT
     m_il.emit_call(METHOD_UNWIND_EH);
 }
 
-void PythonCompiler::emit_prepare_exception(Local prevExc, Local prevExcVal, Local prevTraceback) {
-    auto excType = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-    auto ehVal = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-    auto tb = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-    m_il.ld_loca(excType);
-    m_il.ld_loca(ehVal);
-    m_il.ld_loca(tb);
-
-    m_il.ld_loca(prevExc);
-    m_il.ld_loca(prevExcVal);
-    m_il.ld_loca(prevTraceback);
-
-    m_il.emit_call(METHOD_PREPARE_EXCEPTION);
-    m_il.ld_loc(tb);
-    m_il.ld_loc(ehVal);
-    m_il.ld_loc(excType);
-
-    m_il.free_local(excType);
-    m_il.free_local(ehVal);
-    m_il.free_local(tb);
-}
-
 void PythonCompiler::emit_int(int value) {
     m_il.ld_i4(value);
 }
@@ -1538,10 +1557,6 @@ void PythonCompiler::emit_sizet(size_t value) {
 
 void PythonCompiler::emit_long_long(long long value) {
     m_il.ld_i8(value);
-}
-
-void PythonCompiler::emit_reraise() {
-    m_il.emit_call(METHOD_UNWIND_EH);
 }
 
 void PythonCompiler::emit_float(double value) {
@@ -1699,7 +1714,6 @@ void PythonCompiler::emit_null() {
 }
 
 void PythonCompiler::emit_raise_varargs() {
-    // raise exc
     m_il.emit_call(METHOD_DO_RAISE);
 }
 
@@ -2547,11 +2561,12 @@ GLOBAL_METHOD(METHOD_PRINT_EXPR_TOKEN, &PyJit_PrintExpr, CORINFO_TYPE_INT, Param
 
 GLOBAL_METHOD(METHOD_LOAD_CLASSDEREF_TOKEN, &PyJit_LoadClassDeref, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
-GLOBAL_METHOD(METHOD_PREPARE_EXCEPTION, &PyJit_PrepareException, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT),
+GLOBAL_METHOD(METHOD_HANDLE_EXCEPTION, &PyJit_HandleException, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT),
     Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
-GLOBAL_METHOD(METHOD_DO_RAISE, &PyJit_Raise, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_DO_RAISE, &PyJit_Raise, CORINFO_TYPE_BOOL, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_EH_TRACE, &PyJit_EhTrace, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_POP_EXCEPT, &PyJit_PopExcept, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_COMPARE_EXCEPTIONS, &PyJit_CompareExceptions, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
@@ -2643,6 +2658,8 @@ GLOBAL_METHOD(METHOD_LIST_ITEM_FROM_BACK, &PyJit_GetListItemReversed, CORINFO_TY
 GLOBAL_METHOD(METHOD_GIL_ENSURE, &PyGILState_Ensure, CORINFO_TYPE_NATIVEINT);
 GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 
+GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT));
 
 const char* opcodeName(py_opcode opcode) {
 #define OP_TO_STR(x)   case x: return #x;

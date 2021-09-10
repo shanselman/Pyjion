@@ -52,7 +52,7 @@ struct AbsIntBlockInfo {
         BlockEnd = blockEnd;
     }
 };
-
+typedef vector<AbsIntBlockInfo> AbstractBlockList;
 // The abstract interpreter implementation.  The abstract interpreter performs
 // static analysis of the Python byte code to determine what types are known.
 // Ultimately this information will feedback into code generation allowing
@@ -253,6 +253,15 @@ public:
     }
 };
 
+class InvalidStackEffectException: public std::exception {
+public:
+    InvalidStackEffectException() : std::exception() {};
+    const char * what () const noexcept override
+    {
+        return "Invalid stack effect";
+    }
+};
+
 #ifdef _WIN32
 class __declspec(dllexport) AbstractInterpreter {
 #pragma warning (disable:4251)
@@ -262,10 +271,9 @@ class AbstractInterpreter {
     // ** Results produced:
     // Tracks the interpreter state before each opcode
     unordered_map<py_opindex, InterpreterState> mStartStates;
-    AbstractValue* mReturnValue;
     // ** Inputs:
     PyCodeObject* mCode;
-    _Py_CODEUNIT *mByteCode;
+    _Py_CODEUNIT *mByteCode; // Used by macros
     size_t mSize;
     Local mErrorCheckLocal;
     bool mTracingEnabled;
@@ -338,7 +346,6 @@ public:
     // Returns information about the stack at the specific byte code index.
     InterpreterStack& getStackInfo(py_opindex byteCodeIndex);
 
-    AbstractValue* getReturnInfo();
     bool pgcProbeRequired(py_opindex byteCodeIndex, PgcStatus status);
     short pgcProbeSize(py_opindex byteCodeIndex);
     void enableTracing();
@@ -391,7 +398,7 @@ private:
 
     void ensureLabels(vector<Label>& labels, size_t count);
 
-    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force=false);
+    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force=false, bool trace=true);
     void raiseOnNegativeOne(py_opindex curByte);
 
     void unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler = nullptr);
@@ -425,9 +432,6 @@ private:
     void jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo);
     void testBoolAndBranch(Local value, bool isTrue, Label target);
 
-    void unwindHandlers();
-
-    void emitRaise(ExceptionHandler *handler);
     void updateIntermediateSources();
     void escapeEdges(const vector<Edge>& edges, py_opindex curByte);
     void yieldJumps();
