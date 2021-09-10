@@ -115,23 +115,22 @@ Pyjit_CheckRecursiveCall(PyThreadState *tstate, const char *where)
 {
     int recursion_limit = g_pyjionSettings.recursionLimit;
 
-    if (tstate->recursion_critical)
-        /* Somebody asked that we don't check for recursion. */
-        return 0;
-    if (tstate->overflowed) {
+    if (tstate->recursion_headroom) {
         if (tstate->recursion_depth > recursion_limit + 50) {
             /* Overflowing while handling an overflow. Give up. */
             Py_FatalError("Cannot recover from stack overflow.");
         }
-        return 0;
     }
-    if (tstate->recursion_depth > recursion_limit) {
-        --tstate->recursion_depth;
-        tstate->overflowed = 1;
-        PyErr_Format(PyExc_RecursionError,
-                      "maximum recursion depth exceeded - %s.",
-                      where);
-        return -1;
+    else {
+        if (tstate->recursion_depth > recursion_limit) {
+            tstate->recursion_headroom++;
+            PyErr_Format(PyExc_RecursionError,
+                         "maximum recursion depth exceeded%s",
+                         where);
+            tstate->recursion_headroom--;
+            --tstate->recursion_depth;
+            return -1;
+        }
     }
     return 0;
 }
@@ -151,20 +150,16 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
     if (Pyjit_EnterRecursiveCall("")) {
         return nullptr;
     }
-    PyObject ** stack_pointer = frame->f_stacktop;
-    assert(stack_pointer != nullptr);
-    frame->f_stacktop = nullptr;       /* remains NULL unless yield suspends frame */
-	frame->f_executing = 1;
+    frame->f_stackdepth = -1;
+    frame->f_state = FRAME_EXECUTING;
 
     try {
-        auto res = ((Py_EvalFunc)state)(nullptr, frame, tstate, profile, stack_pointer);
+        auto res = ((Py_EvalFunc)state)(nullptr, frame, tstate, profile, nullptr);
         Pyjit_LeaveRecursiveCall();
-        frame->f_executing = 0;
         return res;
     } catch (const std::exception& e){
         PyErr_SetString(PyExc_RuntimeError, e.what());
         Pyjit_LeaveRecursiveCall();
-        frame->f_executing = 0;
         return nullptr;
     }
 }

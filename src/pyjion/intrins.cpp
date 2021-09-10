@@ -849,7 +849,7 @@ void PyJit_PyErrRestore(PyObject*tb, PyObject*value, PyObject*exception) {
 PyObject* PyJit_ImportName(PyObject*level, PyObject*from, PyObject* name, PyFrameObject* f) {
     _Py_IDENTIFIER(__import__);
     PyThreadState *tstate = PyThreadState_GET();
-    PyObject *imp_func = _PyDict_GetItemId(f->f_builtins, &PyId___import__);
+    PyObject *imp_func = _PyDict_GetItemIdWithError(f->f_builtins, &PyId___import__);
     PyObject *args, *res;
     PyObject* stack[5];
 
@@ -859,6 +859,7 @@ PyObject* PyJit_ImportName(PyObject*level, PyObject*from, PyObject* name, PyFram
         return nullptr;
     }
 
+    /* TODO: Add Fast path for not overloaded __import__. */
     Py_INCREF(imp_func);
 
     stack[0] = name;
@@ -1550,7 +1551,7 @@ PyObject* PyJit_CallN(PyObject *target, PyObject* args) {
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
 #endif
-        if (tstate->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
+        if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
             // Call the function with profiling hooks
             trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj);
             res = PyObject_Vectorcall(target, args_vec, args_vec_size | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -1613,7 +1614,7 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
             (PyDictObject *)f->f_builtins,
             name);
         if (v == nullptr) {
-            if (!_PyErr_OCCURRED())
+            if (!PyErr_Occurred())
                 format_exc_check_arg(PyExc_NameError, NAME_ERROR_MSG, name);
             return nullptr;
         }
@@ -1747,7 +1748,7 @@ PyObject* PyJit_BuildClass(PyFrameObject *f) {
 
     PyObject *bc;
     if (PyDict_CheckExact(f->f_builtins)) {
-        bc = _PyDict_GetItemId(f->f_builtins, &PyId___build_class__);
+        bc = _PyDict_GetItemIdWithError(f->f_builtins, &PyId___build_class__);
         if (bc == nullptr) {
             PyErr_SetString(PyExc_NameError,
                 "__build_class__ not found");
@@ -2008,7 +2009,7 @@ inline PyObject* VectorCall(PyObject* target, Args...args){
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 #endif
-    if (tstate->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
+    if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
         // Call the function with profiling hooks
         trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj);
         res = _PyObject_VectorcallTstate(tstate, target, _args, sizeof...(args) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -2034,7 +2035,7 @@ inline PyObject* VectorCall0(PyObject* target){
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 #endif
-    if (tstate->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
+    if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
         // Call the function with profiling hooks
         trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj);
         res = _PyObject_VectorcallTstate(tstate, target, nullptr, 0 | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -2499,9 +2500,9 @@ inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args
     if (func == nullptr)
         return -1;
     tstate->tracing++;
-    tstate->use_tracing = 0;
+    tstate->cframe->use_tracing = 0;
     int result = func(tracearg, f, ty, args);
-    tstate->use_tracing = ((tstate->c_tracefunc != nullptr)
+    tstate->cframe->use_tracing = ((tstate->c_tracefunc != nullptr)
                            || (tstate->c_profilefunc != nullptr));
     tstate->tracing--;
     return result;
@@ -2510,42 +2511,7 @@ inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args
 void PyJit_TraceLine(PyFrameObject* f, int* instr_lb, int* instr_ub, int* instr_prev){
     auto tstate = PyThreadState_GET();
     if (tstate->c_tracefunc != nullptr && !tstate->tracing) {
-        int result = 0;
-        int line = f->f_lineno;
-
-        /* If the last instruction executed isn't in the current
-           instruction window, reset the window.
-        */
-        if (f->f_lasti < *instr_lb || f->f_lasti >= *instr_ub) {
-            PyAddrPair bounds;
-            line = _PyCode_CheckLineNumber(f->f_code, f->f_lasti,
-                                           &bounds);
-            *instr_lb = bounds.ap_lower;
-            *instr_ub = bounds.ap_upper;
-        }
-        /* If the last instruction falls at the start of a line or if it
-           represents a jump backwards, update the frame's line number and
-           then call the trace function if we're tracing source lines.
-        */
-        if ((f->f_lasti == *instr_lb || f->f_lasti < *instr_prev)) {
-            f->f_lineno = line;
-            if (f->f_trace_lines) {
-                if (tstate->tracing)
-                    return;
-                result = trace(tstate, f, PyTrace_LINE, Py_None, tstate->c_tracefunc, tstate->c_traceobj);
-            }
-        }
-        /* Always emit an opcode event if we're tracing all opcodes. */
-        if (f->f_trace_opcodes) {
-            if (tstate->tracing)
-                return;
-            result = trace(tstate, f, PyTrace_OPCODE, Py_None, tstate->c_tracefunc, tstate->c_traceobj);
-        }
-        *instr_prev = f->f_lasti;
-
-        // TODO : Handle possible change of instruction address
-        //  should lookup jump address and branch (f->f_lasti);
-        // TODO : Handle error in call trace function
+        // TODO : Implement line tracing..
     }
 }
 

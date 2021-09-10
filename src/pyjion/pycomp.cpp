@@ -1596,19 +1596,11 @@ void PythonCompiler::emit_load_from_frame_value_stack(size_t index) {
 }
 
 void PythonCompiler::emit_set_stacktop(size_t height) {
-    load_frame();
-    LD_FIELDA(PyFrameObject, f_stacktop);
-    m_il.ld_loc(m_stacktop);
-    m_il.ld_i((int32_t)(height * sizeof(size_t)));
-    m_il.add();
-    m_il.st_ind_i();
+    // TODO: Find and remove links
 }
 
 void PythonCompiler::emit_shrink_stacktop_local(size_t height) {
-    m_il.ld_loc(m_stacktop);
-    m_il.ld_i((int32_t)(height * sizeof(size_t)));
-    m_il.sub();
-    m_il.st_loc(m_stacktop);
+    // TODO : Find and remove links
 }
 
 // Emits a call to create a new function, consuming the code object and
