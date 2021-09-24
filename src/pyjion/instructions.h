@@ -40,6 +40,29 @@ class InterpreterStack;
 #define GET_OPARG(index)  (py_oparg)_Py_OPARG(mByteCode[(index)/SIZEOF_CODEUNIT])
 #define GET_OPCODE(index) (py_opcode)_Py_OPCODE(mByteCode[(index)/SIZEOF_CODEUNIT])
 
+inline py_opindex jumpsTo(py_opcode opcode, py_oparg oparg, py_opindex index){
+    switch (opcode){
+        // Absolute jumps
+        case JUMP_ABSOLUTE:
+        case JUMP_IF_FALSE_OR_POP:
+        case JUMP_IF_TRUE_OR_POP:
+        case JUMP_IF_NOT_EXC_MATCH:
+        case POP_JUMP_IF_TRUE:
+        case POP_JUMP_IF_FALSE:
+            return oparg * 2;
+        // Relative jumps
+        case END_ASYNC_FOR:
+        case JUMP_FORWARD:
+        case SETUP_WITH:
+        case SETUP_ASYNC_WITH:
+        case SETUP_FINALLY:
+        case FOR_ITER:
+            return (oparg * 2) + index + SIZEOF_CODEUNIT;
+        default:
+            return 1337;
+    }
+}
+
 enum EscapeTransition {
     // Boxed -> Boxed = NoEscape
     // Boxed -> Unboxed = Unbox
@@ -55,6 +78,7 @@ struct Instruction {
     py_opindex index;
     py_opcode opcode;
     py_oparg oparg;
+    py_opindex jumpsTo;
     bool escape = false;
     bool deoptimized = false;
 };

@@ -126,7 +126,7 @@ TEST_CASE("Test instruction graphs"){
         CHECK(t.edgesIn(0) == 0);
         CHECK(t.edgesOut(0) == 1);
 
-        t.assertInstruction(6, POP_JUMP_IF_TRUE, 12, false);
+        t.assertInstruction(6, POP_JUMP_IF_TRUE, 6, false);
         CHECK(t.edgesIn(6) == 1);
         CHECK(t.edgeInIs(6, 0) == NoEscape);
         CHECK(t.edgesOut(6) == 0);
@@ -149,7 +149,7 @@ TEST_CASE("Test instruction graphs"){
         CHECK(t.edgeInIs(4, 1) == Unboxed);
         CHECK(t.edgeOutIs(4, 0) == Unboxed);
         CHECK(t.edgesOut(4) == 1);
-        t.assertInstruction(6, POP_JUMP_IF_TRUE, 12, true); // should be unboxed
+        t.assertInstruction(6, POP_JUMP_IF_TRUE, 6, true); // should be unboxed
         CHECK(t.edgesIn(6) == 1);
         CHECK(t.edgeInIs(6, 0) == Unboxed);
         CHECK(t.edgesOut(6) == 0);
@@ -174,7 +174,7 @@ TEST_CASE("Test instruction graphs"){
                                       "assert_deopt_binary_pop");
         CHECK(t.size() == 16);
         t.assertInstruction(20, COMPARE_OP, 2, true); // == should be unboxed
-        t.assertInstruction(22, POP_JUMP_IF_FALSE, 28, true); // JUMP should be unboxed
+        t.assertInstruction(22, POP_JUMP_IF_FALSE, 14, true); // JUMP should be unboxed
     }
 
     SECTION("test JUMP_IF_FALSE_OR_POP doesn't get optimized and a confused graph") {
@@ -185,7 +185,7 @@ TEST_CASE("Test instruction graphs"){
         CHECK(t.size() == 14);
         t.assertInstruction(24, COMPARE_OP, 2, false); // == should be boxed
         CHECK(t.edgesOut(8) == 1);
-        t.assertInstruction(10, JUMP_IF_FALSE_OR_POP, 26, false); // JUMP should be boxed
+        t.assertInstruction(10, JUMP_IF_FALSE_OR_POP, 13, false); // JUMP should be boxed
     }
 
     SECTION("assert boxable consts to locals"){
