@@ -43,7 +43,8 @@ InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex 
                     .index = index,
                     .opcode = opcode,
                     .oparg = oparg,
-                    .escape = false
+                    .jumpsTo = jumpsTo(opcode, oparg, index),
+                    .escape = false,
             };
             curByte += SIZEOF_CODEUNIT;
             oparg = (oparg << 8) | GET_OPARG(curByte);
@@ -323,7 +324,7 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n}\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
                 break;
             case SETUP_FINALLY:
-                exceptionHandlers.insert(node.second.index + node.second.oparg + SIZEOF_CODEUNIT);
+                exceptionHandlers.insert(node.second.jumpsTo);
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%d)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode), node.second.oparg, blockColor);
                 PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\nlabel = \"try block\";\n", node.first));
                 break;
@@ -340,18 +341,17 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
 
         switch(node.second.opcode){
             case JUMP_FORWARD:
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.index + node.second.oparg + SIZEOF_CODEUNIT));
-                break;
             case JUMP_ABSOLUTE:
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.oparg));
+                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.jumpsTo));
                 break;
+            case FOR_ITER:
+            case JUMP_IF_NOT_EXC_MATCH:
             case JUMP_IF_FALSE_OR_POP:
             case JUMP_IF_TRUE_OR_POP:
-            case JUMP_IF_NOT_EXC_MATCH:
             case POP_JUMP_IF_TRUE:
             case POP_JUMP_IF_FALSE:
                 PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.index + 2));
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.oparg));
+                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.jumpsTo));
                 break;
         }
     }
