@@ -74,6 +74,7 @@ InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex 
             .index = index,
             .opcode = opcode,
             .oparg = oparg,
+            .jumpsTo = jumpsTo(opcode, oparg, index),
             .escape = false
         };
     }

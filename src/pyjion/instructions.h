@@ -59,7 +59,7 @@ inline py_opindex jumpsTo(py_opcode opcode, py_oparg oparg, py_opindex index){
         case FOR_ITER:
             return (oparg * 2) + index + SIZEOF_CODEUNIT;
         default:
-            return 0;
+            return 1337;
     }
 }
 
