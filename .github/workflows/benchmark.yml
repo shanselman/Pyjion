@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        dot-net-version: [ 6.0.100-preview.7.21379.14 ]
+        dot-net-version: [ 6.0.100-rc.1.21463.6 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -53,11 +53,11 @@ jobs:
           python Tests/benchmarks/bench_nqueens.py
 
   bench-macos-11:
-    runs-on: macos-11.0
+    runs-on: macos-11
     strategy:
       matrix:
         python-version: [3.9]
-        dot-net-version: [ 6.0.100-preview.7.21379.14 ]
+        dot-net-version: [ 6.0.100-rc.1.21463.6 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -96,7 +96,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        dot-net-version: [ 6.0.100-preview.7.21379.14 ]
+        dot-net-version: [ 6.0.100-rc.1.21463.6 ]
 
     steps:
       - uses: actions/checkout@v2
