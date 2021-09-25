@@ -1423,13 +1423,6 @@ public:
         WARN("FilterException\r\n"); return 0;
     }
 
-    // Cleans up internal EE tracking when an exception is caught.
-    void HandleException(
-    struct _EXCEPTION_POINTERS *pExceptionPointers
-        ) override {
-        WARN("HandleException\r\n");
-    }
-
     void ThrowExceptionForJitResult(
         HRESULT result) override {
         WARN("ThrowExceptionForJitResult\r\n");
@@ -1909,6 +1902,18 @@ public:
         // method attribs are CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE - so always false.
         return false;
     }
+
+    // Runs the given function under an error trap. This allows the JIT to make calls
+    // to interface functions that may throw exceptions without needing to be aware of
+    // the EH ABI, exception types, etc. Returns true if the given function completed
+    // successfully and false otherwise. This error trap checks for SuperPMI exceptions
+    bool runWithSPMIErrorTrap(
+        errorTrapFunction function, // The function to run
+        void* parameter          // The context parameter that will be passed to the function and the handler
+        ) override {
+            WARN("runWithSPMIErrorTrap not implemented\r\n");
+            return true;
+        };
 };
 
 #endif
