@@ -264,7 +264,6 @@ class PythonCompiler : public IPythonCompiler {
     // This is the ADDRESS of the int f_lasti inside the PyFrameObject
     Local m_lasti;
     Local m_instrCount;
-    Local m_stacktop;
     bool m_compileDebug;
 
 public:
@@ -289,7 +288,7 @@ public:
 
     bool emit_push_frame() override;
     bool emit_pop_frame() override;
-
+    void emit_set_frame_state(PythonFrameState state) override;
     void emit_push_block(int32_t type, int32_t handler, int32_t level) override;
     void emit_pop_block() override;
     void emit_pop_except() override;
@@ -508,11 +507,6 @@ public:
     void emit_infinity_long() override;
     void emit_nan_long() override;
     void emit_guard_exception(const char* expected) override;
-    void emit_store_in_frame_value_stack(size_t index) override;
-    void emit_load_from_frame_value_stack(size_t index) override;
-    void emit_set_stacktop(size_t height) override;
-    void emit_init_stacktop_local() override;
-    void emit_shrink_stacktop_local(size_t height) override;
 
 private:
     void load_frame();

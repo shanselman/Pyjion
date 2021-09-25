@@ -31,6 +31,7 @@
 #include "absvalue.h"
 #include "codemodel.h"
 #include "instructions.h"
+#include "frame.h"
 
 class InvalidLocalException: public std::exception {
 public:
@@ -185,6 +186,7 @@ public:
     virtual bool emit_push_frame() = 0;
     // Pops the current Python frame from the list of frames
     virtual bool emit_pop_frame() = 0;
+    virtual void emit_set_frame_state(PythonFrameState state) = 0;
 
     virtual void emit_push_block(int32_t type, int32_t handler, int32_t level) = 0;
     virtual void emit_pop_block() = 0;
@@ -473,11 +475,6 @@ public:
     virtual void emit_infinity_long() = 0;
     virtual void emit_nan_long() = 0;
     virtual void emit_guard_exception(const char* expected) = 0;
-    virtual void emit_store_in_frame_value_stack(size_t index) = 0;
-    virtual void emit_load_from_frame_value_stack(size_t index) = 0;
-    virtual void emit_set_stacktop(size_t height) = 0;
-    virtual void emit_init_stacktop_local() = 0;
-    virtual void emit_shrink_stacktop_local(size_t height) = 0;
 };
 
 #endif
