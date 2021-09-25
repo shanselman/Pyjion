@@ -132,7 +132,7 @@ def test_mean():
 def test_variance():
     data = [0, 0, 1]
     result = statistics.variance(data)
-    assert result == 0.33333333333333337
+    assert round(result, 2) == round(0.33333333333333337, 2)
 
 def test_variance2():
     data = [0, 1]

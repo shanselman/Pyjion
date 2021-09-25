@@ -151,7 +151,7 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
         return nullptr;
     }
     frame->f_stackdepth = -1;
-    frame->f_state = FRAME_EXECUTING;
+    frame->f_state = PY_FRAME_EXECUTING;
 
     try {
         auto res = ((Py_EvalFunc)state)(nullptr, frame, tstate, profile, nullptr);

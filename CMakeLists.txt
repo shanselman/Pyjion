@@ -196,7 +196,7 @@ if(NET_SRC_LIB)  # use the libraries compiled from source
     message(STATUS "Using .NET builds " ${DOTNETPATH})
 endif()
 
-set(SOURCES src/pyjion/absint.cpp src/pyjion/absvalue.cpp src/pyjion/intrins.cpp src/pyjion/jitinit.cpp src/pyjion/pycomp.cpp src/pyjion/pyjit.cpp src/pyjion/exceptionhandling.cpp src/pyjion/stack.cpp src/pyjion/codemodel.cpp src/pyjion/binarycomp.cpp src/pyjion/instructions.cpp src/pyjion/unboxing.cpp)
+set(SOURCES src/pyjion/absint.cpp src/pyjion/absvalue.cpp src/pyjion/intrins.cpp src/pyjion/jitinit.cpp src/pyjion/pycomp.cpp src/pyjion/pyjit.cpp src/pyjion/exceptionhandling.cpp src/pyjion/stack.cpp src/pyjion/codemodel.cpp src/pyjion/binarycomp.cpp src/pyjion/instructions.cpp src/pyjion/unboxing.cpp src/pyjion/frame.h)
 
 if (WIN32)
     enable_language(ASM_MASM)
