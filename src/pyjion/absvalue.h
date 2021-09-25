@@ -34,6 +34,11 @@
 #include "cowvector.h"
 #include "types.h"
 
+#ifdef WINDOWS
+typedef SIZE_T size_t;
+typedef SSIZE_T ssize_t;
+#endif
+
 class AbstractValue;
 struct AbstractValueWithSources;
 class LocalSource;
