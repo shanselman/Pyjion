@@ -33,6 +33,11 @@
 #include "instructions.h"
 #include "frame.h"
 
+#ifdef WINDOWS
+typedef SIZE_T size_t;
+typedef SSIZE_T ssize_t;
+#endif
+
 class InvalidLocalException: public std::exception {
 public:
     InvalidLocalException(): std::exception() {};
