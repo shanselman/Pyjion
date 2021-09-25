@@ -9,7 +9,7 @@ You can test out Pyjion now at [www.trypyjion.com](https://www.trypyjion.com).
 
 Read the full documentation at [pyjion.readthedocs.io](https://pyjion.readthedocs.io/en/latest/).
 
-## Installing 
+## Installing
 
 ```console
 $ pip install pyjion
@@ -17,11 +17,11 @@ $ pip install pyjion
 
 ## Compiling from source
 
-Prerequisites: 
+Prerequisites:
 
-- CPython 3.9.0
-- CMake 3.2 + 
-- .NET 6 Preview 6
+- CPython 3.9 or 3.10
+- CMake 3.2 +
+- .NET 6 RC1
 
 ```console
  $ git clone git@github.com:tonybaloney/pyjion --recurse-submodules
@@ -31,7 +31,7 @@ Prerequisites:
 
 ## Using Pyjion
 
-To get started, you need to have .NET installed, with Python 3.9 and the Pyjion package (I also recommend using a virtual environment).
+To get started, you need to have .NET installed, with Python 3.9 or 3.10 and the Pyjion package (I also recommend using a virtual environment).
 
 After importing pyjion, enable it by calling `pyjion.enable()` which sets a compilation threshold to 0 (the code only needs to be run once to be compiled by the JIT):
 
@@ -117,13 +117,15 @@ app.run()
 ## FAQ
 
 ### How do you pronounce "Pyjion"?
+
 Like the word "pigeon". @DinoV wanted a name that had something with "Python"
 -- the "Py" part -- and something with "JIT" -- the "JI" part -- and have it be
 pronounceable.
 
-### How do this compare to ...
+### How do this compare to
 
 #### [PyPy](http://pypy.org/)?
+
 [PyPy](http://pypy.org/) is an implementation of Python with its own JIT. The
 biggest difference compared to Pyjion is that PyPy doesn't support all C extension
 modules without modification unless they use [CFFI](https://cffi.readthedocs.org)
@@ -132,30 +134,35 @@ Pyjion also aims to support many JIT compilers while PyPy only supports their
 custom JIT compiler.
 
 #### [Pyston](http://pyston.org)?
+
 [Pyston](http://pyston.org) is an implementation of Python using
 [LLVM](http://llvm.org/) as a JIT compiler. Compared to Pyjion, Pyston has
 partial CPython C API support but not complete support. Pyston also only
 supports LLVM as a JIT compiler.
 
 #### [Numba](http://numba.pydata.org/)?
+
 [Numba](http://numba.pydata.org/) is a JIT compiler for "array-oriented and
 math-heavy Python code". This means that Numba is focused on scientific
 computing while Pyjion tries to optimize all Python code. Numba also only
 supports LLVM.
 
 #### [IronPython](http://ironpython.net/)?
+
 [IronPython](http://ironpython.net/) is an implementation of Python that is
-implemented using [.NET](http://microsoft.com/NET). While IronPython tries to
+implemented using [.NET](https://microsoft.com/NET). While IronPython tries to
 be usable from within .NET, Pyjion does not have a compatibility story with .NET.
 This also means IronPython cannot use C extension modules while Pyjion can.
 
 #### [Psyco](http://psyco.sourceforge.net/)?
+
 [Psyco](http://psyco.sourceforge.net/) was a module that monkeypatched CPython
 to add a custom JIT compiler. Pyjion wants to introduce a proper C API for
 adding a JIT compiler to CPython instead of monkeypatching it. It should be
 noted the creator of Psyco went on to be one of the co-founders of PyPy.
 
 #### [Unladen Swallow](https://en.wikipedia.org/wiki/Unladen_Swallow)?
+
 [Unladen Swallow](https://en.wikipedia.org/wiki/Unladen_Swallow) was an attempt
 to make LLVM be a JIT compiler for CPython. Unfortunately the project lost
 funding before finishing their work after having to spend a large amount of
@@ -163,13 +170,14 @@ time fixing issues in LLVM's JIT compiler (which has greatly improved over the
 subsequent years).
 
 #### [Nuitka](http://nuitka.net/) and [Shedskin](https://github.com/shedskin/shedskin)?
+
 Both [Nuitka](http://nuitka.net/) and
 [Shedskin](https://github.com/shedskin/shedskin) are Python-to-C++ transpilers,
 which means they translate Python code into equivalent C++ code. Being a JIT,
 Pyjion is not a transpiler.
 
-
 ### Will this ever ship with CPython?
+
 Goal #1 is explicitly to add a C API to CPython to support JIT compilers. There
 is no expectation, though, to ship a JIT compiler with CPython. This is because
 CPython compiles with nothing more than a C89 compiler, which allows it to run
@@ -177,9 +185,11 @@ on many platforms. But adding a JIT compiler to CPython would immediately limit
 it to only the platforms that the JIT supports.
 
 ### Does this help with using CPython w/ .NET or UWP?
+
 No.
 
 ## Code of Conduct
+
 This project has adopted the
 [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the
