@@ -27,7 +27,6 @@ def main(input_file, opt_level, pgc):
         print(f"Testing {test}")
         for case in test_cases:
             pyjion.enable()
-            pyjion.enable_tracing()
             if pgc:
                 pyjion.enable_pgc()
                 print("Enabling PGC")

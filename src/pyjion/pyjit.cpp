@@ -230,12 +230,12 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
         interp.setLocalType(i, frame->f_localsplus[i]);
     }
 
-    if (g_pyjionSettings.tracing || tstate->cframe->use_tracing){
+    if (tstate->cframe->use_tracing && tstate->c_tracefunc){
         interp.enableTracing();
     } else {
         interp.disableTracing();
     }
-    if (g_pyjionSettings.profiling || tstate->cframe->use_tracing){
+    if (tstate->cframe->use_tracing && tstate->c_profilefunc){
         interp.enableProfiling();
     } else {
         interp.disableProfiling();
@@ -535,16 +535,6 @@ static PyObject* pyjion_get_threshold(PyObject *self, PyObject* args) {
 	return PyLong_FromUnsignedLongLong(HOT_CODE);
 }
 
-static PyObject* pyjion_enable_tracing(PyObject *self, PyObject* args) {
-    g_pyjionSettings.tracing = true;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_disable_tracing(PyObject *self, PyObject* args) {
-    g_pyjionSettings.tracing = false;
-    Py_RETURN_NONE;
-}
-
 static PyObject* pyjion_enable_debug(PyObject *self, PyObject* args) {
     g_pyjionSettings.debug = true;
     Py_RETURN_NONE;
@@ -552,16 +542,6 @@ static PyObject* pyjion_enable_debug(PyObject *self, PyObject* args) {
 
 static PyObject* pyjion_disable_debug(PyObject *self, PyObject* args) {
     g_pyjionSettings.debug = false;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_enable_profiling(PyObject *self, PyObject* args) {
-    g_pyjionSettings.profiling = true;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_disable_profiling(PyObject *self, PyObject* args) {
-    g_pyjionSettings.profiling = false;
     Py_RETURN_NONE;
 }
 
@@ -592,8 +572,6 @@ static PyObject* pyjion_status(PyObject *self, PyObject* args) {
 	}
 
 	PyDict_SetItemString(res, "clrjitpath", PyUnicode_FromWideChar(g_pyjionSettings.clrjitpath, -1));
-	PyDict_SetItemString(res, "tracing", g_pyjionSettings.tracing ? Py_True : Py_False);
-	PyDict_SetItemString(res, "profiling", g_pyjionSettings.profiling ? Py_True : Py_False);
 	PyDict_SetItemString(res, "pgc", g_pyjionSettings.pgc ? Py_True : Py_False);
 	PyDict_SetItemString(res, "graph", g_pyjionSettings.graph ? Py_True : Py_False);
  	PyDict_SetItemString(res, "debug", g_pyjionSettings.debug ? Py_True : Py_False);
@@ -729,18 +707,6 @@ static PyMethodDef PyjionMethods[] = {
         "Sets optimization level (0 = None, 1 = Common, 2 = Maximum)."
     },
     {
-        "enable_tracing",
-        pyjion_enable_tracing,
-        METH_NOARGS,
-        "Enable tracing for generated code."
-    },
-    {
-        "disable_tracing",
-        pyjion_disable_tracing,
-        METH_NOARGS,
-        "Enable tracing for generated code."
-    },
-    {
         "enable_debug",
         pyjion_enable_debug,
         METH_NOARGS,
@@ -751,18 +717,6 @@ static PyMethodDef PyjionMethods[] = {
         pyjion_disable_debug,
         METH_NOARGS,
         "Enable debug symbols for generated code."
-    },
-    {
-        "enable_profiling",
-        pyjion_enable_profiling,
-        METH_NOARGS,
-        "Enable Python profiling for generated code."
-    },
-    {
-        "disable_profiling",
-        pyjion_disable_profiling,
-        METH_NOARGS,
-        "Disable Python profiling for generated code."
     },
     {
         "enable_pgc",

@@ -108,8 +108,6 @@ inline OptimizationFlags operator&(OptimizationFlags a, OptimizationFlags b)
 }
 
 typedef struct PyjionSettings {
-    bool tracing = false;
-    bool profiling = false;
     bool pgc = true; // Profile-guided-compilation
     bool graph = false; // Generate instruction graphs
     unsigned short optimizationLevel = 1;
