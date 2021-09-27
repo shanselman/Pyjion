@@ -30,6 +30,7 @@
 #include <frameobject.h>
 #include <vector>
 #include "types.h"
+#include "pyjit.h"
 
 #ifdef WINDOWS
 typedef SIZE_T size_t;
@@ -237,7 +238,7 @@ int PyJit_StoreSubscrListSlice(PyObject* value, PyObject *container, PyObject *s
 
 int PyJit_DeleteSubscr(PyObject *container, PyObject *index);
 
-PyObject* PyJit_CallN(PyObject *target, PyObject* args);
+PyObject* PyJit_CallN(PyObject *target, PyObject* args, PyTraceInfo* trace_info);
 
 int PyJit_StoreGlobal(PyObject* v, PyFrameObject* f, PyObject* name);
 
@@ -273,27 +274,27 @@ PyObject* PyJit_IsNot(PyObject* lhs, PyObject* rhs);
 int PyJit_Is_Bool(PyObject* lhs, PyObject* rhs);
 int PyJit_IsNot_Bool(PyObject* lhs, PyObject* rhs);
 
-inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg);
-inline int protected_trace(PyThreadState* tstate, PyFrameObject* f, int ty, PyObject* arg, Py_tracefunc func, PyObject* tracearg);
+inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info);
+inline int protected_trace(PyThreadState* tstate, PyFrameObject* f, int ty, PyObject* arg, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info);
 
-void PyJit_TraceLine(PyFrameObject* f, int* instr_lb, int* instr_ub, int* instr_prev);
-void PyJit_TraceFrameEntry(PyFrameObject* f);
-void PyJit_TraceFrameExit(PyFrameObject* f);
-void PyJit_ProfileFrameEntry(PyFrameObject* f);
-void PyJit_ProfileFrameExit(PyFrameObject* f);
-void PyJit_TraceFrameException(PyFrameObject* f);
+void PyJit_TraceLine(PyFrameObject* f, int* instr_lb, int* instr_ub, int* instr_prev, PyTraceInfo* trace_info);
+void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info);
+void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info);
+void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info);
+void PyJit_ProfileFrameExit(PyFrameObject* f, PyTraceInfo* trace_info);
+void PyJit_TraceFrameException(PyFrameObject* f, PyTraceInfo* trace_info);
 
-PyObject* Call0(PyObject *target);
-PyObject* Call1(PyObject *target, PyObject* arg0);
-PyObject* Call2(PyObject *target, PyObject* arg0, PyObject* arg1);
-PyObject* Call3(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2);
-PyObject* Call4(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3);
-PyObject* Call5(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4);
-PyObject* Call6(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5);
-PyObject* Call7(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6);
-PyObject* Call8(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7);
-PyObject* Call9(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8);
-PyObject* Call10(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9);
+PyObject* Call0(PyObject *target, PyTraceInfo* trace_info);
+PyObject* Call1(PyObject *target, PyObject* arg0, PyTraceInfo* trace_info);
+PyObject* Call2(PyObject *target, PyObject* arg0, PyObject* arg1, PyTraceInfo* trace_info);
+PyObject* Call3(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyTraceInfo* trace_info);
+PyObject* Call4(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyTraceInfo* trace_info);
+PyObject* Call5(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyTraceInfo* trace_info);
+PyObject* Call6(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyTraceInfo* trace_info);
+PyObject* Call7(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyTraceInfo* trace_info);
+PyObject* Call8(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyTraceInfo* trace_info);
+PyObject* Call9(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyTraceInfo* trace_info);
+PyObject* Call10(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyTraceInfo* trace_info);
 
 extern PyObject* g_emptyTuple;
 

@@ -1528,7 +1528,7 @@ int PyJit_DeleteSubscr(PyObject *container, PyObject *index) {
     return res;
 }
 
-PyObject* PyJit_CallN(PyObject *target, PyObject* args) {
+PyObject* PyJit_CallN(PyObject *target, PyObject* args, PyTraceInfo* trace_info) {
     PyObject* res;
     auto tstate = PyThreadState_GET();
     if(!PyTuple_Check(args)) {
@@ -1553,12 +1553,12 @@ PyObject* PyJit_CallN(PyObject *target, PyObject* args) {
 #endif
         if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
             // Call the function with profiling hooks
-            trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj);
+            trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
             res = PyObject_Vectorcall(target, args_vec, args_vec_size | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
             if (res == nullptr)
-                trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj);
+                trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
             else
-                trace(tstate, tstate->frame, PyTrace_C_RETURN, target, tstate->c_profilefunc, tstate->c_profileobj);
+                trace(tstate, tstate->frame, PyTrace_C_RETURN, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
         } else {
             // Regular function call
             res = PyObject_Vectorcall(target, args_vec, args_vec_size | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -1996,12 +1996,12 @@ int PyJit_DeleteName(PyFrameObject* f, PyObject* name) {
 }
 
 template<typename T>
-inline PyObject* Call(PyObject* target) {
-    return Call0(target);
+inline PyObject* Call(PyObject* target, PyTraceInfo* trace_info) {
+    return Call0(target, trace_info);
 }
 
 template<typename T, typename ... Args>
-inline PyObject* VectorCall(PyObject* target, Args...args){
+inline PyObject* VectorCall(PyObject* target, PyTraceInfo* trace_info, Args...args){
     auto tstate = PyThreadState_GET();
     PyObject* res = nullptr;
     PyObject* _args[sizeof...(args)] = {args...};
@@ -2011,12 +2011,12 @@ inline PyObject* VectorCall(PyObject* target, Args...args){
 #endif
     if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
         // Call the function with profiling hooks
-        trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj);
+        trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
         res = _PyObject_VectorcallTstate(tstate, target, _args, sizeof...(args) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
         if (res == nullptr)
-            trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj);
+            trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
         else
-            trace(tstate, tstate->frame, PyTrace_C_RETURN, target, tstate->c_profilefunc, tstate->c_profileobj);
+            trace(tstate, tstate->frame, PyTrace_C_RETURN, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     } else {
         // Regular function call
         res = _PyObject_VectorcallTstate(tstate, target, _args, sizeof...(args) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -2028,7 +2028,7 @@ inline PyObject* VectorCall(PyObject* target, Args...args){
     return res;
 }
 
-inline PyObject* VectorCall0(PyObject* target){
+inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
     PyObject* res = nullptr;
 #ifdef GIL
@@ -2037,12 +2037,12 @@ inline PyObject* VectorCall0(PyObject* target){
 #endif
     if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
         // Call the function with profiling hooks
-        trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj);
+        trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
         res = _PyObject_VectorcallTstate(tstate, target, nullptr, 0 | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
         if (res == nullptr)
-            trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj);
+            trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
         else
-            trace(tstate, tstate->frame, PyTrace_C_RETURN, target, tstate->c_profilefunc, tstate->c_profileobj);
+            trace(tstate, tstate->frame, PyTrace_C_RETURN, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     } else {
         // Regular function call
         res = _PyObject_VectorcallTstate(tstate, target, nullptr, 0 | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -2062,7 +2062,7 @@ inline PyObject* MethCall(PyObject *target, Args...args) {
                          "missing target in call");
         return nullptr;
     }
-    PyObject* res = VectorCall<PyObject*>(target, args...);
+    PyObject* res = VectorCall<PyObject*>(target, nullptr, args...); // TODO Trace method
 
     Py_DECREF(target);
     for (auto &i: {args...})
@@ -2072,7 +2072,7 @@ inline PyObject* MethCall(PyObject *target, Args...args) {
 }
 
 template<typename T, typename ... Args>
-inline PyObject* Call(PyObject *target, Args...args) {
+inline PyObject* Call(PyObject *target, PyTraceInfo* trace_info, Args...args) {
     auto tstate = PyThreadState_GET();
     PyObject* res = nullptr;
     if (target == nullptr) {
@@ -2082,7 +2082,7 @@ inline PyObject* Call(PyObject *target, Args...args) {
         return nullptr;
     }
     if (PyCFunction_Check(target)) {
-        res = VectorCall<PyObject*>(target, args...);
+        res = VectorCall<PyObject*>(target, trace_info, args...);
     } else {
         auto t_args = PyTuple_New(sizeof...(args));
         if (t_args == nullptr) {
@@ -2112,7 +2112,7 @@ inline PyObject* Call(PyObject *target, Args...args) {
     return res;
 }
 
-PyObject* Call0(PyObject *target) {
+PyObject* Call0(PyObject *target, PyTraceInfo* trace_info) {
     PyObject* res = nullptr;
     if (PyErr_Occurred())
         return nullptr;
@@ -2127,7 +2127,7 @@ PyObject* Call0(PyObject *target) {
     gstate = PyGILState_Ensure();
 #endif
     if (PyCFunction_Check(target)) {
-        res = VectorCall0(target);
+        res = VectorCall0(target, trace_info);
     }
     else {
         res = PyObject_CallNoArgs(target);
@@ -2139,44 +2139,44 @@ PyObject* Call0(PyObject *target) {
     return res;
 }
 
-PyObject* Call1(PyObject *target, PyObject* arg0) {
-    return Call<PyObject *>(target, arg0);
+PyObject* Call1(PyObject *target, PyObject* arg0, PyTraceInfo* trace_info) {
+    return Call<PyObject *>(target, trace_info, arg0);
 }
 
-PyObject* Call2(PyObject *target, PyObject* arg0, PyObject* arg1) {
-    return Call<PyObject*>(target, arg0, arg1);
+PyObject* Call2(PyObject *target, PyObject* arg0, PyObject* arg1, PyTraceInfo* trace_info) {
+    return Call<PyObject*>(target, trace_info, arg0, arg1);
 }
 
-PyObject* Call3(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2) {
-    return Call<PyObject*>(target, arg0, arg1, arg2);
+PyObject* Call3(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyTraceInfo* trace_info) {
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2);
 }
 
-PyObject* Call4(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3) {
-    return Call<PyObject*>(target, arg0, arg1, arg2, arg3);
+PyObject* Call4(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyTraceInfo* trace_info) {
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3);
 }
 
-PyObject* Call5(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4){
-    return Call<PyObject*>(target, arg0, arg1, arg2, arg3, arg4);
+PyObject* Call5(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyTraceInfo* trace_info){
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4);
 }
 
-PyObject* Call6(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5){
-    return Call<PyObject*>(target, arg0, arg1, arg2, arg3, arg4, arg5);
+PyObject* Call6(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyTraceInfo* trace_info){
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5);
 }
 
-PyObject* Call7(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6){
-    return Call<PyObject*>(target, arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+PyObject* Call7(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyTraceInfo* trace_info){
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
-PyObject* Call8(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7){
-    return Call<PyObject*>(target, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+PyObject* Call8(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyTraceInfo* trace_info){
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
-PyObject* Call9(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8){
-    return Call<PyObject*>(target, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+PyObject* Call9(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyTraceInfo* trace_info){
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
-PyObject* Call10(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9){
-    return Call<PyObject*>(target, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+PyObject* Call10(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyTraceInfo* trace_info){
+    return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 }
 
 PyObject* MethCall0(PyObject* self, PyJitMethodLocation* method_info) {
@@ -2184,7 +2184,7 @@ PyObject* MethCall0(PyObject* self, PyJitMethodLocation* method_info) {
     if (method_info->object != nullptr)
         res = MethCall<PyObject*>(method_info->method, method_info->object);
     else {
-        res = Call0(method_info->method);
+        res = Call0(method_info->method, nullptr); // TODO method tracing
     }
     Py_DECREF(method_info);
     return res;
@@ -2496,7 +2496,7 @@ PyObject* PyJit_FormatValue(PyObject* item) {
 	return res;
 }
 
-inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg) {
+inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info) {
     if (func == nullptr)
         return -1;
     tstate->tracing++;
@@ -2508,21 +2508,25 @@ inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args
     return result;
 }
 
-void PyJit_TraceLine(PyFrameObject* f, int* instr_lb, int* instr_ub, int* instr_prev){
+void PyJit_TraceLine(PyFrameObject* f, int* instr_lb, int* instr_ub, int* instr_prev, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
     if (tstate->c_tracefunc != nullptr && !tstate->tracing) {
         // TODO : Implement line tracing..
     }
 }
 
-inline int protected_trace(PyThreadState* tstate, PyFrameObject* f, int ty, PyObject* arg, Py_tracefunc func, PyObject* tracearg){
+inline int protected_trace(
+        PyThreadState* tstate, PyFrameObject* f,
+        int ty, PyObject* arg,
+        Py_tracefunc func, PyObject* tracearg,
+        PyTraceInfo* trace_info){
     int result = 0;
     PyObject *type, *value, *traceback;
     PyErr_Fetch(&type, &value, &traceback);
 
     if (tstate->tracing)
         return 0;
-    result = trace(tstate, f, ty, arg, func, tracearg);
+    result = trace(tstate, f, ty, arg, func, tracearg, trace_info);
 
     if (result == 0) {
         PyErr_Restore(type, value, traceback);
@@ -2535,35 +2539,35 @@ inline int protected_trace(PyThreadState* tstate, PyFrameObject* f, int ty, PyOb
     }
 }
 
-void PyJit_TraceFrameEntry(PyFrameObject* f){
+void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
     if (tstate->c_tracefunc != nullptr && !tstate->tracing) {
-        protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_tracefunc, tstate->c_traceobj);
+        protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
-void PyJit_TraceFrameExit(PyFrameObject* f){
+void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
     if (tstate->c_tracefunc != nullptr && !tstate->tracing) {
-        protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_tracefunc, tstate->c_traceobj);
+        protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
-void PyJit_ProfileFrameEntry(PyFrameObject* f){
+void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
     if (tstate->c_profilefunc != nullptr && !tstate->tracing) {
-        protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_profilefunc, tstate->c_profileobj);
+        protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }
 
-void PyJit_ProfileFrameExit(PyFrameObject* f){
+void PyJit_ProfileFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
     if (tstate->c_profilefunc != nullptr && !tstate->tracing) {
-        protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_profilefunc, tstate->c_profileobj);
+        protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }
 
-void PyJit_TraceFrameException(PyFrameObject* f){
+void PyJit_TraceFrameException(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
     if (tstate->c_tracefunc != nullptr) {
         PyObject *type, *value, *traceback, *orig_traceback, *arg;
@@ -2585,7 +2589,7 @@ void PyJit_TraceFrameException(PyFrameObject* f){
 
         if (tstate->tracing)
             return;
-        result = trace(tstate, f, PyTrace_EXCEPTION, arg, tstate->c_tracefunc, tstate->c_traceobj);
+        result = trace(tstate, f, PyTrace_EXCEPTION, arg, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
         Py_DECREF(arg);
         if (result == 0) {
             PyErr_Restore(type, value, orig_traceback);
