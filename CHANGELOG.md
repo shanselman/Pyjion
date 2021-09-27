@@ -3,7 +3,8 @@
 ## 1.0.0 (master)
 
 * Experimental `try..except` statements, stacked exception handlers and exception filtering. Disabled by default
-* Updated to .NET 6 preview 7
+* Updated to .NET 6 RC1
+* Added Python 3.10 support
 
 ## 1.0.0 (rc2)
 
