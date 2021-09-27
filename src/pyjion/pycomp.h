@@ -511,6 +511,8 @@ public:
 private:
     void load_frame();
     void load_tstate();
+    void load_profile();
+    void load_trace_info();
     void load_local(py_oparg oparg);
     void decref(bool noopt = false);
     CorInfoType to_clr_type(LocalKind kind);

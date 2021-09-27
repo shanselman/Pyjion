@@ -47,7 +47,7 @@ PythonCompiler::PythonCompiler(PyCodeObject *code) :
         Parameter(CORINFO_TYPE_NATIVEINT), // struct _frame*
         Parameter(CORINFO_TYPE_NATIVEINT), // PyThreadState*
         Parameter(CORINFO_TYPE_NATIVEINT), // PyjionCodeProfile*
-        Parameter(CORINFO_TYPE_NATIVEINT), // PyObject**
+        Parameter(CORINFO_TYPE_NATIVEINT), // PyTraceInfo
         })
 {
     this->m_code = code;
@@ -61,6 +61,14 @@ void PythonCompiler::load_frame() {
 
 void PythonCompiler::load_tstate() {
     m_il.ld_arg(2);
+}
+
+void PythonCompiler::load_profile() {
+    m_il.ld_arg(3);
+}
+
+void PythonCompiler::load_trace_info() {
+    m_il.ld_arg(4);
 }
 
 bool PythonCompiler::emit_push_frame() {
@@ -2141,7 +2149,7 @@ void PythonCompiler::mark_sequence_point(size_t idx) {
 }
 
 void PythonCompiler::emit_pgc_profile_capture(Local value, size_t ipos, size_t istack) {
-    m_il.ld_arg(3);
+    load_profile();
     emit_load_local(value);
     emit_sizet(ipos);
     emit_sizet(istack);

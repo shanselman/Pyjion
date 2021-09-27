@@ -150,11 +150,20 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
     if (Pyjit_EnterRecursiveCall("")) {
         return nullptr;
     }
+
+    PyTraceInfo trace_info;
+    /* Mark trace_info as uninitialized */
+    trace_info.code = nullptr;
+    CFrame *prev_cframe = tstate->cframe;
+    trace_info.cframe.use_tracing = prev_cframe->use_tracing;
+    trace_info.cframe.previous = prev_cframe;
+    tstate->cframe = &trace_info.cframe;
+
     frame->f_stackdepth = -1;
     frame->f_state = PY_FRAME_EXECUTING;
 
     try {
-        auto res = ((Py_EvalFunc)state)(nullptr, frame, tstate, profile, nullptr);
+        auto res = ((Py_EvalFunc)state)(nullptr, frame, tstate, profile, &trace_info);
         Pyjit_LeaveRecursiveCall();
         return res;
     } catch (const std::exception& e){

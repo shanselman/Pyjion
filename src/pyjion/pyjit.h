@@ -69,7 +69,14 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
 PyObject* PyJit_EvalFrame(PyThreadState *, PyFrameObject *, int);
 PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject);
 
-typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyObject**);
+// This type isn't exported in the Python 3.10 API, so define it here.
+typedef struct {
+    PyCodeObject *code; // The code object for the bounds. May be NULL.
+    PyCodeAddressRange bounds; // Only valid if code != NULL.
+    CFrame cframe;
+} PyTraceInfo;
+
+typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo* );
 
 enum OptimizationFlags
 {
