@@ -276,8 +276,8 @@ int PyJit_IsNot_Bool(PyObject* lhs, PyObject* rhs);
 
 inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info);
 inline int protected_trace(PyThreadState* tstate, PyFrameObject* f, int ty, PyObject* arg, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info);
-
-void PyJit_TraceLine(PyFrameObject* f, int* instr_lb, int* instr_ub, int* instr_prev, PyTraceInfo* trace_info);
+inline void initialize_trace_info(PyTraceInfo* trace_info, PyFrameObject* frame);
+void PyJit_TraceLine(PyFrameObject* f, int instr_prev, PyTraceInfo* trace_info);
 void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info);
 void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info);
 void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info);

@@ -2508,11 +2508,42 @@ inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args
     return result;
 }
 
-void PyJit_TraceLine(PyFrameObject* f, int* instr_lb, int* instr_ub, int* instr_prev, PyTraceInfo* trace_info){
-    auto tstate = PyThreadState_GET();
-    if (tstate->c_tracefunc != nullptr && !tstate->tracing) {
-        // TODO : Implement line tracing..
+inline void initialize_trace_info(PyTraceInfo* trace_info, PyFrameObject* frame){
+    if (trace_info->code != frame->f_code) {
+        trace_info->code = frame->f_code;
+        const char *linetable = PyBytes_AS_STRING(trace_info->code->co_linetable);
+        Py_ssize_t length = PyBytes_GET_SIZE(trace_info->code->co_linetable);
+        trace_info->bounds.opaque.lo_next = linetable;
+        trace_info->bounds.opaque.limit = trace_info->bounds.opaque.lo_next + length;
+        trace_info->bounds.ar_start = -1;
+        trace_info->bounds.ar_end = 0;
+        trace_info->bounds.opaque.computed_line = trace_info->code->co_firstlineno;
+        trace_info->bounds.ar_line = -1;
     }
+}
+
+void PyJit_TraceLine(PyFrameObject* f, int instr_prev, PyTraceInfo* trace_info){
+    int result = 0;
+    auto tstate = PyThreadState_GET();
+    /* If the last instruction falls at the start of a line or if it
+       represents a jump backwards, update the frame's line number and
+       then call the trace function if we're tracing source lines.
+    */
+    initialize_trace_info(trace_info, f);
+    int lastline = _PyCode_CheckLineNumber(instr_prev * 2, &trace_info->bounds);
+    int line = _PyCode_CheckLineNumber(f->f_lasti*2, &trace_info->bounds);
+    if (line != -1 && f->f_trace_lines) {
+        /* Trace backward edges or if line number has changed */
+        if (f->f_lasti < instr_prev || line != lastline) {
+            result = protected_trace(tstate, f, PyTrace_LINE, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
+        }
+    }
+    /* Always emit an opcode event if we're tracing all opcodes. */
+    if (f->f_trace_opcodes) {
+        result = protected_trace(tstate, f, PyTrace_OPCODE, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
+    }
+    // TODO : Handle line trace exception
+    // return result;
 }
 
 inline int protected_trace(
@@ -2541,28 +2572,28 @@ inline int protected_trace(
 
 void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_tracefunc != nullptr && !tstate->tracing) {
+    if (tstate->c_tracefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
 void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_tracefunc != nullptr && !tstate->tracing) {
+    if (tstate->c_tracefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
 void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_profilefunc != nullptr && !tstate->tracing) {
+    if (tstate->c_profilefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }
 
 void PyJit_ProfileFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_profilefunc != nullptr && !tstate->tracing) {
+    if (tstate->c_profilefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }

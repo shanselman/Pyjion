@@ -1602,14 +1602,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         // push initial trace on entry to frame
         m_comp->emit_trace_frame_entry();
 
-        mTracingInstrLowerBound = m_comp->emit_define_local(LK_Int);
-        m_comp->emit_int(0);
-        m_comp->emit_store_local(mTracingInstrLowerBound);
-
-        mTracingInstrUpperBound = m_comp->emit_define_local(LK_Int);
-        m_comp->emit_int(-1);
-        m_comp->emit_store_local(mTracingInstrUpperBound);
-
         mTracingLastInstr = m_comp->emit_define_local(LK_Int);
         m_comp->emit_int(-1);
         m_comp->emit_store_local(mTracingLastInstr);
@@ -1663,7 +1655,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         if (!canSkipLastiUpdate(curByte)) {
             m_comp->emit_lasti_update(curByte / 2);
             if (mTracingEnabled){
-                m_comp->emit_trace_line(mTracingInstrLowerBound, mTracingInstrUpperBound, mTracingLastInstr);
+                m_comp->emit_trace_line(mTracingLastInstr);
             }
         }
         auto stackInfo = getStackInfo(curByte);
