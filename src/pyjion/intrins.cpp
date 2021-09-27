@@ -2292,6 +2292,7 @@ PyObject* MethCall10(PyObject* self, PyJitMethodLocation* method_info, PyObject*
 
 PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* args, PyTraceInfo* trace_info) {
     PyObject* res;
+    auto tstate = PyThreadState_GET();
     if(!PyTuple_Check(args)) {
         PyErr_Format(PyExc_TypeError,
                      "invalid arguments for method call");
@@ -2328,10 +2329,18 @@ PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
 #endif
-        // The `PY_VECTORCALL_ARGUMENTS_OFFSET` flag lets callees know that they're allowed to
-        // write to `args[-1]` so we should pass the pointer to the first item in our vector and
-        // subtract one from the size argument.
-        res = PyObject_Vectorcall(target, args_vec + 1, (args_vec_size - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
+        if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
+            // Call the function with profiling hooks
+            trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+            res = PyObject_Vectorcall(target, args_vec + 1, (args_vec_size - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
+            if (res == nullptr)
+                trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+            else
+                trace(tstate, tstate->frame, PyTrace_C_RETURN, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+        } else {
+            // Regular function call
+            res = PyObject_Vectorcall(target, args_vec + 1, (args_vec_size - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
+        }
 #ifdef GIL
         PyGILState_Release(gstate);
 #endif
