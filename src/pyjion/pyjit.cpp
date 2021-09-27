@@ -230,12 +230,12 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
         interp.setLocalType(i, frame->f_localsplus[i]);
     }
 
-    if (g_pyjionSettings.tracing){
+    if (g_pyjionSettings.tracing || tstate->cframe->use_tracing){
         interp.enableTracing();
     } else {
         interp.disableTracing();
     }
-    if (g_pyjionSettings.profiling){
+    if (g_pyjionSettings.profiling || tstate->cframe->use_tracing){
         interp.enableProfiling();
     } else {
         interp.disableProfiling();
