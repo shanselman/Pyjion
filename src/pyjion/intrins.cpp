@@ -2477,6 +2477,7 @@ PyJitMethodLocation* PyJit_LoadMethod(PyObject* object, PyObject* name, PyJitMet
     if (!meth_found) {
         Py_DECREF(object);
         method_info->object = nullptr;
+        return nullptr;
     } else {
         method_info->object = object;
     }
