@@ -2431,6 +2431,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 } else {
                     m_comp->emit_dup(); // dup self as needs to remain on stack
                     m_comp->emit_load_method(PyTuple_GetItem(mCode->co_names, oparg));
+                    errorCheck("failed to load method",  "", curByte);
                 }
                 incStack(1);
                 break;
