@@ -78,7 +78,7 @@ public:
         if (PyErr_Occurred()) {
             PyErr_PrintEx(-1);
             FAIL("Error on Python execution");
-            return nullptr;
+            return "";
         }
 
         auto repr = PyUnicode_AsUTF8(PyObject_Repr(res.get()));
@@ -89,7 +89,7 @@ public:
             REQUIRE(tstate->curexc_type == Py_None);
         }
 
-        return std::string(repr);
+        return {repr};
     }
 
     PyObject *raises() {

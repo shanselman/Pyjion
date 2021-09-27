@@ -1551,7 +1551,7 @@ PyObject* PyJit_CallN(PyObject *target, PyObject* args, PyTraceInfo* trace_info)
         PyGILState_STATE gstate;
         gstate = PyGILState_Ensure();
 #endif
-        if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
+        if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
             // Call the function with profiling hooks
             trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
             res = PyObject_Vectorcall(target, args_vec, args_vec_size | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -2009,7 +2009,7 @@ inline PyObject* VectorCall(PyObject* target, PyTraceInfo* trace_info, Args...ar
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 #endif
-    if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
+    if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
         // Call the function with profiling hooks
         trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
         res = _PyObject_VectorcallTstate(tstate, target, _args, sizeof...(args) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -2035,7 +2035,7 @@ inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info){
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 #endif
-    if (tstate->cframe->use_tracing && tstate->c_profileobj && g_pyjionSettings.profiling) {
+    if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
         // Call the function with profiling hooks
         trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
         res = _PyObject_VectorcallTstate(tstate, target, nullptr, 0 | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
@@ -2055,14 +2055,14 @@ inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info){
 }
 
 template<typename T, typename ... Args>
-inline PyObject* MethCall(PyObject *target, Args...args) {
+inline PyObject* MethCall(PyObject *target, PyTraceInfo * trace_info, Args...args) {
     if (target == nullptr) {
         if (!PyErr_Occurred())
             PyErr_Format(PyExc_TypeError,
                          "missing target in call");
         return nullptr;
     }
-    PyObject* res = VectorCall<PyObject*>(target, nullptr, args...); // TODO Trace method
+    PyObject* res = VectorCall<PyObject*>(target, trace_info, args...);
 
     Py_DECREF(target);
     for (auto &i: {args...})
@@ -2179,118 +2179,118 @@ PyObject* Call10(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 }
 
-PyObject* MethCall0(PyObject* self, PyJitMethodLocation* method_info) {
+PyObject* MethCall0(PyObject* self, PyJitMethodLocation* method_info, PyTraceInfo* trace_info) {
     PyObject* res = nullptr;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object);
     else {
-        res = Call0(method_info->method, nullptr); // TODO method tracing
+        res = Call0(method_info->method, trace_info);
     }
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall1(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1) {
+PyObject* MethCall1(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall2(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2) {
+PyObject* MethCall2(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall3(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3) {
+PyObject* MethCall3(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall4(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4) {
+PyObject* MethCall4(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3, arg4);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3, arg4);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3, arg4);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall5(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5){
+PyObject* MethCall5(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyTraceInfo* trace_info){
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3, arg4, arg5);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3, arg4, arg5);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3, arg4, arg5);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall6(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6){
+PyObject* MethCall6(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyTraceInfo* trace_info){
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3, arg4, arg5, arg6);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3, arg4, arg5, arg6);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall7(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7){
+PyObject* MethCall7(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyTraceInfo* trace_info){
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall8(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8){
+PyObject* MethCall8(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyTraceInfo* trace_info){
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall9(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9){
+PyObject* MethCall9(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyTraceInfo* trace_info){
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCall10(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyObject* arg10){
+PyObject* MethCall10(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyObject* arg10, PyTraceInfo* trace_info){
     PyObject* res;
     if (method_info->object != nullptr)
-        res = MethCall<PyObject*>(method_info->method, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+        res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
     else
-        res = MethCall<PyObject*>(method_info->method, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
+        res = MethCall<PyObject*>(method_info->method, trace_info, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
     Py_DECREF(method_info);
     return res;
 }
 
-PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* args) {
+PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* args, PyTraceInfo* trace_info) {
     PyObject* res;
     if(!PyTuple_Check(args)) {
         PyErr_Format(PyExc_TypeError,
@@ -2575,35 +2575,35 @@ inline int protected_trace(
 
 void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_tracefunc != nullptr) {
+    if (trace_info->cframe.use_tracing && tstate->c_tracefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
 void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_tracefunc != nullptr) {
+    if (trace_info->cframe.use_tracing && tstate->c_tracefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
 void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_profilefunc != nullptr) {
+    if (trace_info->cframe.use_tracing && tstate->c_profilefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }
 
 void PyJit_ProfileFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_profilefunc != nullptr) {
+    if (trace_info->cframe.use_tracing && tstate->c_profilefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }
 
 void PyJit_TraceFrameException(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
-    if (tstate->c_tracefunc != nullptr) {
+    if (trace_info->cframe.use_tracing && tstate->c_tracefunc != nullptr) {
         PyObject *type, *value, *traceback, *orig_traceback, *arg;
         int result = 0;
         PyErr_Fetch(&type, &value, &orig_traceback);
