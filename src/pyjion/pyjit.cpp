@@ -182,7 +182,7 @@ HMODULE GetClrJit() {
 #endif
 
 bool JitInit(const wchar_t * path) {
-    g_pyjionSettings = {false, false};
+    g_pyjionSettings = PyjionSettings();
     g_pyjionSettings.recursionLimit = Py_GetRecursionLimit();
     g_pyjionSettings.clrjitpath = path;
 	g_extraSlot = PyThread_tss_alloc();

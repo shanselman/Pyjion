@@ -37,7 +37,6 @@ int main(int argc, char* const argv[]) {
     JitInit(L"libclrjit.so");
 #endif
     g_pyjionSettings.graph = true;
-    g_pyjionSettings.pgc = true;
     g_pyjionSettings.debug = true;
     g_pyjionSettings.codeObjectSizeLimit = 1000000;
     g_pyjionSettings.exceptionHandling = true;
