@@ -1553,7 +1553,12 @@ PyObject* PyJit_CallN(PyObject *target, PyObject* args, PyTraceInfo* trace_info)
 #endif
         if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
             // Call the function with profiling hooks
-            trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+            int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+
+            if (trace_res != 0){
+                PyGILState_Release(gstate);
+                return nullptr;
+            }
             res = PyObject_Vectorcall(target, args_vec, args_vec_size | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
             if (res == nullptr)
                 trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
@@ -2011,7 +2016,13 @@ inline PyObject* VectorCall(PyObject* target, PyTraceInfo* trace_info, Args...ar
 #endif
     if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
         // Call the function with profiling hooks
-        trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+        int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+
+        if (trace_res != 0){
+            PyGILState_Release(gstate);
+            return nullptr;
+        }
+
         res = _PyObject_VectorcallTstate(tstate, target, _args, sizeof...(args) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
         if (res == nullptr)
             trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
@@ -2037,7 +2048,12 @@ inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info){
 #endif
     if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
         // Call the function with profiling hooks
-        trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+        int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+
+        if (trace_res != 0){
+            PyGILState_Release(gstate);
+            return nullptr;
+        }
         res = _PyObject_VectorcallTstate(tstate, target, nullptr, 0 | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
         if (res == nullptr)
             trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
@@ -2084,6 +2100,7 @@ inline PyObject* Call(PyObject *target, PyTraceInfo* trace_info, Args...args) {
     if (PyCFunction_Check(target)) {
         res = VectorCall<PyObject*>(target, trace_info, args...);
     } else {
+        // TODO : Optimize this to reflect the changes to call_function using vectorcalls
         auto t_args = PyTuple_New(sizeof...(args));
         if (t_args == nullptr) {
             goto error;
@@ -2331,7 +2348,12 @@ PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
 #endif
         if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
             // Call the function with profiling hooks
-            trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+            int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
+
+            if (trace_res != 0){
+                PyGILState_Release(gstate);
+                return nullptr;
+            }
             res = PyObject_Vectorcall(target, args_vec + 1, (args_vec_size - 1) | PY_VECTORCALL_ARGUMENTS_OFFSET, nullptr);
             if (res == nullptr)
                 trace(tstate, tstate->frame, PyTrace_C_EXCEPTION, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
@@ -2511,11 +2533,19 @@ PyObject* PyJit_FormatValue(PyObject* item) {
 inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info) {
     if (func == nullptr)
         return -1;
+    if (tstate->tracing)
+        return 0;
     tstate->tracing++;
     tstate->cframe->use_tracing = 0;
+    if (f->f_lasti < 0) {
+        f->f_lineno = f->f_code->co_firstlineno;
+    }
+    else {
+        initialize_trace_info(trace_info, f);
+        f->f_lineno = _PyCode_CheckLineNumber(f->f_lasti*2, &trace_info->bounds);
+    }
     int result = func(tracearg, f, ty, args);
-    tstate->cframe->use_tracing = ((tstate->c_tracefunc != nullptr)
-                           || (tstate->c_profilefunc != nullptr));
+    tstate->cframe->use_tracing = ((tstate->c_tracefunc != nullptr) || (tstate->c_profilefunc != nullptr));
     tstate->tracing--;
     return result;
 }
