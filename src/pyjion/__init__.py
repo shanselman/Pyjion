@@ -75,8 +75,8 @@ lib_path = _which_dotnet()
 
 try:
     from ._pyjion import enable, disable, info as _info, dump_il, dump_native, get_offsets, set_threshold, \
-        get_threshold, set_optimization_level, enable_tracing, disable_tracing, enable_debug, disable_debug, \
-        enable_profiling, disable_profiling, enable_pgc, disable_pgc, enable_graphs, disable_graphs, get_graph, \
+        get_threshold, set_optimization_level, enable_debug, disable_debug, \
+        enable_pgc, disable_pgc, enable_graphs, disable_graphs, get_graph, \
         init as _init, status, symbols
 
     _init(lib_path)
