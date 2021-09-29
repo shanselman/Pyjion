@@ -1653,10 +1653,6 @@ public:
         return CORINFO_HFA_ELEM_DOUBLE;
     }
 
-    bool runWithErrorTrap(void (*function)(void *), void *parameter) override {
-        return false;
-    }
-
     const char *getMethodNameFromMetadata(CORINFO_METHOD_HANDLE ftn, const char **className, const char **namespaceName,
                                           const char **enclosingClassName) override {
         WARN("getMethodNameFromMetadata not defined\r\n");
@@ -1903,6 +1899,19 @@ public:
         return false;
     }
 
+    bool runWithErrorTrap(
+            errorTrapFunction function, // The function to run
+            void* parameter          // The context parameter that will be passed to the function and the handler
+            ) override {
+        // Just run this through a simple try-catch instead of importing more CEE libraries.
+        try {
+            function(parameter);
+            return true;
+        } catch (const std::exception& e){
+            return false;
+        }
+    }
+
     // Runs the given function under an error trap. This allows the JIT to make calls
     // to interface functions that may throw exceptions without needing to be aware of
     // the EH ABI, exception types, etc. Returns true if the given function completed
@@ -1911,8 +1920,13 @@ public:
         errorTrapFunction function, // The function to run
         void* parameter          // The context parameter that will be passed to the function and the handler
         ) override {
-            WARN("runWithSPMIErrorTrap not implemented\r\n");
-            return true;
+            // Just run this through a simple try-catch instead of importing more CEE libraries.
+            try {
+                function(parameter);
+                return true;
+            } catch (const std::exception& e){
+                return false;
+            }
         };
 };
 
