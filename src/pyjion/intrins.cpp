@@ -2622,6 +2622,7 @@ void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
 
 void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
+    // TODO : This should capture the return value, not None
     if (trace_info->cframe.use_tracing && tstate->c_tracefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
@@ -2636,6 +2637,7 @@ void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
 
 void PyJit_ProfileFrameExit(PyFrameObject* f, PyTraceInfo* trace_info){
     auto tstate = PyThreadState_GET();
+    // TODO : This should capture the return value, not None
     if (trace_info->cframe.use_tracing && tstate->c_profilefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }

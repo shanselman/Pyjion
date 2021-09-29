@@ -167,6 +167,8 @@ public:
     unsigned int j_callPointsLen;
     PyObject* j_graph;
     SymbolTable j_symbols;
+    bool j_tracingHooks;
+    bool j_profilingHooks;
 
 	explicit PyjionJittedCode(PyObject* code) {
         j_compile_result = 0;
@@ -186,6 +188,8 @@ public:
 		j_sequencePointsLen = 0;
 		j_callPoints = nullptr;
 		j_callPointsLen = 0;
+        j_tracingHooks = false;
+        j_profilingHooks = false;
 		Py_INCREF(code);
 	}
 

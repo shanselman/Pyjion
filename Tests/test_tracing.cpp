@@ -32,11 +32,13 @@
 
 
 int TestTraceFunc(PyObject * state, PyFrameObject *frame, int type, PyObject * arg){
+    printf("Caught tracing hook %d\n", type);
     PyDict_SetItem(state, PyLong_FromLong(type), Py_True);
     return 0;
 }
 
 int TestProfileFunc(PyObject * state, PyFrameObject *frame, int type, PyObject * arg){
+    printf("Caught profiling hook %d\n", type);
     PyDict_SetItem(state, PyLong_FromLong(type), Py_True);
     return 0;
 }
@@ -69,6 +71,8 @@ private:
         size_t collected = PyGC_Collect();
         printf("Collected %zu values\n", collected);
         REQUIRE(!m_jittedcode->j_failed);
+        CHECK(m_jittedcode->j_tracingHooks);
+        CHECK(m_jittedcode->j_profilingHooks);
         return res;
     }
 
@@ -80,6 +84,7 @@ public:
             FAIL("failed to compile code");
         }
         auto jitted = PyJit_EnsureExtra((PyObject *) *m_code);
+
         m_jittedcode = jitted;
     }
 
