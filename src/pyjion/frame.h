@@ -23,25 +23,17 @@
 *
 */
 
-#define CATCH_CONFIG_RUNNER
-#include <catch2/catch.hpp>
+#ifndef PYJION_FRAME_H
+#define PYJION_FRAME_H
 
-#include <Python.h>
-#include <pyjit.h>
+enum PythonFrameState {
+    PY_FRAME_CREATED = -2,
+    PY_FRAME_SUSPENDED = -1,
+    PY_FRAME_EXECUTING = 0,
+    PY_FRAME_RETURNED = 1,
+    PY_FRAME_UNWINDING = 2,
+    PY_FRAME_RAISED = 3,
+    PY_FRAME_CLEARED = 4
+};
 
-int main(int argc, char* const argv[]) {
-    Py_Initialize();
-#ifdef WINDOWS
-    JitInit(L"clrjit.dll");
-#else
-    JitInit(L"libclrjit.so");
 #endif
-    g_pyjionSettings.graph = true;
-    g_pyjionSettings.debug = true;
-    g_pyjionSettings.codeObjectSizeLimit = 1000000;
-    g_pyjionSettings.exceptionHandling = true;
-    setOptimizationLevel(1);
-    int result = Catch::Session().run(argc, argv);
-    Py_Finalize();
-    return result;
-}

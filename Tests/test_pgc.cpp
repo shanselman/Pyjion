@@ -31,6 +31,7 @@
 
 TEST_CASE("test BINARY PGC"){
     SECTION("test simple") {
+        CHECK(g_pyjionSettings.pgc);
         auto t = PgcProfilingTest(
                 "def f():\n  a = 1\n  b = 2.0\n  c=3\n  return a + b + c\n"
         );

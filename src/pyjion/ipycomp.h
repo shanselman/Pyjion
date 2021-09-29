@@ -31,6 +31,12 @@
 #include "absvalue.h"
 #include "codemodel.h"
 #include "instructions.h"
+#include "frame.h"
+
+#ifdef WINDOWS
+typedef SIZE_T size_t;
+typedef SSIZE_T ssize_t;
+#endif
 
 #ifdef WINDOWS
 typedef SIZE_T size_t;
@@ -190,6 +196,7 @@ public:
     virtual bool emit_push_frame() = 0;
     // Pops the current Python frame from the list of frames
     virtual bool emit_pop_frame() = 0;
+    virtual void emit_set_frame_state(PythonFrameState state) = 0;
 
     virtual void emit_push_block(int32_t type, int32_t handler, int32_t level) = 0;
     virtual void emit_pop_block() = 0;
@@ -447,12 +454,12 @@ public:
     virtual void emit_setup_annotations() = 0;
 
     /* Tracing functions */
-    virtual void emit_trace_line(Local lowerBound, Local upperBound, Local lastInstr) = 0;
+    virtual void emit_trace_line(Local lastInstr) = 0;
     virtual void emit_trace_frame_entry() = 0;
-    virtual void emit_trace_frame_exit() = 0;
+    virtual void emit_trace_frame_exit(Local retVal) = 0;
     virtual void emit_trace_exception() = 0;
     virtual void emit_profile_frame_entry() = 0;
-    virtual void emit_profile_frame_exit() = 0;
+    virtual void emit_profile_frame_exit(Local retVal) = 0;
     virtual void emit_pgc_profile_capture(Local value, size_t ipos, size_t istack) = 0;
 
     /* Compiles the generated code */
@@ -478,11 +485,6 @@ public:
     virtual void emit_infinity_long() = 0;
     virtual void emit_nan_long() = 0;
     virtual void emit_guard_exception(const char* expected) = 0;
-    virtual void emit_store_in_frame_value_stack(size_t index) = 0;
-    virtual void emit_load_from_frame_value_stack(size_t index) = 0;
-    virtual void emit_set_stacktop(size_t height) = 0;
-    virtual void emit_init_stacktop_local() = 0;
-    virtual void emit_shrink_stacktop_local(size_t height) = 0;
 };
 
 #endif

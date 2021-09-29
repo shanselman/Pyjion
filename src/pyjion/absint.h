@@ -278,8 +278,6 @@ class AbstractInterpreter {
     Local mErrorCheckLocal;
     bool mTracingEnabled;
     bool mProfilingEnabled;
-    Local mTracingInstrLowerBound;
-    Local mTracingInstrUpperBound;
     Local mTracingLastInstr;
 
 

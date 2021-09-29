@@ -311,7 +311,7 @@ TEST_CASE("General contains comparison") {
 
 TEST_CASE("Assertions") {
     SECTION("assert simple case") {
-        auto t = EmissionTest("def f(): assert '1' == '2'");
+        auto t = EmissionTest("def f(): a = 1 ; assert '1' == '2'");
         CHECK(t.raises() == PyExc_AssertionError);
     }
     SECTION("assert simple case short int") {
@@ -516,6 +516,14 @@ TEST_CASE("Simple methods") {
                               "      x += x.upper()\n"
                               "   return x");
         CHECK(t.returns() == "'HELLOHELLOHELLOHELLO'");
+    }
+
+    SECTION("test non existent method attribute raises AttributeError") {
+        auto t = EmissionTest("def f():\n"
+                              "    l = {'a': 1, 'b': 2}\n"
+                              "    k = l.sdfff()\n"
+                              "    return tuple(k)");
+        CHECK(t.raises() == PyExc_AttributeError);
     }
 }
 

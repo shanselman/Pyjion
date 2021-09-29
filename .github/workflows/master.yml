@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: [3.10-dev]
         dot-net-version: [6.0.100-rc.1.21463.6]
     steps:
       - uses: actions/checkout@v2
@@ -130,7 +130,7 @@ jobs:
     runs-on: macos-11
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: [3.10-dev]
         dot-net-version: [ 6.0.100-rc.1.21463.6 ]
 
     steps:
@@ -235,7 +235,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: [3.10-dev]
         dot-net-version: [ 6.0.100-rc.1.21463.6 ]
 
     steps:
@@ -296,7 +296,7 @@ jobs:
         working-directory: ${{runner.workspace}}/build/Release
         run: |
           cp c:\Users\runneradmin\AppData\Local\Microsoft\dotnet\shared\Microsoft.NETCore.App\6.0.0-rc.1.21451.13\clrjit.dll .
-          .\unit_tests.exe --out test.log -s --use-colour yes
+          .\unit_tests.exe
 
       - name: Setup Python tests
         shell: bash

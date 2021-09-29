@@ -10,7 +10,7 @@ You can run ``pyjion`` as a standalone command-line program, similar to how you 
 
 .. code-block::
 
-   usage: pyjion [-h] [-m MODULE] [--tracing] [--profiling] [--graph] [--debug] [--no-pgc] [-o OPT_LEVEL] [script]
+   usage: pyjion [-h] [-m MODULE] [--graph] [--debug] [--no-pgc] [-o OPT_LEVEL] [script]
 
    Python JIT Compiler
 
@@ -20,8 +20,6 @@ You can run ``pyjion`` as a standalone command-line program, similar to how you 
    optional arguments:
    -h, --help            show this help message and exit
    -m MODULE             Execute module
-   --tracing             Enable tracing (used by debuggers)
-   --profiling           Enable profiling
    --graph               Enable instruction graph generation
    --debug               Enable debuggable JIT methods
    --no-pgc              Disable PGC
@@ -40,22 +38,6 @@ Core module
 .. function:: disable()
 
    Disable the JIT
-
-.. function:: enable_tracing()
-
-   Enable tracing hooks (e.g. used by debuggers) to be emitted in the compiled CIL. Required for :ref:`Debugging`.
-
-.. function:: disable_tracing()
-
-   Disable tracing hooks.
-
-.. function:: enable_profiling()
-
-   Enable profiling hooks (e.g. used by performance profilers) to be emitted in the compiled CIL. See :ref:`Debugging`
-
-.. function:: disable_profiling()
-
-   Disable profiling hooks.
 
 .. function:: enable_debug()
 

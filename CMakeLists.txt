@@ -34,7 +34,7 @@ if (SKBUILD)
 endif (SKBUILD)
 
 if (NOT PYTHON_LIBRARIES)
-    find_package (Python3 3.9 EXACT COMPONENTS Interpreter Development)
+    find_package (Python3 3.10 EXACT COMPONENTS Interpreter Development)
 else()
     set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
     set(Python3_INCLUDE_DIRS ${PYTHON_INCLUDE_DIRS})
@@ -196,7 +196,7 @@ if(NET_SRC_LIB)  # use the libraries compiled from source
     message(STATUS "Using .NET builds " ${DOTNETPATH})
 endif()
 
-set(SOURCES src/pyjion/absint.cpp src/pyjion/absvalue.cpp src/pyjion/intrins.cpp src/pyjion/jitinit.cpp src/pyjion/pycomp.cpp src/pyjion/pyjit.cpp src/pyjion/exceptionhandling.cpp src/pyjion/stack.cpp src/pyjion/codemodel.cpp src/pyjion/binarycomp.cpp src/pyjion/instructions.cpp src/pyjion/unboxing.cpp)
+set(SOURCES src/pyjion/absint.cpp src/pyjion/absvalue.cpp src/pyjion/intrins.cpp src/pyjion/jitinit.cpp src/pyjion/pycomp.cpp src/pyjion/pyjit.cpp src/pyjion/exceptionhandling.cpp src/pyjion/stack.cpp src/pyjion/codemodel.cpp src/pyjion/binarycomp.cpp src/pyjion/instructions.cpp src/pyjion/unboxing.cpp src/pyjion/frame.h)
 
 if (WIN32)
     enable_language(ASM_MASM)
@@ -237,7 +237,7 @@ endif()
 if (BUILD_TESTS)
     # Testing
     add_subdirectory(Tests/Catch)
-    set(TEST_SOURCES Tests/testing_util.cpp Tests/test_basics.cpp Tests/test_compiler.cpp Tests/test_absint.cpp Tests/Tests.cpp Tests/test_wrappers.cpp Tests/test_exceptions.cpp Tests/test_scopes.cpp Tests/test_tracing.cpp Tests/test_inference.cpp Tests/test_math.cpp Tests/test_pgc.cpp Tests/test_unpack.cpp Tests/test_class.cpp Tests/test_coro.cpp Tests/test_graph.cpp Tests/test_big_build.cpp Tests/test_ilgen.cpp Tests/test_with.cpp)
+    set(TEST_SOURCES Tests/testing_util.cpp Tests/test_basics.cpp Tests/test_compiler.cpp Tests/Tests.cpp Tests/test_wrappers.cpp Tests/test_exceptions.cpp Tests/test_scopes.cpp Tests/test_tracing.cpp Tests/test_inference.cpp Tests/test_math.cpp Tests/test_pgc.cpp Tests/test_unpack.cpp Tests/test_class.cpp Tests/test_coro.cpp Tests/test_graph.cpp Tests/test_big_build.cpp Tests/test_ilgen.cpp Tests/test_with.cpp)
 
     add_executable(unit_tests ${TEST_SOURCES} $<TARGET_OBJECTS:pyjionlib>)
     if (NOT WIN32)

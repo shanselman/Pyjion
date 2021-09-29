@@ -148,7 +148,7 @@ TEST_CASE("Test refcnt for Call methods"){
         CHECK(PyFunction_Check(func));
         Py_INCREF(func); // imitate the loading of the function
         CHECK(func->ob_refcnt == 2);
-        auto res = Call0(func);
+        auto res = Call0(func, nullptr);
         CHECK_THAT(PyUnicode_AsUTF8(PyObject_Repr(res)), Catch::Equals("1"));
         CHECK(func->ob_refcnt == 1);
     }
@@ -161,7 +161,7 @@ TEST_CASE("Test refcnt for Call methods"){
         CHECK(func->ob_refcnt == 2);
         CHECK(arg1->ob_refcnt == 2);
 
-        auto res = Call1(func, arg1);
+        auto res = Call1(func, arg1, nullptr);
 
         CHECK_THAT(PyUnicode_AsUTF8(PyObject_Repr(res)), Catch::Equals("1"));
         CHECK(func->ob_refcnt == 1);
@@ -177,7 +177,7 @@ TEST_CASE("Test refcnt for Call methods"){
         CHECK(arg1->ob_refcnt == 2);
         auto args = PyTuple_New(1);
         PyTuple_SET_ITEM(args, 0, arg1);
-        auto res = PyJit_CallN(func, args);
+        auto res = PyJit_CallN(func, args, nullptr);
 
         CHECK_THAT(PyUnicode_AsUTF8(PyObject_Repr(res)), Catch::Equals("1"));
         CHECK(func->ob_refcnt == 1);

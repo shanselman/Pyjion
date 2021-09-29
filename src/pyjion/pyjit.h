@@ -69,7 +69,14 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
 PyObject* PyJit_EvalFrame(PyThreadState *, PyFrameObject *, int);
 PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject);
 
-typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyObject**);
+// This type isn't exported in the Python 3.10 API, so define it here.
+typedef struct {
+    PyCodeObject *code; // The code object for the bounds. May be NULL.
+    PyCodeAddressRange bounds; // Only valid if code != NULL.
+    CFrame cframe;
+} PyTraceInfo;
+
+typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo* );
 
 enum OptimizationFlags
 {
@@ -101,8 +108,6 @@ inline OptimizationFlags operator&(OptimizationFlags a, OptimizationFlags b)
 }
 
 typedef struct PyjionSettings {
-    bool tracing = false;
-    bool profiling = false;
     bool pgc = true; // Profile-guided-compilation
     bool graph = false; // Generate instruction graphs
     unsigned short optimizationLevel = 1;
@@ -162,6 +167,8 @@ public:
     unsigned int j_callPointsLen;
     PyObject* j_graph;
     SymbolTable j_symbols;
+    bool j_tracingHooks;
+    bool j_profilingHooks;
 
 	explicit PyjionJittedCode(PyObject* code) {
         j_compile_result = 0;
@@ -181,6 +188,8 @@ public:
 		j_sequencePointsLen = 0;
 		j_callPoints = nullptr;
 		j_callPointsLen = 0;
+        j_tracingHooks = false;
+        j_profilingHooks = false;
 		Py_INCREF(code);
 	}
 
