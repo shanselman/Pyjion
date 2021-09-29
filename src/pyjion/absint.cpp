@@ -2468,10 +2468,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     m_comp->emit_mark_label(finalRet);
 
     if (mTracingEnabled) {
-        m_comp->emit_trace_frame_exit();
+        m_comp->emit_trace_frame_exit(m_retValue);
     }
     if (mProfilingEnabled) {
-        m_comp->emit_profile_frame_exit();
+        m_comp->emit_profile_frame_exit(m_retValue);
     }
 
     if (m_comp->emit_pop_frame()) {

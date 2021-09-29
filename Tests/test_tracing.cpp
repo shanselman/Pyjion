@@ -32,13 +32,65 @@
 
 
 int TestTraceFunc(PyObject * state, PyFrameObject *frame, int type, PyObject * arg){
-    printf("Caught tracing hook %d\n", type);
+    switch(type){
+        case PyTrace_CALL:
+            CHECK(arg == Py_None);
+            break;
+        case PyTrace_EXCEPTION:
+            CHECK(arg != Py_None);
+            break;
+        case PyTrace_LINE:
+            CHECK(arg == Py_None);
+            break;
+        case PyTrace_RETURN:
+            CHECK(arg != Py_None);
+            CHECK(PyLong_AsLong(arg) == 6);
+            break;
+        case PyTrace_C_CALL:
+            CHECK(arg != Py_None);
+            break;
+        case PyTrace_C_EXCEPTION:
+            CHECK(arg != Py_None);
+            break;
+        case PyTrace_C_RETURN:
+            CHECK(arg != Py_None);
+            break;
+        default:
+            FAIL("Unexpected type");
+            break;
+    }
     PyDict_SetItem(state, PyLong_FromLong(type), Py_True);
     return 0;
 }
 
 int TestProfileFunc(PyObject * state, PyFrameObject *frame, int type, PyObject * arg){
-    printf("Caught profiling hook %d\n", type);
+    switch(type){
+        case PyTrace_CALL:
+            CHECK(arg == Py_None);
+            break;
+        case PyTrace_EXCEPTION:
+            CHECK(arg != Py_None);
+            break;
+        case PyTrace_LINE:
+            CHECK(arg == Py_None);
+            break;
+        case PyTrace_RETURN:
+            CHECK(arg != Py_None);
+            CHECK(PyLong_AsLong(arg) == 6);
+            break;
+        case PyTrace_C_CALL:
+            CHECK(arg != Py_None);
+            break;
+        case PyTrace_C_EXCEPTION:
+            CHECK(arg != Py_None);
+            break;
+        case PyTrace_C_RETURN:
+            CHECK(arg != Py_None);
+            break;
+        default:
+            FAIL("Unexpected type");
+            break;
+    }
     PyDict_SetItem(state, PyLong_FromLong(type), Py_True);
     return 0;
 }
@@ -66,10 +118,11 @@ private:
         _PyEval_SetTrace(tstate, &TestTraceFunc, m_recordedTraces.get());
         _PyEval_SetProfile(tstate, &TestProfileFunc, m_recordedProfiles.get());
         auto res = PyJit_ExecuteAndCompileFrame(m_jittedcode, frame, tstate, nullptr);
+        _PyEval_SetTrace(tstate, nullptr, nullptr);
+        _PyEval_SetProfile(tstate, nullptr, nullptr);
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), prev);
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();
-        printf("Collected %zu values\n", collected);
         REQUIRE(!m_jittedcode->j_failed);
         CHECK(m_jittedcode->j_tracingHooks);
         CHECK(m_jittedcode->j_profilingHooks);

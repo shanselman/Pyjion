@@ -451,10 +451,10 @@ public:
     /* Tracing functions */
     virtual void emit_trace_line(Local lastInstr) = 0;
     virtual void emit_trace_frame_entry() = 0;
-    virtual void emit_trace_frame_exit() = 0;
+    virtual void emit_trace_frame_exit(Local retVal) = 0;
     virtual void emit_trace_exception() = 0;
     virtual void emit_profile_frame_entry() = 0;
-    virtual void emit_profile_frame_exit() = 0;
+    virtual void emit_profile_frame_exit(Local retVal) = 0;
     virtual void emit_pgc_profile_capture(Local value, size_t ipos, size_t istack) = 0;
 
     /* Compiles the generated code */
