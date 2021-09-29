@@ -2407,6 +2407,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 if (OPT_ENABLED(BuiltinMethods) && !stackInfo.empty() && stackInfo.top().hasValue() && stackInfo.top().Value->known() && !stackInfo.top().Value->needsGuard()){
                     FLAG_OPT_USAGE(BuiltinMethods);
                     m_comp->emit_builtin_method(PyTuple_GetItem(mCode->co_names, oparg), stackInfo.top().Value);
+                    errorCheck("failed to load method",  "", curByte);
                 } else {
                     m_comp->emit_dup(); // dup self as needs to remain on stack
                     m_comp->emit_load_method(PyTuple_GetItem(mCode->co_names, oparg));
