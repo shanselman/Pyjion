@@ -53,10 +53,10 @@ jobs:
         shell: bash
         run: python -m pip install --upgrade pip && pip install .
 
-      - name: Run unit tests
+      - name: Run C++ unit tests
         working-directory: ${{runner.workspace}}/build
         shell: bash
-        run: ./unit_tests
+        run: ./unit_tests --out test.log -s --use-colour yes
 
       - name: Setup Python tests
         shell: bash
@@ -127,7 +127,7 @@ jobs:
         timeout-minutes: 30
 
   build-macos-11:
-    runs-on: macos-11.0
+    runs-on: macos-11
     strategy:
       matrix:
         python-version: [3.10-dev]
@@ -162,10 +162,10 @@ jobs:
         shell: bash
         run: python -m pip install --upgrade pip && pip install .
 
-      - name: Run unit tests
+      - name: Run C++ unit tests
         working-directory: ${{runner.workspace}}/build
         shell: bash
-        run: ./unit_tests
+        run: ./unit_tests --out test.log -s --use-colour yes
         
       - name: Run gcov
         shell: bash
@@ -292,7 +292,7 @@ jobs:
           name: dist
           path: ${{ env.WHEEL }}
 
-      - name: Run unit tests
+      - name: Run C++ unit tests
         working-directory: ${{runner.workspace}}/build/Release
         run: |
           cp c:\Users\runneradmin\AppData\Local\Microsoft\dotnet\shared\Microsoft.NETCore.App\6.0.0-rc.1.21451.13\clrjit.dll .

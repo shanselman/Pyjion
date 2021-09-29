@@ -38,6 +38,11 @@ typedef SIZE_T size_t;
 typedef SSIZE_T ssize_t;
 #endif
 
+#ifdef WINDOWS
+typedef SIZE_T size_t;
+typedef SSIZE_T ssize_t;
+#endif
+
 class InvalidLocalException: public std::exception {
 public:
     InvalidLocalException(): std::exception() {};
