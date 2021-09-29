@@ -109,14 +109,13 @@ private:
         auto builtins = PyEval_GetBuiltins();
         PyDict_SetItemString(globals.get(), "__builtins__", builtins);
         PyDict_SetItemString(globals.get(), "sys", sysModule.get());
-
         auto tstate = PyThreadState_Get();
+        _PyEval_SetTrace(tstate, &TestTraceFunc, m_recordedTraces.get());
+        _PyEval_SetProfile(tstate, &TestProfileFunc, m_recordedProfiles.get());
         auto frame = PyFrame_New(tstate, m_code.get(), globals.get(), PyObject_ptr(PyDict_New()).get());
         auto prev = _PyInterpreterState_GetEvalFrameFunc(PyInterpreterState_Main());
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), PyJit_EvalFrame);
 
-        _PyEval_SetTrace(tstate, &TestTraceFunc, m_recordedTraces.get());
-        _PyEval_SetProfile(tstate, &TestProfileFunc, m_recordedProfiles.get());
         auto res = PyJit_ExecuteAndCompileFrame(m_jittedcode, frame, tstate, nullptr);
         _PyEval_SetTrace(tstate, nullptr, nullptr);
         _PyEval_SetProfile(tstate, nullptr, nullptr);
