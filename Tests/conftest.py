@@ -10,10 +10,6 @@ def pytest_runtest_call(item: pytest.Item) -> None:
     for mark in item.iter_markers():
         if mark.name == "graph":
             pyjion.enable_graphs()
-        elif mark.name == "profile":
-            pyjion.enable_profiling()
-        elif mark.name == "tracing":
-            pyjion.enable_tracing()
     pyjion.enable_debug()
     item.runtest()
     pyjion.disable()
@@ -21,8 +17,6 @@ def pytest_runtest_call(item: pytest.Item) -> None:
     if not info.compiled:
         warnings.warn("{0} did not compile ({1})".format(item.function, str(info.compile_result)))
     pyjion.disable_graphs()
-    pyjion.disable_profiling()
-    pyjion.disable_tracing()
     gc.collect()
 
 

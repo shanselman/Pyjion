@@ -486,12 +486,12 @@ public:
     void emit_inc_local(Local local, size_t value) override;
     void emit_dec_local(Local local, size_t value) override;
 
-    void emit_trace_line(Local lowerBound, Local upperBound, Local lastInstr) override;
+    void emit_trace_line(Local lastInstr) override;
     void emit_trace_frame_entry() override;
-    void emit_trace_frame_exit() override;
+    void emit_trace_frame_exit(Local retVal) override;
     void emit_trace_exception() override;
     void emit_profile_frame_entry() override;
-    void emit_profile_frame_exit() override;
+    void emit_profile_frame_exit(Local retVal) override;
     void emit_pgc_profile_capture(Local value, size_t ipos, size_t istack) override;
     JittedCode* emit_compile() override;
     void lift_n_to_top(uint16_t pos) override;
@@ -511,6 +511,8 @@ public:
 private:
     void load_frame();
     void load_tstate();
+    void load_profile();
+    void load_trace_info();
     void load_local(py_oparg oparg);
     void decref(bool noopt = false);
     CorInfoType to_clr_type(LocalKind kind);

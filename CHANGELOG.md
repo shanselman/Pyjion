@@ -2,8 +2,14 @@
 
 ## 1.0.0 (master)
 
+* Updated to .NET 6 RC1
+* Added Python 3.10 support
 * Experimental `try..except` statements, stacked exception handlers and exception filtering. Disabled by default
-* Updated to .NET 6 preview 7
+* Fixed a bug on LOAD_METHOD not raising an exception immediately if the method could not be resolved
+* Remove `enable_tracing()` and `enable_profiling` functions. Profiling and tracing is detected on compilation and available via the `.info()` method
+* Added support for PEP626 (fast line tracing)
+* Extended profiling support for CFunction calls
+* PyTrace_RETURN now correctly sends the return value as an argument as per CPython spec
 
 ## 1.0.0 (rc2)
 

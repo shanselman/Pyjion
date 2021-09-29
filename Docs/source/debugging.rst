@@ -10,7 +10,7 @@ Call tracing
 
 Python's tracing callback API adds overhead to execution. To improve performance, Pyjion will only compile these callbacks when tracing is enabled ahead of time.
 
-Before calling ``sys.settrace()`` you must enable the tracing hooks by calling ``pyjion.enable_tracing()``:
+Before calling ``sys.settrace()``:
 
 .. code-block:: python
 
@@ -28,21 +28,18 @@ Before calling ``sys.settrace()`` you must enable the tracing hooks by calling `
         return a + b + c + d
 
     pyjion.enable()
-    pyjion.enable_tracing()
     sys.settrace(custom_tracer)
     assert _f() == 10
     sys.settrace(None)
 
-You can disable tracing again by calling ``pyjion.disable_tracing()``
-
 Profiling
 ---------
 
-Python profilers (like the ``profile`` module) require runtime callbacks in Python execution. Python's profiling callback API adds overhead to execution. To improve performance, Pyjion will only compile these callbacks when profiling is enabled ahead of time.
+Python profilers (like the ``profile`` module) require runtime callbacks in Python execution.
 
 See `Profiling <https://docs.python.org/3/library/profile.html>` for the Python reference.
 
-Before calling ``sys.setprofile()`` you must enable the profiling hooks by calling ``pyjion.enable_profiling()``:
+Call ``sys.setprofile()`` to set a profile function:
 
 .. code-block:: python
 
@@ -60,26 +57,8 @@ Before calling ``sys.setprofile()`` you must enable the profiling hooks by calli
         return a + b + c + d
 
     pyjion.enable()
-    pyjion.enable_profiling()
     sys.setprofile(custom_profiler)
     assert _f() == 10
     sys.setprofile(None)
 
-You can disable profiling again by calling ``pyjion.disable_profiling()``
 
-Command Line
-------------
-
-If you're running scripts and modules using the ``-m pyjion`` command, you can use the ``--tracing`` and ``-profiling`` flags:
-
-Enabling tracing:
-
-.. code-block::
-
-   > pyjion --tracing my_script.py
-
-Enabling profiling:
-
-.. code-block::
-
-   > pyjion --profiling my_script.py

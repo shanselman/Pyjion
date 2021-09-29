@@ -517,6 +517,14 @@ TEST_CASE("Simple methods") {
                               "   return x");
         CHECK(t.returns() == "'HELLOHELLOHELLOHELLO'");
     }
+
+    SECTION("test non existent method attribute raises AttributeError") {
+        auto t = EmissionTest("def f():\n"
+                              "    l = {'a': 1, 'b': 2}\n"
+                              "    k = l.sdfff()\n"
+                              "    return tuple(k)");
+        CHECK(t.raises() == PyExc_AttributeError);
+    }
 }
 
 TEST_CASE("Test nested stacks"){

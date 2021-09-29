@@ -1602,14 +1602,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         // push initial trace on entry to frame
         m_comp->emit_trace_frame_entry();
 
-        mTracingInstrLowerBound = m_comp->emit_define_local(LK_Int);
-        m_comp->emit_int(0);
-        m_comp->emit_store_local(mTracingInstrLowerBound);
-
-        mTracingInstrUpperBound = m_comp->emit_define_local(LK_Int);
-        m_comp->emit_int(-1);
-        m_comp->emit_store_local(mTracingInstrUpperBound);
-
         mTracingLastInstr = m_comp->emit_define_local(LK_Int);
         m_comp->emit_int(-1);
         m_comp->emit_store_local(mTracingLastInstr);
@@ -1663,7 +1655,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         if (!canSkipLastiUpdate(curByte)) {
             m_comp->emit_lasti_update(curByte / 2);
             if (mTracingEnabled){
-                m_comp->emit_trace_line(mTracingInstrLowerBound, mTracingInstrUpperBound, mTracingLastInstr);
+                m_comp->emit_trace_line(mTracingLastInstr);
             }
         }
         auto stackInfo = getStackInfo(curByte);
@@ -2415,9 +2407,11 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 if (OPT_ENABLED(BuiltinMethods) && !stackInfo.empty() && stackInfo.top().hasValue() && stackInfo.top().Value->known() && !stackInfo.top().Value->needsGuard()){
                     FLAG_OPT_USAGE(BuiltinMethods);
                     m_comp->emit_builtin_method(PyTuple_GetItem(mCode->co_names, oparg), stackInfo.top().Value);
+                    errorCheck("failed to load method",  "", curByte);
                 } else {
                     m_comp->emit_dup(); // dup self as needs to remain on stack
                     m_comp->emit_load_method(PyTuple_GetItem(mCode->co_names, oparg));
+                    errorCheck("failed to load method",  "", curByte);
                 }
                 incStack(1);
                 break;
@@ -2474,10 +2468,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     m_comp->emit_mark_label(finalRet);
 
     if (mTracingEnabled) {
-        m_comp->emit_trace_frame_exit();
+        m_comp->emit_trace_frame_exit(m_retValue);
     }
     if (mProfilingEnabled) {
-        m_comp->emit_profile_frame_exit();
+        m_comp->emit_profile_frame_exit(m_retValue);
     }
 
     if (m_comp->emit_pop_frame()) {
