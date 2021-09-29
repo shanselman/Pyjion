@@ -232,13 +232,17 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
 
     if (tstate->cframe->use_tracing && tstate->c_tracefunc){
         interp.enableTracing();
+        state->j_tracingHooks = true;
     } else {
         interp.disableTracing();
+        state->j_tracingHooks = false;
     }
     if (tstate->cframe->use_tracing && tstate->c_profilefunc){
         interp.enableProfiling();
+        state->j_profilingHooks = true;
     } else {
         interp.disableProfiling();
+        state->j_profilingHooks = false;
     }
 
     auto res = interp.compile(frame->f_builtins, frame->f_globals, profile, state->j_pgc_status);
@@ -391,6 +395,8 @@ static PyObject *pyjion_info(PyObject *self, PyObject* func) {
 	PyjionJittedCode* jitted = PyJit_EnsureExtra(code);
 
 	PyDict_SetItemString(res, "failed", jitted->j_failed ? Py_True : Py_False);
+	PyDict_SetItemString(res, "tracing", jitted->j_tracingHooks ? Py_True : Py_False);
+	PyDict_SetItemString(res, "profiling", jitted->j_profilingHooks ? Py_True : Py_False);
     PyDict_SetItemString(res, "compile_result", PyLong_FromLong(jitted->j_compile_result));
     PyDict_SetItemString(res, "compiled", jitted->j_addr != nullptr ? Py_True : Py_False);
     PyDict_SetItemString(res, "optimizations", PyLong_FromLong(jitted->j_optimizations));
