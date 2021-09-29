@@ -422,27 +422,27 @@ TEST_CASE("Test exception handling") {
         CHECK(t.returns() == "2");
     }
 }
-TEST_CASE("Test nesting exception handlers", "[!mayfail]") {
-    SECTION("test double nested exception filters and return from finally"){
-        auto t = ExceptionTest(
-                "def f():\n    try:\n        try:\n             try:\n                  raise TypeError('err')\n             except BaseException:\n                  raise\n        finally:\n             pass\n    finally:\n        return 42\n"
-                );
-        CHECK(t.returns() == "42");
-    }
-    SECTION("test nested exception filters and return from finally") {
-        auto t = ExceptionTest(
-                "def f():\n"
-                "    try:\n"
-                "        try:\n"
-                "            raise TypeError('err')\n"
-                "        except BaseException:\n"
-                "            raise\n"
-                "    finally:\n"
-                "        return 42"
-                );
-        CHECK(t.returns() == "42");
-    }
-}
+// TEST_CASE("Test nesting exception handlers", "[!mayfail]") {
+//     SECTION("test double nested exception filters and return from finally"){
+//         auto t = ExceptionTest(
+//                 "def f():\n    try:\n        try:\n             try:\n                  raise TypeError('err')\n             except BaseException:\n                  raise\n        finally:\n             pass\n    finally:\n        return 42\n"
+//                 );
+//         CHECK(t.returns() == "42");
+//     }
+//     SECTION("test nested exception filters and return from finally") {
+//         auto t = ExceptionTest(
+//                 "def f():\n"
+//                 "    try:\n"
+//                 "        try:\n"
+//                 "            raise TypeError('err')\n"
+//                 "        except BaseException:\n"
+//                 "            raise\n"
+//                 "    finally:\n"
+//                 "        return 42"
+//                 );
+//         CHECK(t.returns() == "42");
+//     }
+// }
 TEST_CASE("Test working nesting exception handlers") {
     SECTION("test nested exception filters and pass from finally") {
         auto t = ExceptionTest(
