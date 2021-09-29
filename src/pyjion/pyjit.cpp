@@ -166,9 +166,8 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
         auto res = ((Py_EvalFunc)state)(nullptr, frame, tstate, profile, &trace_info);
         tstate->cframe = trace_info.cframe.previous;
         tstate->cframe->use_tracing = trace_info.cframe.use_tracing;
-        // TODO : Frame pop should be here, not inside JITTED code.
         Pyjit_LeaveRecursiveCall();
-        // TODO : Run _Py_CheckFunctionResult()
+        _Py_CheckFunctionResult(tstate, nullptr, res, __func__);
         return res;
     } catch (const std::exception& e){
         PyErr_SetString(PyExc_RuntimeError, e.what());
