@@ -158,3 +158,19 @@ def test_fraction_operations():
     assert result3 == Fraction(14, 15)
     result4 = Fraction(2, 3) ** Fraction(7, 5)
     assert result4 == 0.5668553336114626
+
+
+def test_strides_from_shape():
+    ndim = 3
+    layout = 'C'
+    shape = [3, 2, 5]
+    itemsize = 1
+    if layout == 'C':
+        strides = list(shape[1:]) + [itemsize]
+        for i in range(ndim-2, -1, -1):
+            strides[i] *= strides[i+1]
+    else:
+        strides = [itemsize] + list(shape[:-1])
+        for i in range(1, ndim):
+            strides[i] *= strides[i-1]
+    assert strides == [10, 5, 1]
