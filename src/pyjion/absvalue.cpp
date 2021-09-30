@@ -1213,7 +1213,7 @@ AbstractValue* RangeValue::iter(AbstractSource* selfSources) {
 }
 
 AbstractValue* RangeIteratorValue::next(AbstractSource* selfSources) {
-    return &Integer;
+    return &Any; // See related issue, &Integer;
 }
 
 AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source){
