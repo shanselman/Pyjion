@@ -37,7 +37,8 @@ void incref(T v) {
 
 template<typename T, typename... Args>
 void incref(T v, Args... args) {
-    Py_INCREF(v) ; incref(args...);
+    Py_INCREF(v);
+    incref(args...);
 }
 
 TEST_CASE("Test math errors") {
@@ -58,8 +59,7 @@ TEST_CASE("Test inplace") {
                               "  c += a * b\n"
                               "  return c");
         CHECK(t.returns() == "10.0");
-    }
-    SECTION("complex nested calculation") {
+    }SECTION("complex nested calculation") {
         auto t = EmissionTest("def f():\n"
                               "  dt = 2.0\n"
                               "  dx = 3.0\n"
@@ -68,8 +68,7 @@ TEST_CASE("Test inplace") {
                               "  mag = dt * ((dx * dx + dy * dy + dz * dz) ** (-1.5))\n"
                               "  return mag");
         CHECK(t.returns() == "0.00565685424949238");
-    }
-    SECTION("inplace addition of multiple ints") {
+    }SECTION("inplace addition of multiple ints") {
         auto t = EmissionTest("def f():\n"
                               "  a = 2\n"
                               "  b = 3\n"
@@ -107,8 +106,7 @@ TEST_CASE("Test inplace") {
                               "  c *= a - b\n"
                               "  return c");
         CHECK(t.returns() == "8");
-    }
-    SECTION("inplace addition of two strs ") {
+    }SECTION("inplace addition of two strs ") {
         auto t = EmissionTest("def f():\n"
                               "  a = 'a'\n"
                               "  b = 'b'\n"
@@ -138,20 +136,17 @@ TEST_CASE("Unary tests") {
                 "def f():\n  x=True\n  return not x\n"
         );
         CHECK(t.returns() == "False");
-    }
-    SECTION("in place add") {
+    }SECTION("in place add") {
         auto t = EmissionTest(
                 "def f():\n  x=1\n  x+=1\n  return x"
         );
         CHECK(t.returns() == "2");
-    }
-    SECTION("simple add") {
+    }SECTION("simple add") {
         auto t = EmissionTest(
                 "def f():\n  x=1\n  y=2\n  z = x+y\n  return z"
         );
         CHECK(t.returns() == "3");
-    }
-    SECTION("test1") {
+    }SECTION("test1") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    x += 1\n    x -= 1\n    y = not x\n    return y"
         );
@@ -406,8 +401,7 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = 1\n    y = 1\n    return x == y"
         );
         CHECK(t.returns() == "True");
-    }
-    SECTION("big int modulus") {
+    }SECTION("big int modulus") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 9223372036854775807\n    return x % y"
         );
@@ -419,32 +413,27 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = 1\n    y = 2\n    return x / y"
         );
         CHECK(t.returns() == "0.5");
-    }
-    SECTION("large int divide") {
+    }SECTION("large int divide") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 4611686018427387903\n    return x / y"
         );
         CHECK(t.returns() == "2.168404344971009e-19");
-    }
-    SECTION("big int divide") {
+    }SECTION("big int divide") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 9223372036854775807\n    return x / y"
         );
         CHECK(t.returns() == "1.0842021724855044e-19");
-    }
-    SECTION("large int divide by 1") {
+    }SECTION("large int divide by 1") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    y = 1\n    return x / y"
         );
         CHECK(t.returns() == "4.611686018427388e+18");
-    }
-    SECTION("big int divide by 1") {
+    }SECTION("big int divide by 1") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 1\n    return x / y"
         );
         CHECK(t.returns() == "9.223372036854776e+18");
-    }
-    SECTION("big ints divide") {
+    }SECTION("big ints divide") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 9223372036854775807\n    return x / y"
         );
@@ -456,26 +445,22 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = 1\n    y = 2\n    return x >> y"
         );
         CHECK(t.returns() == "0");
-    }
-    SECTION("large int right shift") {
+    }SECTION("large int right shift") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 4611686018427387903\n    return x >> y"
         );
         CHECK(t.returns() == "0");
-    }
-    SECTION("big int right shift") {
+    }SECTION("big int right shift") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 9223372036854775807\n    return x >> y"
         );
         CHECK(t.returns() == "0");
-    }
-    SECTION("test58") {
+    }SECTION("test58") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    y = 1\n    return x >> y"
         );
         CHECK(t.returns() == "2305843009213693951");
-    }
-    SECTION("test59") {
+    }SECTION("test59") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 1\n    return x >> y"
         );
@@ -534,32 +519,27 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = 1\n    y = 2\n    return x ** y"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("medium int power") {
+    }SECTION("medium int power") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 32\n    return x ** y"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("large int power") {
+    }SECTION("large int power") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 4611686018427387903\n    return x ** y"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("big int power") {
+    }SECTION("big int power") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 9223372036854775807\n    return x ** y"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("large int power 1") {
+    }SECTION("large int power 1") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    y = 1\n    return x ** y"
         );
         CHECK(t.returns() == "4611686018427387903");
-    }
-    SECTION("big int power 1") {
+    }SECTION("big int power 1") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 1\n    return x ** y"
         );
@@ -571,50 +551,42 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = 1\n    y = 2\n    return x // y"
         );
         CHECK(t.returns() == "0");
-    }
-    SECTION("large int floor divide") {
+    }SECTION("large int floor divide") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 4611686018427387903\n    return x // y"
         );
         CHECK(t.returns() == "0");
-    }
-    SECTION("big int floor divide") {
+    }SECTION("big int floor divide") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 9223372036854775807\n    return x // y"
         );
         CHECK(t.returns() == "0");
-    }
-    SECTION("large int floor divide by 1") {
+    }SECTION("large int floor divide by 1") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    y = 1\n    return x // y"
         );
         CHECK(t.returns() == "4611686018427387903");
-    }
-    SECTION("big int floor divide by large int") {
+    }SECTION("big int floor divide by large int") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 4611686018427387903\n    return x // y"
         );
         CHECK(t.returns() == "2");
-    }
-    SECTION("big int floor divide by -ve large int") {
+    }SECTION("big int floor divide by -ve large int") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = -4611686018427387903\n    return x // y"
         );
         CHECK(t.returns() == "-3");
-    }
-    SECTION("big int floor divide by 1") {
+    }SECTION("big int floor divide by 1") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 1\n    return x // y"
         );
         CHECK(t.returns() == "9223372036854775807");
-    }
-    SECTION("big int floor divide by -1") {
+    }SECTION("big int floor divide by -1") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = -1\n    return x // y"
         );
         CHECK(t.returns() == "-9223372036854775807");
-    }
-    SECTION("big int floor divide by big int") {
+    }SECTION("big int floor divide by big int") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 9223372036854775807\n    return x // y"
         );
@@ -626,26 +598,22 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = 1\n    y = 2\n    return x % y"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("small int mod by large int") {
+    }SECTION("small int mod by large int") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 4611686018427387903\n    return x % y"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("large int mod by large int") {
+    }SECTION("large int mod by large int") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    y = 1\n    return x % y"
         );
         CHECK(t.returns() == "0");
-    }
-    SECTION("test87") {
+    }SECTION("test87") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 4611686018427387903\n    return x % y"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("big int modulus by large -ve int") {
+    }SECTION("big int modulus by large -ve int") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = -4611686018427387903\n    return x % y"
         );
@@ -776,8 +744,7 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = -9223372036854775808\n    y = 1\n    return x - y"
         );
         CHECK(t.returns() == "-9223372036854775809");
-    }
-    SECTION("large -ve spill int no overflow") {
+    }SECTION("large -ve spill int no overflow") {
         auto t = EmissionTest(
                 "def f():\n    x = -1\n    y = 4611686018427387904\n    return x - y"
         );
@@ -848,6 +815,7 @@ TEST_CASE("Unary tests") {
         CHECK(t.returns() == "85070591730234615847396907784232501249");
     }
 }
+
 TEST_CASE("test binary/arithmetic operations") {
     // Simple optimized code test cases...
     SECTION("inplace left shift") {
@@ -855,60 +823,51 @@ TEST_CASE("test binary/arithmetic operations") {
                 "def f():\n    x = 2\n    x <<= 2\n    return x"
         );
         CHECK(t.returns() == "8");
-    }
-    SECTION("inplace right shift") {
+    }SECTION("inplace right shift") {
         auto t = EmissionTest(
                 "def f():\n    x = 8\n    x >>= 2\n    return x"
         );
         CHECK(t.returns() == "2");
-    }
-    SECTION("float postive unary") {
+    }SECTION("float postive unary") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.0\n    y = +x\n    return y"
         );
         CHECK(t.returns() == "1.0");
-    }
-    SECTION("float not unary") {
+    }SECTION("float not unary") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.0\n    if not x:\n        return 1\n    return 2"
         );
         CHECK(t.returns() == "2");
-    }
-    SECTION("float is falsey") {
+    }SECTION("float is falsey") {
         auto t = EmissionTest(
                 "def f():\n    x = 0.0\n    if not x:\n        return 1\n    return 2"
         );
         CHECK(t.returns() == "1");
-    }
-    SECTION("float negative unary") {
+    }SECTION("float negative unary") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.0\n    y = -x\n    return y"
         );
         CHECK(t.returns() == "-1.0");
-    }
-    SECTION("float not operator") {
+    }SECTION("float not operator") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.0\n    y = not x\n    return y"
         );
         CHECK(t.returns() == "False");
-    }
-    SECTION("test unary constants"){
+    }SECTION("test unary constants") {
         auto t = EmissionTest(
-            "def f(): \n"
-            "  if not -24.0 < -12.0: \n"
-            "    return False"
+                "def f(): \n"
+                "  if not -24.0 < -12.0: \n"
+                "    return False"
         );
         CHECK(t.returns() == "None");
-    }
-    SECTION("test unary constants reversed"){
+    }SECTION("test unary constants reversed") {
         auto t = EmissionTest(
-            "def f(): \n"
-            "  if not -24.0 > -12.0: \n"
-            "    return True"
+                "def f(): \n"
+                "  if not -24.0 > -12.0: \n"
+                "    return True"
         );
         CHECK(t.returns() == "True");
-    }
-    SECTION("float falsey not") {
+    }SECTION("float falsey not") {
         auto t = EmissionTest(
                 "def f():\n    x = 0.0\n    y = not x\n    return y"
         );
@@ -1043,34 +1002,34 @@ TEST_CASE("test binary/arithmetic operations") {
                 "def f():\n    x = 1.023\n    y = 2.023\n    x -= y\n    return x"
         );
         CHECK(t.returns() == "-1.0000000000000002");
-    }SECTION("test33") {
+    }SECTION("test true division of floats") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.023\n    y = 2.023\n    x /= y\n    return x"
         );
         CHECK(t.returns() == "0.5056846267918932");
-    }SECTION("test34") {
+    }SECTION("test inplace floor division of floats") {
         auto t = EmissionTest(
                 "def f():\n    x = 2.023\n    y = 1.023\n    x //= y\n    return x"
         );
         CHECK(t.returns() == "1.0");
-    }SECTION("test35") {
+    }SECTION("test inplace modulo of floats") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.023\n    y = 2.023\n    x %= y\n    return x"
         );
         CHECK(t.returns() == "1.023");
-    }SECTION("test36") {
+    }SECTION("test inplace multiply of floats") {
         auto t = EmissionTest(
                 "def f():\n    x = 2.023\n    y = 3.023\n    x *= y\n    return x"
         );
         CHECK(t.returns() == "6.115529");
-    }SECTION("test37") {
+    }SECTION("test inplace power of floats") {
         auto t = EmissionTest(
                 "def f():\n    x = 2.023\n    y = 3.023\n    x **= y\n    return x"
         );
         CHECK(t.returns() == "8.414446502664783");
     }
         // fully optimized complex code
-    SECTION("test38") {
+    SECTION("test calculation of pi") {
         auto t = EmissionTest(
                 "def f():\n    pi = 0.\n    k = 0.\n    while k < 256.:\n        pi += (4. / (8.*k + 1.) - 2. / (8.*k + 4.) - 1. / (8.*k + 5.) - 1. / (8.*k + 6.)) / 16.**k\n        k += 1.\n    return pi"
         );
@@ -1082,8 +1041,7 @@ TEST_CASE("test binary/arithmetic operations") {
                 "def f():\n    x = 1.0\n    y = 2.0\n    z = 3.0\n    return x + y / z"
         );
         CHECK(t.returns() == "1.6666666666666665");
-    }
-    SECTION("test name error raised on delete RefCountCheck") {
+    }SECTION("test name error raised on delete RefCountCheck") {
         auto t = EmissionTest(
                 "def f():\n    a = RefCountCheck()\n    del a\n    return finalized"
         );
@@ -1102,44 +1060,37 @@ TEST_CASE("Test math operations") {
                 "def f():\n    x = b'abc'*3\n    return x"
         );
         CHECK(t.returns() == "b'abcabcabc'");
-    }
-    SECTION("test increment unbound ") {
+    }SECTION("test increment unbound ") {
         auto t = EmissionTest(
                 "def f():\n    unbound += 1"
         );
         CHECK(t.raises() == PyExc_UnboundLocalError);
-    }
-    SECTION("test modulus by zero") {
+    }SECTION("test modulus by zero") {
         auto t = EmissionTest(
                 "def f():\n    return 5 % 0"
         );
         CHECK(t.raises() == PyExc_ZeroDivisionError);
-    }
-    SECTION("test modulus floats by zero") {
+    }SECTION("test modulus floats by zero") {
         auto t = EmissionTest(
                 "def f():\n    return 5.0 % 0.0"
         );
         CHECK(t.raises() == PyExc_ZeroDivisionError);
-    }
-    SECTION("test floor divide by zero") {
+    }SECTION("test floor divide by zero") {
         auto t = EmissionTest(
                 "def f():\n    return 5.0 // 0.0"
         );
         CHECK(t.raises() == PyExc_ZeroDivisionError);
-    }
-    SECTION("test divide by zero") {
+    }SECTION("test divide by zero") {
         auto t = EmissionTest(
                 "def f():\n    return 5.0 / 0.0"
         );
         CHECK(t.raises() == PyExc_ZeroDivisionError);
-    }
-    SECTION("test string multiply") {
+    }SECTION("test string multiply") {
         auto t = EmissionTest(
                 "def f():\n    x = 'abc'*3\n    return x"
         );
         CHECK(t.returns() == "'abcabcabc'");
-    }
-    SECTION("test boundary ranging") {
+    }SECTION("test boundary ranging") {
         auto t = EmissionTest(
                 "def f():\n    if 0.0 < 1.0 <= 1.0 == 1.0 >= 1.0 > 0.0 != 1.0:  return 42"
         );
@@ -1165,8 +1116,7 @@ TEST_CASE("Test unboxing of floats") {
                               "  mag = dz * (dx * dy)\n"
                               "  return mag");
         CHECK(t.returns() == "60.0");
-    }
-    SECTION("complex nested calculation 2") {
+    }SECTION("complex nested calculation 2") {
         auto t = EmissionTest("def f():\n"
                               "  dx = 9.5e-322\n"
                               "  dy = -1.2174e-320\n"
@@ -1175,8 +1125,7 @@ TEST_CASE("Test unboxing of floats") {
                               "  m2 = 0.03769367487038949\n"
                               "  return (m1 * m2) / ((dx * dx + dy * dy + dz * dz) ** 0.5)");
         CHECK(t.raises() == PyExc_ZeroDivisionError);
-    }
-    SECTION("test inplace subtraction") {
+    }SECTION("test inplace subtraction") {
         auto t = EmissionTest("def f():\n"
                               "  dx = 0.452345\n"
                               "  dy = -91.35555\n"
@@ -1184,8 +1133,7 @@ TEST_CASE("Test unboxing of floats") {
                               "  dz -= dx * dy\n"
                               "  return dz");
         CHECK(t.returns() == "41.324226264749996");
-    }
-    SECTION("test inplace addition") {
+    }SECTION("test inplace addition") {
         auto t = EmissionTest("def f():\n"
                               "  dx = 0.452345\n"
                               "  dy = -91.35555\n"
@@ -1193,8 +1141,7 @@ TEST_CASE("Test unboxing of floats") {
                               "  dz += dx * dy\n"
                               "  return dz");
         CHECK(t.returns() == "2305.00907373525");
-    }
-    SECTION("test inplace slice addition") {
+    }SECTION("test inplace slice addition") {
         auto t = EmissionTest("def f():\n"
                               "  dx = 0.452345\n"
                               "  dy = -91.35555\n"
@@ -1214,7 +1161,7 @@ TEST_CASE("Test unboxing of floats") {
         CHECK(t.returns() == "'boo 3'");
     }
 
-    SECTION("test root negative mixed"){
+    SECTION("test root negative mixed") {
         auto t = EmissionTest("def f():\n"
                               "  i = -10\n"
                               "  x = 1234567890.0 * (10.0 ** i)\n"

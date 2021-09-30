@@ -10,6 +10,7 @@
 * Added support for PEP626 (fast line tracing)
 * Extended profiling support for CFunction calls
 * PyTrace_RETURN now correctly sends the return value as an argument as per CPython spec
+* Fixed a bug causing SEG when range iterators are escaped 
 
 ## 1.0.0 (rc2)
 

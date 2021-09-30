@@ -1213,7 +1213,7 @@ AbstractValue* RangeValue::iter(AbstractSource* selfSources) {
 }
 
 AbstractValue* RangeIteratorValue::next(AbstractSource* selfSources) {
-    return &Integer;
+    return &Any; // &Integer; TODO: Resolve issues with the stack-effect of for-iters
 }
 
 AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source){
