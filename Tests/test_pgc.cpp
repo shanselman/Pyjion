@@ -323,7 +323,7 @@ TEST_CASE("test STORE_SUBSCR PGC") {
     };
 }
 
-TEST_CASE("Test PGC integer logic"){
+TEST_CASE("Test PGC integer logic") {
     SECTION("test unboxed locals for int calculations") {
         auto t = PgcProfilingTest(
                 "def f():\n"
@@ -332,11 +332,28 @@ TEST_CASE("Test PGC integer logic"){
                 "     z = y * y + x - y\n"
                 "     x *= z\n"
                 "  return x\n"
-                );
+        );
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "19408");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
         CHECK(t.returns() == "19408");
+        CHECK(t.pgcStatus() == PgcStatus::Optimized);
+    };
+}
+TEST_CASE("Test range iter yielding unboxed values"){
+    SECTION("test unboxed backward range in for iter") {
+        auto t = PgcProfilingTest(
+                "def f():\n"
+                "  shape=[3,2,5]\n"
+                "  strides = list(shape[1:]) + [1]\n"
+                "  for i in range(1, -1, -1):\n"
+                "    strides[i] *= strides[i+1]\n"
+                "  return strides\n"
+        );
+        CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
+        CHECK(t.returns() == "[10, 5, 1]");
+        CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
+        CHECK(t.returns() == "[10, 5, 1]");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
 }
