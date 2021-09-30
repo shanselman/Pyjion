@@ -378,13 +378,6 @@ TEST_CASE("Test exception handling") {
             CHECK(t.returns() == "1");
         }
 
-        SECTION("test match exception fallthrough") {
-            auto t = ExceptionTest(
-                    "def f():\n    try:\n        raise\n    except RuntimeError:\n        return 42"
-                    );
-            CHECK(t.returns() == "42");
-        }
-
         SECTION("test raising exceptions in a loop") {
             auto t = ExceptionTest(
                     "def f():\n    try:\n        while True:\n            try:\n                raise Exception()\n            except Exception:\n                break\n    finally:\n        pass\n    return 42"
