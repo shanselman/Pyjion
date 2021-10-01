@@ -137,6 +137,8 @@ class JitInfo:
     optimizations: OptimizationFlags
     pgc: PgcStatus
     run_count: int
+    tracing: bool
+    profiling: bool
 
 
 def info(f) -> JitInfo:
@@ -146,4 +148,6 @@ def info(f) -> JitInfo:
                    d['compiled'],
                    OptimizationFlags(d['optimizations']),
                    PgcStatus(d['pgc']),
-                   d['run_count'])
+                   d['run_count'],
+                   d['tracing'],
+                   d['profiling'])
