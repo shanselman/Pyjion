@@ -1,5 +1,5 @@
 from dis import get_instructions
-from pyjion import il, native, offsets, symbols
+from pyjion import il, native, offsets as get_offsets, symbols
 from collections import namedtuple
 from warnings import warn
 import struct
@@ -501,7 +501,7 @@ def dis(f, include_offsets=False, print_pc=True):
         return
     if include_offsets:
         python_instructions = {i.offset: i for i in get_instructions(f)}
-        print_il(_il, offsets=offsets(f), bytecodes=python_instructions, print_pc=print_pc, symbols=symbols(f))
+        print_il(_il, offsets=get_offsets(f), bytecodes=python_instructions, print_pc=print_pc, symbols=symbols(f))
     else:
         print_il(_il, print_pc=print_pc, symbols=symbols(f))
 
@@ -530,7 +530,7 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
 
     if include_offsets:
         python_instructions = {i.offset: i for i in get_instructions(f)}
-        jit_offsets = offsets(f)
+        jit_offsets = get_offsets(f)
     else:
         python_instructions = {}
         jit_offsets = []
