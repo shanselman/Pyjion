@@ -35,6 +35,9 @@ typedef ICorJitCompiler* (__cdecl* GETJIT)();
 typedef void(__cdecl* JITSTARTUP)(ICorJitHost*);
 #endif
 
+#define MAX_UINT8_T 255
+#define MAX_UINT16_T 65535
+
 PyjionSettings g_pyjionSettings;
 extern BaseModule g_module;
 #define SET_OPT(opt, actualLevel, minLevel) \
@@ -523,71 +526,6 @@ static PyObject* pyjion_get_offsets(PyObject* self, PyObject* func ){
     return offsets;
 }
 
-static PyObject* pyjion_set_threshold(PyObject *self, PyObject* args) {
-	if (!PyLong_Check(args)) {
-		PyErr_SetString(PyExc_TypeError, "Expected int for new threshold");
-		return nullptr;
-	}
-
-	auto newValue = PyLong_AsLongLong(args);
-	if (newValue < 0) {
-		PyErr_SetString(PyExc_ValueError, "Expected positive threshold");
-		return nullptr;
-	}
-
-	auto prev = PyLong_FromUnsignedLongLong(HOT_CODE);
-	HOT_CODE = PyLong_AsLongLong(args);
-	return prev;
-}
-
-static PyObject* pyjion_get_threshold(PyObject *self, PyObject* args) {
-	return PyLong_FromUnsignedLongLong(HOT_CODE);
-}
-
-static PyObject* pyjion_enable_debug(PyObject *self, PyObject* args) {
-    g_pyjionSettings.debug = true;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_disable_debug(PyObject *self, PyObject* args) {
-    g_pyjionSettings.debug = false;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_enable_pgc(PyObject *self, PyObject* args) {
-    g_pyjionSettings.pgc = true;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_disable_pgc(PyObject *self, PyObject* args) {
-    g_pyjionSettings.pgc = false;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_enable_graphs(PyObject *self, PyObject* args) {
-    g_pyjionSettings.graph = true;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_disable_graphs(PyObject *self, PyObject* args) {
-    g_pyjionSettings.graph = false;
-    Py_RETURN_NONE;
-}
-
-static PyObject* pyjion_status(PyObject *self, PyObject* args) {
-    auto res = PyDict_New();
-	if (res == nullptr) {
-		return nullptr;
-	}
-
-	PyDict_SetItemString(res, "clrjitpath", PyUnicode_FromWideChar(g_pyjionSettings.clrjitpath, -1));
-	PyDict_SetItemString(res, "pgc", g_pyjionSettings.pgc ? Py_True : Py_False);
-	PyDict_SetItemString(res, "graph", g_pyjionSettings.graph ? Py_True : Py_False);
- 	PyDict_SetItemString(res, "debug", g_pyjionSettings.debug ? Py_True : Py_False);
-
-	return res;
-}
-
 static PyObject *pyjion_get_graph(PyObject *self, PyObject* func) {
     PyObject* code;
     if (PyFunction_Check(func)) {
@@ -630,22 +568,6 @@ static PyObject *pyjion_symbols(PyObject *self, PyObject* func) {
     return table;
 }
 
-static PyObject* pyjion_set_optimization_level(PyObject *self, PyObject* args) {
-    if (!PyLong_Check(args)) {
-        PyErr_SetString(PyExc_TypeError, "Expected int for new threshold");
-        return nullptr;
-    }
-
-    auto newValue = PyLong_AsUnsignedLong(args);
-    if (newValue > 2) {
-        PyErr_SetString(PyExc_ValueError, "Expected a number smaller than 3");
-        return nullptr;
-    }
-
-    setOptimizationLevel(newValue);
-    Py_RETURN_NONE;
-}
-
 static PyObject* pyjion_init(PyObject *self, PyObject* args) {
     if (!PyUnicode_Check(args)) {
         PyErr_SetString(PyExc_TypeError, "Expected str for new clrjit");
@@ -658,6 +580,88 @@ static PyObject* pyjion_init(PyObject *self, PyObject* args) {
     } else{
         return nullptr;
     }
+}
+
+static PyObject *
+pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
+{
+    Py_ssize_t nargs = PyTuple_GET_SIZE(args);
+    PyObject * pgc = nullptr, *level=nullptr, *debug= nullptr, *graph= nullptr, *threshold=nullptr;
+    if (nargs == 0 && kwargs == nullptr) {
+        goto return_result;
+    }
+    pgc = PyDict_GetItemString(kwargs, "pgc");
+    if (pgc != nullptr){
+        // pgc
+        if (!PyBool_Check(pgc)) {
+            PyErr_SetString(PyExc_TypeError, "Expected bool for pgc flag");
+            return nullptr;
+        }
+        g_pyjionSettings.pgc = pgc == Py_True ? true : false;
+    }
+    level = PyDict_GetItemString(kwargs, "level");
+    if (level != nullptr){
+        // optimization level
+        if (!PyLong_Check(level)) {
+            PyErr_SetString(PyExc_TypeError, "Expected int for optimization level");
+            return nullptr;
+        }
+
+        auto newLevel = PyLong_AsLong(level);
+        if (newLevel < 0 || newLevel > 2) {
+            PyErr_SetString(PyExc_ValueError, "Level not in range of 0-2");
+            return nullptr;
+        }
+        g_pyjionSettings.optimizationLevel = newLevel;
+    }
+    debug = PyDict_GetItemString(kwargs, "debug");
+    if (debug != nullptr){
+        // debug
+        if (!PyBool_Check(debug)) {
+            PyErr_SetString(PyExc_TypeError, "Expected bool for debug flag");
+            return nullptr;
+        }
+        g_pyjionSettings.debug = debug == Py_True ? true : false;
+    }
+    graph = PyDict_GetItemString(kwargs, "graph");
+    if (graph){
+        // graph
+        if (!PyBool_Check(graph)) {
+            PyErr_SetString(PyExc_TypeError, "Expected bool for graph flag");
+            return nullptr;
+        }
+        g_pyjionSettings.graph = graph == Py_True ? true : false;
+    }
+    threshold = PyDict_GetItemString(kwargs, "threshold");
+    if (threshold){
+        // threshold
+        if (!PyLong_Check(threshold)) {
+            PyErr_SetString(PyExc_TypeError, "Expected int for threshold level");
+            return nullptr;
+        }
+
+        auto newThreshold = PyLong_AsLong(threshold);
+        if (newThreshold < 0 || newThreshold > MAX_UINT8_T) {
+            PyErr_SetString(PyExc_ValueError, "Threshold cannot be negative or exceed 255");
+            return nullptr;
+        }
+        g_pyjionSettings.threshold = newThreshold;
+    }
+
+    return_result:
+    auto res = PyDict_New();
+    if (res == nullptr) {
+        return nullptr;
+    }
+
+    PyDict_SetItemString(res, "clrjitpath", PyUnicode_FromWideChar(g_pyjionSettings.clrjitpath, -1));
+    PyDict_SetItemString(res, "pgc", g_pyjionSettings.pgc ? Py_True : Py_False);
+    PyDict_SetItemString(res, "graph", g_pyjionSettings.graph ? Py_True : Py_False);
+    PyDict_SetItemString(res, "debug", g_pyjionSettings.debug ? Py_True : Py_False);
+    PyDict_SetItemString(res, "level", PyLong_FromLong(g_pyjionSettings.optimizationLevel));
+    PyDict_SetItemString(res, "threshold", PyLong_FromLong(g_pyjionSettings.threshold));
+
+    return res;
 }
 
 static PyMethodDef PyjionMethods[] = {
@@ -680,79 +684,31 @@ static PyMethodDef PyjionMethods[] = {
 		"Returns a dictionary describing information about a function or code objects current JIT status."
 	},
     {
-        "dump_il",
+        "config",
+            reinterpret_cast<PyCFunction>(pyjion_config),
+        METH_VARARGS|METH_KEYWORDS,
+        "Configure Pyjion runtime settings."
+    },
+    {
+        "il",
         pyjion_dump_il,
         METH_O,
         "Outputs the IL for the compiled code object."
     },
     {
-        "dump_native",
+        "native",
         pyjion_dump_native,
         METH_O,
         "Outputs the machine code for the compiled code object."
     },
     {
-        "get_offsets",
+        "offsets",
         pyjion_get_offsets,
         METH_O,
         "Get the sequence of offsets for IL and machine code for given python bytecodes."
     },
-	{
-		"set_threshold",
-		pyjion_set_threshold,
-		METH_O,
-		"Sets the number of times a method needs to be executed before the JIT is triggered."
-	},
-	{
-		"get_threshold",
-		pyjion_get_threshold,
-		METH_O,
-		"Gets the number of times a method needs to be executed before the JIT is triggered."
-	},
     {
-        "set_optimization_level",
-        pyjion_set_optimization_level,
-        METH_O,
-        "Sets optimization level (0 = None, 1 = Common, 2 = Maximum)."
-    },
-    {
-        "enable_debug",
-        pyjion_enable_debug,
-        METH_NOARGS,
-        "Enable debug symbols for generated code."
-    },
-    {
-        "disable_debug",
-        pyjion_disable_debug,
-        METH_NOARGS,
-        "Enable debug symbols for generated code."
-    },
-    {
-        "enable_pgc",
-        pyjion_enable_pgc,
-        METH_NOARGS,
-        "Enable profile-guided-compilation."
-    },
-    {
-        "disable_pgc",
-        pyjion_disable_pgc,
-        METH_NOARGS,
-        "Disable profile-guided-compilation."
-    },
-    {
-        "enable_graphs",
-        pyjion_enable_graphs,
-        METH_NOARGS,
-        "Enable generating instruction graphs."
-    },
-    {
-        "disable_graphs",
-        pyjion_disable_graphs,
-        METH_NOARGS,
-        "Disable generating instruction graphs."
-    },
-    {
-        "get_graph",
+        "graph",
         pyjion_get_graph,
         METH_O,
         "Fetch instruction graph for code object."
@@ -764,12 +720,6 @@ static PyMethodDef PyjionMethods[] = {
         "Initialize JIT."
     },
     {
-        "status",
-        pyjion_status,
-        METH_NOARGS,
-        "JIT Status."
-      },
-  {
         "symbols",
         pyjion_symbols,
         METH_O,

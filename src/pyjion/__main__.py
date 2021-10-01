@@ -32,14 +32,7 @@ def main():
 
     pyjion.enable()
 
-    if args.graph:
-        pyjion.enable_graphs()
-    if args.debug:
-        pyjion.enable_debug()
-    if args.no_pgc:
-        pyjion.disable_pgc()
-
-    pyjion.set_optimization_level(args.opt_level)
+    pyjion.config(graph=args.graph, debug=args.debug, pgc=not args.no_pgc, level=args.opt_level)
 
     if args.module:
         runpy.run_module(args.module)
