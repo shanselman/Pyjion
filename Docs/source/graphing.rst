@@ -9,13 +9,13 @@ Pyjion can create .dot (graphviz) graphs for any function during the compilation
 
     import pyjion
     pyjion.enable()
-    pyjion.enable_graphs()
+    pyjion.config(graph=True)
 
-Once this is enabled and functions have been compiled, you can get the graph using the ``get_graph()`` function:
+Once this is enabled and functions have been compiled, you can get the graph using the ``graph()`` function:
 
 .. code-block:: python
 
-    >>> pyjion.get_graph(f)
+    >>> pyjion.graph(f)
 
     digraph f { 
     ...

@@ -17,7 +17,7 @@ Prerequisites
 -------------
 
 - Pyjion requires `.NET 6 <https://dotnet.microsoft.com/download>`_ to be installed.
-- Pyjion requires `Python 3.9 <https://python.org/downloads>`_.
+- Pyjion requires `Python 3.9 or 3.10 <https://python.org/downloads>`_.
 
 Installing Pyjion
 -----------------

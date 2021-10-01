@@ -9,6 +9,6 @@ def test_graph_dump() -> None:
         b = 2
         return a + b
     f()
-    assert pyjion.get_graph(f) is not None
+    assert pyjion.graph(f) is not None
     f()
-    assert pyjion.get_graph(f) is not None
+    assert pyjion.graph(f) is not None

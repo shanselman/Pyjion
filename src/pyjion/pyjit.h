@@ -105,9 +105,10 @@ typedef struct PyjionSettings {
     bool profiling = false;
     bool pgc = true; // Profile-guided-compilation
     bool graph = false; // Generate instruction graphs
-    unsigned short optimizationLevel = 1;
-    int recursionLimit = DEFAULT_RECURSION_LIMIT;
-    size_t codeObjectSizeLimit = DEFAULT_CODEOBJECT_SIZE_LIMIT;
+    uint8_t optimizationLevel = 1;
+    uint8_t threshold = 0;
+    uint32_t recursionLimit = DEFAULT_RECURSION_LIMIT;
+    uint32_t codeObjectSizeLimit = DEFAULT_CODEOBJECT_SIZE_LIMIT;
 #ifdef DEBUG
     bool debug = true;
 #else
@@ -119,8 +120,6 @@ typedef struct PyjionSettings {
     // Optimizations
     OptimizationFlags optimizations = OptimizationFlags();
 } PyjionSettings;
-
-static PY_UINT64_T HOT_CODE = 0;
 
 extern PyjionSettings g_pyjionSettings;
 
@@ -149,7 +148,7 @@ public:
 	short j_compile_result;
 	unsigned int j_optimizations;
 	Py_EvalFunc j_addr;
-	PY_UINT64_T j_specialization_threshold;
+	uint8_t j_specialization_threshold;
 	PyObject* j_code;
 	PyjionCodeProfile* j_profile;
     unsigned char* j_il;
@@ -170,7 +169,7 @@ public:
 		j_run_count = 0;
 		j_failed = false;
 		j_addr = nullptr;
-		j_specialization_threshold = HOT_CODE;
+		j_specialization_threshold = g_pyjionSettings.threshold;
 		j_il = nullptr;
 		j_ilLen = 0;
 		j_nativeSize = 0;

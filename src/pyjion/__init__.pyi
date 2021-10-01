@@ -1,4 +1,4 @@
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, Optional
 
 def enable() -> bool:
     """
@@ -37,55 +37,22 @@ def info(f: Callable) -> Dict[str, Any]:
     """
     ...
 
-def dump_il(f: Callable) -> bytearray:
+def config(pgc: Optional[bool], level: Optional[int], debug: Optional[bool], graph: Optional[bool], threshold: Optional[int], ) -> Dict[str, Any]:
     ...
 
-def dump_native(f: Callable) -> tuple[bytearray, int, int]:
+def offsets(f: Callable) -> tuple[tuple[int, int, int, int]]:
     ...
 
-def enable_tracing() -> None:
-    ...
-
-def disable_tracing() -> None:
-    ...
-
-def enable_profiling() -> None:
-    ...
-
-def disable_profiling() -> None:
-    ...
-
-def enable_pgc() -> None:
-    ...
-
-def disable_pgc() -> None:
-    ...
-
-def set_optimization_level(level: int) -> None:
-    ...
-
-def enable_debug() -> None:
-    ...
-
-def disable_debug() -> None:
-    ...
-
-def get_offsets(f: Callable) -> tuple[tuple[int, int, int, int]]:
-    ...
-
-def enable_graphs() -> None:
-    ...
-
-def disable_graphs() -> None:
-    ...
-
-def get_graph(f: Callable) -> str:
-    ...
-
-def status() -> Dict[Any, Any]:
+def graph(f: Callable) -> str:
     ...
 
 def symbols(f: Callable) -> Dict[int, str]:
+    ...
+
+def il(f: Callable) -> bytearray:
+    ...
+
+def native(f: Callable) -> tuple[bytearray, int, int]:
     ...
 
 class PyjionUnboxingError(ValueError):

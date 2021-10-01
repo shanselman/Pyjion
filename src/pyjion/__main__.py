@@ -11,14 +11,6 @@ def main():
 
     group.add_argument('-m', action='store', type=str, dest="module", help="Execute module")
 
-    parser.add_argument('--tracing',
-                        action='store_true',
-                        help='Enable tracing (used by debuggers)')
-
-    parser.add_argument('--profiling',
-                        action='store_true',
-                        help='Enable profiling')
-
     parser.add_argument('--graph',
                         action='store_true',
                         help='Enable instruction graph generation')
@@ -40,18 +32,7 @@ def main():
 
     pyjion.enable()
 
-    if args.tracing:
-        pyjion.enable_tracing()
-    if args.profiling:
-        pyjion.enable_profiling()
-    if args.graph:
-        pyjion.enable_graphs()
-    if args.debug:
-        pyjion.enable_debug()
-    if args.no_pgc:
-        pyjion.disable_pgc()
-
-    pyjion.set_optimization_level(args.opt_level)
+    pyjion.config(graph=args.graph, debug=args.debug, pgc=not args.no_pgc, level=args.opt_level)
 
     if args.module:
         runpy.run_module(args.module)
