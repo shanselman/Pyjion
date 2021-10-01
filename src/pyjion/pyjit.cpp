@@ -424,6 +424,7 @@ static PyObject *pyjion_info(PyObject *self, PyObject* func) {
     PyDict_SetItemString(res, "compiled", jitted->j_addr != nullptr ? Py_True : Py_False);
     PyDict_SetItemString(res, "optimizations", PyLong_FromLong(jitted->j_optimizations));
     PyDict_SetItemString(res, "pgc", PyLong_FromLong(jitted->j_pgc_status));
+    PyDict_SetItemString(res, "level", PyLong_FromLong(jitted->j_optLevel));
 
     auto runCount = PyLong_FromUnsignedLongLong(jitted->j_run_count);
 	PyDict_SetItemString(res, "run_count", runCount);
