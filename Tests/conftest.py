@@ -6,17 +6,17 @@ import warnings
 
 def pytest_runtest_call(item: pytest.Item) -> None:
     pyjion.enable()
-    pyjion.set_optimization_level(int(item.config.option.opt_level))
+    pyjion.config(level=int(item.config.option.opt_level))
     for mark in item.iter_markers():
         if mark.name == "graph":
-            pyjion.enable_graphs()
-    pyjion.enable_debug()
+            pyjion.config(graph=True)
+    pyjion.config(debug=True)
     item.runtest()
     pyjion.disable()
     info = pyjion.info(item.function)
     if not info.compiled:
         warnings.warn("{0} did not compile ({1})".format(item.function, str(info.compile_result)))
-    pyjion.disable_graphs()
+    pyjion.config(graph=False)
     gc.collect()
 
 

@@ -10,7 +10,7 @@ def test_offsets():
 
     assert _f(4) == 2.0
 
-    offsets = pyjion.get_offsets(_f)
+    offsets = pyjion.offsets(_f)
     assert len(offsets) > 7
 
 

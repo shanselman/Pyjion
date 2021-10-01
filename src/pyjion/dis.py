@@ -1,5 +1,5 @@
 from dis import get_instructions
-from pyjion import dump_il, dump_native, get_offsets, symbols
+from pyjion import il, native, offsets as get_offsets, symbols
 from collections import namedtuple
 from warnings import warn
 import struct
@@ -495,16 +495,15 @@ def dis(f, include_offsets=False, print_pc=True):
     :param include_offsets: Flag to print python bytecode offsets as comments
     :param print_pc: Flag to print the memory address of each instruction
     """
-    il = dump_il(f)
-    if not il:
+    _il = il(f)
+    if not _il:
         print("No IL for this function, it may not have compiled correctly.")
         return
     if include_offsets:
         python_instructions = {i.offset: i for i in get_instructions(f)}
-        offsets = get_offsets(f)
-        print_il(il, offsets=offsets, bytecodes=python_instructions, print_pc=print_pc, symbols=symbols(f))
+        print_il(_il, offsets=get_offsets(f), bytecodes=python_instructions, print_pc=print_pc, symbols=symbols(f))
     else:
-        print_il(il, print_pc=print_pc, symbols=symbols(f))
+        print_il(_il, print_pc=print_pc, symbols=symbols(f))
 
 
 def dis_native(f, include_offsets=False, print_pc=True) -> None:
@@ -522,9 +521,9 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
     except ImportError:
         raise ModuleNotFoundError("Install distorm3 and rich before disassembling native functions")
 
-    native = dump_native(f)
+    _native = native(f)
 
-    if not native:
+    if not _native:
         print("No native code for this function, it may not have compiled correctly")
         return
     symbol_table = symbols(f)
@@ -536,7 +535,7 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
         python_instructions = {}
         jit_offsets = []
 
-    code, _, position = native
+    code, _, position = _native
     iterable = distorm3.DecodeGenerator(position, bytes(code), distorm3.Decode64Bits)
 
     disassembled = [(offset, instruction) for (offset, _, instruction, _) in iterable]
