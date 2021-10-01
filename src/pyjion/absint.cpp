@@ -962,6 +962,9 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     POP_VALUE();
                     PUSH_INTERMEDIATE(&Any);
                     break;  // No stack effect
+                case GEN_START:
+                    skipEffect = true;
+                    break;
                 default:
                     return IncompatibleOpcode_Unknown;
                     break;
@@ -2437,6 +2440,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             }
             case YIELD_VALUE: {
                 yieldValue(op.index, curStackSize, graph);
+                skipEffect = true;
+                break;
+            }
+            case GEN_START: {
                 skipEffect = true;
                 break;
             }

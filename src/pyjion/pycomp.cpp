@@ -2767,6 +2767,14 @@ const char* opcodeName(py_opcode opcode) {
         OP_TO_STR(SET_UPDATE)
         OP_TO_STR(DICT_MERGE)
         OP_TO_STR(DICT_UPDATE)
+        OP_TO_STR(GEN_START)
+        OP_TO_STR(COPY_DICT_WITHOUT_KEYS)
+        OP_TO_STR(MATCH_CLASS)
+        OP_TO_STR(GET_LEN)
+        OP_TO_STR(MATCH_MAPPING)
+        OP_TO_STR(MATCH_SEQUENCE)
+        OP_TO_STR(MATCH_KEYS)
+        OP_TO_STR(ROT_N)
     }
     return "unknown";
 }
