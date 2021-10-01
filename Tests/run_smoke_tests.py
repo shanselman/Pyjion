@@ -27,15 +27,8 @@ def main(input_file, opt_level, pgc):
         print(f"Testing {test}")
         for case in test_cases:
             pyjion.enable()
-            pyjion.enable_tracing()
-            if pgc:
-                pyjion.enable_pgc()
-                print("Enabling PGC")
-            else:
-                pyjion.disable_pgc()
-                print("Disabling PGC")
             print(f"Trying with Optimizations = {opt_level}")
-            pyjion.set_optimization_level(opt_level)
+            pyjion.config(level=opt_level, pgc=pgc)
             r = unittest.result.TestResult()
             case.run(r)
             if r.wasSuccessful():

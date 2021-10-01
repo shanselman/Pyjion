@@ -10,7 +10,7 @@ You can run ``pyjion`` as a standalone command-line program, similar to how you 
 
 .. code-block::
 
-   usage: pyjion [-h] [-m MODULE] [--tracing] [--profiling] [--graph] [--debug] [--no-pgc] [-o OPT_LEVEL] [script]
+   usage: pyjion [-h] [-m MODULE] [--graph] [--debug] [--no-pgc] [-o OPT_LEVEL] [script]
 
    Python JIT Compiler
 
@@ -20,8 +20,6 @@ You can run ``pyjion`` as a standalone command-line program, similar to how you 
    optional arguments:
    -h, --help            show this help message and exit
    -m MODULE             Execute module
-   --tracing             Enable tracing (used by debuggers)
-   --profiling           Enable profiling
    --graph               Enable instruction graph generation
    --debug               Enable debuggable JIT methods
    --no-pgc              Disable PGC
@@ -41,69 +39,25 @@ Core module
 
    Disable the JIT
 
-.. function:: enable_tracing()
+.. function:: config(pgc: Optional[bool], level: Optional[int], debug: Optional[bool], graph: Optional[bool], threshold: Optional[int], ) -> Dict[str, Any]:
 
-   Enable tracing hooks (e.g. used by debuggers) to be emitted in the compiled CIL. Required for :ref:`Debugging`.
+   Get the configuration of Pyjion and change any of the settings.
 
-.. function:: disable_tracing()
-
-   Disable tracing hooks.
-
-.. function:: enable_profiling()
-
-   Enable profiling hooks (e.g. used by performance profilers) to be emitted in the compiled CIL. See :ref:`Debugging`
-
-.. function:: disable_profiling()
-
-   Disable profiling hooks.
-
-.. function:: enable_debug()
-
-   Sets debug flags in the .NET JIT Compiler. Used for :ref:`Disassembler` output.
-
-.. function:: disable_debug()
-
-   Disable emitting debuggable JIT methods.
-
-.. function:: enable_pgc()
-
-   Enable compilation profiling (already enabled by default)
-
-.. function:: disable_pgc()
-
-   Disable compilation profiling
-
-.. function:: set_threshold(to: int)
-
-   Set the threshold to JIT compile a function to the number of times it is executed.
-
-.. function:: dump_il(f)
+.. function:: il(f)
 
    Return the ECMA CIL bytecode as a bytearray
 
-.. function:: dump_native(f)
+.. function:: native(f)
 
    Return the compiled machine-code as a bytearray
 
-.. function:: get_offsets(f: Callable) -> tuple[tuple[int, int, int]]:
+.. function:: offsets(f: Callable) -> tuple[tuple[int, int, int]]:
    
    Get sequence points for a compiled function (used by the :ref:`Disassembler`)
 
-.. function::  enable_graphs() -> None:
-   
-   Enable graph generation, see :ref:`Graphing`
-
-.. function::  disable_graphs() -> None:
-   
-   Disable graph generation.
-
-.. function::  get_graph(f: Callable) -> str:
+.. function::  graph(f: Callable) -> str:
    
    Get graph for compiled function, see :ref:`Graphing`
-
-.. function::  status() -> Dict[Any, Any]:
-
-   Get Pyjion runtime status.
 
 .. function::  symbols(f: Callable) -> Dict[int, str]:
 

@@ -8,7 +8,7 @@ Compiling from Source
 
 Prerequisites:
 
-- CPython 3.9.0
+- CPython 3.9 or 3.10
 - CMake 3.2 +
 - .NET 6
 
