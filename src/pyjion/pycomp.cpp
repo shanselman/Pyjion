@@ -150,6 +150,35 @@ void PythonCompiler::emit_lasti(){
     m_il.ld_ind_i4();
 }
 
+void PythonCompiler::emit_store_in_frame_value_stack(size_t index) {
+    // Equivalent of PUSH() macro in ceval
+    auto valueTmp = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
+    m_il.st_loc(valueTmp);
+    load_frame();
+    LD_FIELDA(PyFrameObject, f_valuestack);
+    m_il.ld_i((int32_t)(index * sizeof(size_t)));
+    m_il.add();
+    m_il.ld_loc(valueTmp);
+    m_il.st_ind_i();
+    m_il.free_local(valueTmp);
+}
+
+void PythonCompiler::emit_load_from_frame_value_stack(size_t index) {
+    // Equivalent of POP() macro in ceval
+    load_frame();
+    LD_FIELDA(PyFrameObject, f_valuestack);
+    m_il.ld_i((int32_t)(index * sizeof(size_t)));
+    m_il.sub();
+    m_il.ld_ind_i();
+}
+
+void PythonCompiler::emit_set_stackdepth(size_t index) {
+    load_frame();
+    LD_FIELDA(PyFrameObject, f_stackdepth);
+    m_il.ld_i(index);
+    m_il.st_ind_i();
+}
+
 void PythonCompiler::load_local(py_oparg oparg) {
     load_frame();
     m_il.ld_i(offsetof(PyFrameObject, f_localsplus) + oparg * sizeof(size_t));

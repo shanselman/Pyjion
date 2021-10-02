@@ -1568,10 +1568,19 @@ void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, Instruc
     m_comp->emit_incref();
     m_comp->emit_store_local(m_retValue);
     m_comp->emit_set_frame_state(PY_FRAME_SUSPENDED);
+
+    // Stack has submitted result back. Store any other variables
+    for (size_t i = (stackSize - 1); i > 0 ; --i) {
+        m_comp->emit_store_in_frame_value_stack(i-1);
+    }
+    m_comp->emit_set_stackdepth(stackSize-1);
     m_comp->emit_branch(BranchAlways, m_retLabel);
     // ^ Exit Frame || 🔽 Enter frame from next()
     m_comp->emit_mark_label(m_yieldOffsets[index]);
-    m_comp->emit_ptr(Py_None);
+    for (size_t i = stackSize; i > 0 ; --i) {
+        m_comp->emit_load_from_frame_value_stack(i);
+    }
+    m_comp->emit_set_stackdepth(stackSize);
 }
 
 AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc_status, InstructionGraph* graph) {

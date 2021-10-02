@@ -508,6 +508,10 @@ public:
     void emit_nan_long() override;
     void emit_guard_exception(const char* expected) override;
 
+    void emit_store_in_frame_value_stack(size_t index) override;
+    void emit_load_from_frame_value_stack(size_t index) override;
+    void emit_set_stackdepth(size_t index) override;
+
 private:
     void load_frame();
     void load_tstate();
