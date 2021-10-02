@@ -1571,6 +1571,7 @@ void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, Instruc
     m_comp->emit_branch(BranchAlways, m_retLabel);
     // ^ Exit Frame || 🔽 Enter frame from next()
     m_comp->emit_mark_label(m_yieldOffsets[index]);
+    m_comp->emit_ptr(Py_None);
 }
 
 AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc_status, InstructionGraph* graph) {
