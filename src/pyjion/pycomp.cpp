@@ -150,32 +150,26 @@ void PythonCompiler::emit_lasti(){
     m_il.ld_ind_i4();
 }
 
-void PythonCompiler::emit_store_in_frame_value_stack(size_t index) {
+void PythonCompiler::emit_store_in_frame_value_stack() {
     // Equivalent of PUSH() macro in ceval
-    auto valueTmp = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
-    m_il.st_loc(valueTmp);
     load_frame();
-    LD_FIELDA(PyFrameObject, f_valuestack);
-    m_il.ld_i((int32_t)(index * sizeof(size_t)));
-    m_il.add();
-    m_il.ld_loc(valueTmp);
-    m_il.st_ind_i();
-    m_il.free_local(valueTmp);
+    m_il.emit_call(METHOD_SAVE_TO_VALUESTACK);
 }
 
-void PythonCompiler::emit_load_from_frame_value_stack(size_t index) {
+void PythonCompiler::emit_load_from_frame_value_stack(uint32_t idx) {
     // Equivalent of POP() macro in ceval
     load_frame();
-    LD_FIELDA(PyFrameObject, f_valuestack);
-    m_il.ld_i((int32_t)(index * sizeof(size_t)));
-    m_il.sub();
-    m_il.ld_ind_i();
+    m_il.ld_u4(idx);
+    m_il.emit_call(METHOD_LOAD_FROM_VALUESTACK);
 }
 
-void PythonCompiler::emit_set_stackdepth(size_t index) {
+void PythonCompiler::emit_dec_frame_stacksize(uint32_t by) {
     load_frame();
-    LD_FIELDA(PyFrameObject, f_stackdepth);
-    m_il.ld_i(index);
+    LD_FIELDA(PyFrameObject , f_stackdepth);
+    m_il.dup();
+    m_il.ld_ind_i();
+    m_il.ld_u4(by);
+    m_il.sub();
     m_il.st_ind_i();
 }
 
@@ -2673,6 +2667,10 @@ GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parame
 
 GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT));
+
+GLOBAL_METHOD(METHOD_LOAD_FROM_VALUESTACK, &PyJit_LoadFromFrameValueStack, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_UINT));
+GLOBAL_METHOD(METHOD_SAVE_TO_VALUESTACK, &PyJit_SaveToFrameValueStack, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_NATIVEINT));
+
 
 const char* opcodeName(py_opcode opcode) {
 #define OP_TO_STR(x)   case x: return #x;

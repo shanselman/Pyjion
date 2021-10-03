@@ -139,8 +139,8 @@
 #define METHOD_SETUP_ANNOTATIONS                 0x00000078
 #define METHOD_DEALLOC_OBJECT                    0x00000079
 #define METHOD_LOAD_CLOSURE                      0x0000007A
-// Unused                                        0x0000007B
-// Unused                                        0x0000007C
+#define METHOD_LOAD_FROM_VALUESTACK              0x0000007B
+#define METHOD_SAVE_TO_VALUESTACK                0x0000007C
 #define METHOD_LOADNAME_HASH                     0x0000007D
 #define METHOD_LOADGLOBAL_HASH                   0x0000007E
 #define METHOD_PENDING_CALLS                     0x0000007F
@@ -508,10 +508,9 @@ public:
     void emit_nan_long() override;
     void emit_guard_exception(const char* expected) override;
 
-    void emit_store_in_frame_value_stack(size_t index) override;
-    void emit_load_from_frame_value_stack(size_t index) override;
-    void emit_set_stackdepth(size_t index) override;
-
+    void emit_store_in_frame_value_stack() override;
+    void emit_load_from_frame_value_stack(uint32_t idx) override;
+    void emit_dec_frame_stacksize(uint32_t by) override;
 private:
     void load_frame();
     void load_tstate();
