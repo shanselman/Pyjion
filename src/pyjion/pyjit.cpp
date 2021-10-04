@@ -162,7 +162,8 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
     trace_info.cframe.previous = prev_cframe;
     tstate->cframe = &trace_info.cframe;
 
-    //frame->f_stackdepth = -1;
+    if (frame->f_state != PY_FRAME_SUSPENDED)
+        frame->f_stackdepth = -1;
     frame->f_state = PY_FRAME_EXECUTING;
 
     try {

@@ -163,13 +163,20 @@ void PythonCompiler::emit_load_from_frame_value_stack(uint32_t idx) {
     m_il.emit_call(METHOD_LOAD_FROM_VALUESTACK);
 }
 
-void PythonCompiler::emit_dec_frame_stacksize(uint32_t by) {
+void PythonCompiler::emit_dec_frame_stackdepth(uint32_t by) {
     load_frame();
     LD_FIELDA(PyFrameObject , f_stackdepth);
     m_il.dup();
     m_il.ld_ind_i();
     m_il.ld_u4(by);
     m_il.sub();
+    m_il.st_ind_i();
+}
+
+void PythonCompiler::emit_set_frame_stackdepth(uint32_t to) {
+    load_frame();
+    LD_FIELDA(PyFrameObject , f_stackdepth);
+    m_il.ld_u4(to);
     m_il.st_ind_i();
 }
 

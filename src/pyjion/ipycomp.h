@@ -488,7 +488,8 @@ public:
 
     virtual void emit_store_in_frame_value_stack() = 0;
     virtual void emit_load_from_frame_value_stack(uint32_t idx) = 0;
-    virtual void emit_dec_frame_stacksize(uint32_t by) = 0;
+    virtual void emit_dec_frame_stackdepth(uint32_t by) = 0;
+    virtual void emit_set_frame_stackdepth(uint32_t to) = 0;
 };
 
 #endif

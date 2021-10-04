@@ -120,8 +120,9 @@ private:
         auto prev = _PyInterpreterState_GetEvalFrameFunc(PyInterpreterState_Main());
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), PyJit_EvalFrame);
         auto res = PyJit_ExecuteAndCompileFrame(m_jittedcode, frame, tstate, profile);
+        CHECK(frame->f_stackdepth != -1);
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), prev);
-        //Py_DECREF(frame);
+        Py_DECREF(frame);
         PyGC_Collect();
         if (m_jittedcode->j_failed){
             printf("Failure code : %d \n", m_jittedcode->j_compile_result);
@@ -231,7 +232,7 @@ private:
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), PyJit_EvalFrame);
         m_jittedcode->j_profile = profile;
         auto res = PyJit_EvalFrame(tstate, frame, 0);
-
+        CHECK(frame->f_stackdepth != -1);
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), prev);
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();

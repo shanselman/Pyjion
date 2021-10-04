@@ -1580,7 +1580,7 @@ void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, Instruc
     for (uint32_t i = stackSize; i > 0 ; --i) {
         m_comp->emit_load_from_frame_value_stack(i);
     }
-    m_comp->emit_dec_frame_stacksize(stackSize);
+    m_comp->emit_dec_frame_stackdepth(stackSize);
 }
 
 AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc_status, InstructionGraph* graph) {
@@ -2473,6 +2473,8 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     m_comp->emit_mark_label(rootHandlerLabel);
 
     m_comp->emit_null();
+    m_comp->emit_set_frame_state(PY_FRAME_RAISED);
+    m_comp->emit_set_frame_stackdepth(0);
 
     auto finalRet = m_comp->emit_define_label();
     m_comp->emit_branch(BranchAlways, finalRet);
@@ -2619,6 +2621,7 @@ void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcod
 void AbstractInterpreter::returnValue(py_opindex opcodeIndex) {
     m_comp->emit_store_local(m_retValue);
     m_comp->emit_set_frame_state(PY_FRAME_RETURNED);
+    m_comp->emit_set_frame_stackdepth(0);
     m_comp->emit_branch(BranchAlways, m_retLabel);
     decStack();
 }
