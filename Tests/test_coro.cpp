@@ -149,4 +149,24 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
                               "  return [x for x in tens()]\n");
         CHECK(t.returns() == "['1!', '3!', '5!', '7!', '9!']");
     }
+    SECTION("test nested yields and unpacker.") {
+        auto t = EmissionTest("def f():\n"
+                              "  def cr():\n"
+                              "    for idx, letter in enumerate('banana'):\n"
+                              "        if letter != 'a':\n"
+                              "            yield idx\n"
+                              "        elif letter == 'n':\n"
+                              "            for x in range(5):\n"
+                              "                yield idx\n"
+                              "  return [x for x in cr()]\n");
+        CHECK(t.returns() == "[0, 2, 4]");
+    }
+    SECTION("test non-enumerable.") {
+        auto t = EmissionTest("def f():\n"
+                              "  def cr():\n"
+                              "    for x in 255:\n"
+                              "        yield x\n"
+                              "  return [x for x in cr()]\n");
+        CHECK(t.raises() == PyExc_TypeError);
+    }
 }
