@@ -141,7 +141,7 @@ void PythonCompiler::emit_lasti_init() {
 
 void PythonCompiler::emit_lasti_update(py_opindex index) {
     m_il.ld_loc(m_lasti);
-    m_il.ld_u4(index);
+    m_il.ld_u4(index / 2);
     m_il.st_ind_i4();
 }
 

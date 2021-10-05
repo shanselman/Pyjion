@@ -121,6 +121,8 @@ private:
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), PyJit_EvalFrame);
         auto res = PyJit_ExecuteAndCompileFrame(m_jittedcode, frame, tstate, profile);
         CHECK(frame->f_stackdepth != -1);
+        CHECK(frame->f_lasti >= 0);
+        CHECK(frame->f_lasti * 2 < PyBytes_GET_SIZE(m_code->co_code));
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), prev);
         Py_DECREF(frame);
         PyGC_Collect();
@@ -135,7 +137,9 @@ private:
 public:
     explicit EmissionTest(const char *code) {
         PyErr_Clear();
+#ifdef DEBUG_VERBOSE
         printf("--- Executing Code ---\n%s \n-----------------\n", code);
+#endif
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile in JIT code");
@@ -154,7 +158,9 @@ public:
         }
 
         auto repr = PyUnicode_AsUTF8(PyObject_Repr(res.get()));
+#ifdef DEBUG_VERBOSE
         printf("Returned: %s \n", repr);
+#endif
         auto tstate = PyThreadState_GET();
         REQUIRE(tstate->curexc_value == nullptr);
         REQUIRE(tstate->curexc_traceback == nullptr);

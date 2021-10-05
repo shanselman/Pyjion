@@ -2874,8 +2874,10 @@ void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
 
 PyObject* PyJit_BlockPop(PyFrameObject* frame){
     if (frame->f_iblock <= 0) {
+#ifdef DEBUG
         printf("Warning: block underflow at %d %s %s line %d\n", frame->f_lasti, PyUnicode_AsUTF8(frame->f_code->co_filename),
                PyUnicode_AsUTF8(frame->f_code->co_name), frame->f_lineno);
+#endif
         return nullptr;
     }
     return reinterpret_cast<PyObject *>(PyFrame_BlockPop(frame));
@@ -2883,15 +2885,9 @@ PyObject* PyJit_BlockPop(PyFrameObject* frame){
 
 void PyJit_SaveToFrameValueStack(PyObject* obj, PyFrameObject* frame){
     frame->f_valuestack[frame->f_stackdepth] = obj;
-#ifdef DEBUG
-    printf("Saving %s to frame at %d\n", PyUnicode_AsUTF8(PyObject_Repr(obj)), frame->f_stackdepth);
-#endif
     frame->f_stackdepth++;
 }
 
 PyObject* PyJit_LoadFromFrameValueStack(PyFrameObject* frame, uint32_t idx){
-#ifdef DEBUG
-    printf("Loading %s from frame at %d\n", PyUnicode_AsUTF8(PyObject_Repr(frame->f_valuestack[idx-1])), idx);
-#endif
-    return frame->f_valuestack[idx-1];
+    return frame->f_valuestack[idx];
 }
