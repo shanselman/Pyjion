@@ -426,7 +426,7 @@ public:
 
     void ld_i(void* ptr) {
         auto value = (size_t)ptr;
-#ifdef _TARGET_AMD64_
+#ifdef HOST_64BIT
         if ((value & 0xFFFFFFFF) == value) {
             ld_i((int)value);
         }
