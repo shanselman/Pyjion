@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.0.0 (main)
+
+* Added ARM64 for Apple macOS (M1 Silicon). The JIT will emit native ARM64 assembly. Disassembler not supported.
+
 ## 1.0.0 (rc3)
 
 * Updated to .NET 6 RC1
