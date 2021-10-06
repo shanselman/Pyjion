@@ -273,6 +273,7 @@ public:
         uint16_t                   slotNum,  /* IN  */
         int32_t                  addlDelta /* IN  */
         ) override {
+        int64_t delta;
         switch (fRelocType) {
             case IMAGE_REL_BASED_DIR64:
                 *((uint64_t *)((uint8_t *)location + slotNum)) = (uint64_t)target;
@@ -292,6 +293,70 @@ public:
             }
             break;
 #endif // _TARGET_AMD64_
+#ifdef _TARGET_ARM64_
+        case IMAGE_REL_ARM64_BRANCH26:   // 26 bit offset << 2 & sign ext, for B and BL
+        {
+            _ASSERTE(slot == 0);
+            _ASSERTE(addlDelta == 0);
+
+            auto branchTarget  = (uint64_t) target;
+            _ASSERTE((branchTarget & 0x3) == 0);   // the low two bits must be zero
+
+            auto fixupLocation = (uint64_t) location;
+            auto fixupLocationRW = (uint64_t) locationRW;
+            _ASSERTE((fixupLocation & 0x3) == 0);  // the low two bits must be zero
+
+            delta = (int64_t)(branchTarget - fixupLocation);
+            _ASSERTE((delta & 0x3) == 0);          // the low two bits must be zero
+
+            // PutArm64Rel28
+            auto pCode = (uint32_t *) fixupLocationRW;
+            uint32_t branchInstr = *pCode;
+            branchInstr &= 0xFC000000;
+            branchInstr |= (((int32_t)delta >> 2) & 0x03FFFFFF);
+            *pCode = branchInstr;
+        }
+        break;
+
+    case IMAGE_REL_ARM64_PAGEBASE_REL21:
+        {
+            _ASSERTE(slot == 0);
+            _ASSERTE(addlDelta == 0);
+
+            // Write the 21 bits pc-relative page address into location.
+            int64_t targetPage = (int64_t)target & 0xFFFFFFFFFFFFF000LL;
+            int64_t locationPage = (int64_t)location & 0xFFFFFFFFFFFFF000LL;
+            auto relPage = (int64_t)(targetPage - locationPage);
+            int32_t imm21 = (int32_t)(relPage >> 12) & 0x1FFFFF;
+            // PutArm64Rel21
+            auto pCode = (uint32_t *)locationRW;
+            UINT32 adrpInstr = *pCode;
+            adrpInstr &= 0x9F00001F;
+            INT32 immlo = imm21 & 0x03;
+            INT32 immhi = (imm21 & 0x1FFFFC) >> 2;
+            adrpInstr |= ((immlo << 29) | (immhi << 5));
+            *pCode = adrpInstr;
+        }
+        break;
+
+    case IMAGE_REL_ARM64_PAGEOFFSET_12A:
+        {
+            _ASSERTE(slot == 0);
+            _ASSERTE(addlDelta == 0);
+
+            // Write the 12 bits page offset into location.
+            uint32_t imm12 = (int32_t)(uint64_t)target & 0xFFFLL;
+            // PutArm64Rel12;
+            auto pCode = (uint32_t *)locationRW;
+            uint32_t addInstr = *pCode;
+            addInstr &= 0xFFC003FF;
+            addInstr |= (imm12 << 10);
+            *pCode = addInstr;
+        }
+        break;
+
+#endif // TARGET_ARM64
+
             default:
                 printf("Unsupported relocation type (%d)\r\n", fRelocType);
         }
