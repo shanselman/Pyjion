@@ -311,8 +311,10 @@ public:
         return IMAGE_FILE_MACHINE_AMD64;
 #elif defined(_TARGET_X86_)
         return IMAGE_FILE_MACHINE_I386;
-#elif defined(_TARGET_ARM_)
-        return IMAGE_FILE_MACHINE_ARM;
+#elif defined(_TARGET_ARM64_)
+        return IMAGE_FILE_MACHINE_ARM64;
+#else
+#error "unsupported architecture"
 #endif
     }
 
