@@ -51,8 +51,6 @@ private:
         auto res = PyJit_ExecuteAndCompileFrame(m_jittedcode, frame, tstate, nullptr);
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();
-        printf("Collected %zu values\n", collected);
-        printf("Result %d\n", m_jittedcode->j_compile_result);
         REQUIRE(!m_jittedcode->j_failed);
         return res;
     }
@@ -61,9 +59,9 @@ public:
     explicit ExceptionTest(const char *code) {
         PyErr_Clear();
         PyErr_SetExcInfo(nullptr, nullptr, nullptr);
-        printf("\t\t--- Executing Code ---\n");
-        puts(code);
-        printf("-----------------\n");
+#ifdef DEBUG_VERBOSE
+        printf("--- Executing Code ---\n%s \n-----------------\n", code);
+#endif
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile code");

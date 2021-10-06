@@ -191,7 +191,7 @@ void PyJit_DebugTrace(char* msg);
 void PyJit_DebugPtr(void* ptr);
 void PyJit_DebugType(PyTypeObject* ty);
 void PyJit_DebugPyObject(PyObject* obj);
-void PyJit_DebugFault(char* msg, char* context, int32_t index);
+void PyJit_DebugFault(char* msg, char* context, int32_t index, PyFrameObject* frame);
 void PyJit_PgcGuardException(PyObject* obj, const char* expected);
 void PyJit_PyErrRestore(PyObject*tb, PyObject*value, PyObject*exception);
 

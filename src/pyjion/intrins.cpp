@@ -822,8 +822,8 @@ void PyJit_DebugTrace(char* msg) {
     puts(msg);
 }
 
-void PyJit_DebugFault(char* msg, char* context, int32_t index) {
-    printf("%s %s at %d\n", msg, context, index);
+void PyJit_DebugFault(char* msg, char* context, int32_t index, PyFrameObject* frame) {
+    printf("%s %s at %s, %s line %d\n", msg, context, PyUnicode_AsUTF8(frame->f_code->co_filename), PyUnicode_AsUTF8(frame->f_code->co_name), PyCode_Addr2Line(frame->f_code, index));
 }
 
 void PyJit_DebugPtr(void* ptr) {
@@ -1691,6 +1691,8 @@ PyObject* PyJit_GetIter(PyObject* iterable) {
 
 PyObject* PyJit_IterNext(PyObject* iter) {
     if (iter == nullptr) {
+        if (PyErr_Occurred())
+            return nullptr; // this shouldn't happen.
         PyErr_Format(PyExc_TypeError,
                      "Unable to iterate, iterator is null.");
         return nullptr;
@@ -2885,9 +2887,11 @@ PyObject* PyJit_BlockPop(PyFrameObject* frame){
 
 void PyJit_SaveToFrameValueStack(PyObject* obj, PyFrameObject* frame){
     frame->f_valuestack[frame->f_stackdepth] = obj;
+    //printf("Saving %s to frame at %d\n", PyUnicode_AsUTF8(PyObject_Repr(obj)), frame->f_stackdepth);
     frame->f_stackdepth++;
 }
 
 PyObject* PyJit_LoadFromFrameValueStack(PyFrameObject* frame, uint32_t idx){
+    //printf("Loading %s from frame at %d\n", PyUnicode_AsUTF8(PyObject_Repr(frame->f_valuestack[idx])), idx);
     return frame->f_valuestack[idx];
 }
