@@ -57,7 +57,11 @@
 
 using namespace std;
 
+#ifdef HOST_ARM64
+void JIT_StackProbe();
+#else
 extern "C" void JIT_StackProbe(); // Implemented in helpers.asm
+#endif
 
 const CORINFO_CLASS_HANDLE PYOBJECT_PTR_TYPE = (CORINFO_CLASS_HANDLE)0x11;
 
