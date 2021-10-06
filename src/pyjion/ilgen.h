@@ -610,7 +610,7 @@ public:
         jitInfo->assignIL(m_il);
         auto res = JITMethod(m_module, m_retType, m_params, nullptr, m_sequencePoints, m_callPoints);
         CORINFO_METHOD_INFO methodInfo = to_method(&res, stackSize);
-#ifdef HOST_OSX and HOST_ARM64
+#if (defined(HOST_OSX) && defined(HOST_ARM64))
         pthread_jit_write_protect_np(0);
 #endif
         CorJitResult result = jit->compileMethod(
@@ -620,7 +620,7 @@ public:
                 &nativeEntry,
                 &nativeSizeOfCode
         );
-#ifdef HOST_OSX and HOST_ARM64
+#if (defined(HOST_OSX) && defined(HOST_ARM64))
         pthread_jit_write_protect_np(1);
 #endif
         jitInfo->setNativeSize(nativeSizeOfCode);
