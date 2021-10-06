@@ -57,7 +57,11 @@
 
 using namespace std;
 
+#ifdef HOST_ARM64
+void JIT_StackProbe();
+#else
 extern "C" void JIT_StackProbe(); // Implemented in helpers.asm
+#endif
 
 const CORINFO_CLASS_HANDLE PYOBJECT_PTR_TYPE = (CORINFO_CLASS_HANDLE)0x11;
 
@@ -307,8 +311,10 @@ public:
         return IMAGE_FILE_MACHINE_AMD64;
 #elif defined(_TARGET_X86_)
         return IMAGE_FILE_MACHINE_I386;
-#elif defined(_TARGET_ARM_)
-        return IMAGE_FILE_MACHINE_ARM;
+#elif defined(_TARGET_ARM64_)
+        return IMAGE_FILE_MACHINE_ARM64;
+#else
+#error "unsupported architecture"
 #endif
     }
 
