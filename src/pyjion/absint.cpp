@@ -1754,7 +1754,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case SETUP_ANNOTATIONS:
-                m_comp->emit_set_annotations();
+                m_comp->emit_setup_annotations();
                 intErrorCheck("failed to setup annotations", nullptr, curByte);
                 break;
             case JUMP_ABSOLUTE:
