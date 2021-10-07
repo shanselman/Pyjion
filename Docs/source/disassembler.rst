@@ -15,6 +15,8 @@ The X86_64 disassembler requires ``rich`` and ``distorm3``. You can install the 
 
    > pip install pyjion[dis]
 
+For ARM64/aarch64 binaries, you must follow the instructions to export dumps and load into an external disassembler.
+
 CIL Disassembler
 ----------------
 
@@ -152,7 +154,7 @@ The ``dis_native()`` function has an optional flag to print the offsets of the P
 External disassemblers
 ----------------------
 
-If you prefer to use an external disassembler, like Hopper, you can use the ``pyjion.dump_native()`` function to fetch the bytearray and write it to disk.
+If you prefer to use an external disassembler, like Hopper, you can use the ``pyjion.native()`` function to fetch the bytearray and write it to disk.
 
 .. code-block:: python
 
@@ -163,12 +165,18 @@ If you prefer to use an external disassembler, like Hopper, you can use the ``py
     >>> half(4)
     2.0
     >>> pyjion.disable()
-    >>> raw, length, position = pyjion.dump_native(x)
+    >>> raw, length, position = pyjion.native(half)
     >>> with open('dump.raw', 'wb') as out:
     ...   out.write(raw)
 
 In your disassembler, open the ``dump.raw`` file as a raw file. The ``position`` variable shown in this example is the base address of the JIT in memory:
 
 .. image:: _static/hopper.png
+    :width: 50%
+    :align: center
+
+For Apple M1, choose the aarch64 CPU Architecture in Hopper:
+
+.. image:: _static/hopper-arm64.png
     :width: 50%
     :align: center

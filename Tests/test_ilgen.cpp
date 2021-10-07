@@ -138,6 +138,75 @@ TEST_CASE("Test locals") {
         CHECK(result == value);
     }
 }
+TEST_CASE("Test branch true of floats"){
+    SECTION("test branch true emitter") {
+        auto test_module = new UserModule(g_module);
+        auto gen = new ILGenerator(
+                test_module,
+                CORINFO_TYPE_INT,
+                std::vector<Parameter>{
+                });
+        Label isTrue = gen->define_label(), end = gen->define_label();
+        gen->ld_r8(1.0);
+        gen->branch(BranchTrue, isTrue);
+        gen->ld_i4(2);
+        gen->branch(BranchAlways, end);
+        gen->mark_label(isTrue);
+        gen->ld_i4(3);
+        gen->mark_label(end);
+        gen->ret();
+        auto *jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        JITMethod method = gen->compile(jitInfo, g_jit, 100);
+        REQUIRE(method.m_addr != nullptr);
+        int32_t result = ((Returns_int32) method.getAddr())();
+        CHECK(result == 3);
+    }
+    SECTION("test branch false emitter") {
+        auto test_module = new UserModule(g_module);
+        auto gen = new ILGenerator(
+                test_module,
+                CORINFO_TYPE_INT,
+                std::vector<Parameter>{
+                });
+        Label isTrue = gen->define_label(), end = gen->define_label();
+        gen->ld_r8(1.0);
+        gen->branch(BranchFalse, isTrue);
+        gen->ld_i4(2);
+        gen->branch(BranchAlways, end);
+        gen->mark_label(isTrue);
+        gen->ld_i4(3);
+        gen->mark_label(end);
+        gen->ret();
+        auto *jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        JITMethod method = gen->compile(jitInfo, g_jit, 100);
+        REQUIRE(method.m_addr != nullptr);
+        int32_t result = ((Returns_int32) method.getAddr())();
+        CHECK(result == 2);
+    }
+    SECTION("test branch r8 equivalence emitter") {
+        auto test_module = new UserModule(g_module);
+        auto gen = new ILGenerator(
+                test_module,
+                CORINFO_TYPE_INT,
+                std::vector<Parameter>{
+                });
+        Label isTrue = gen->define_label(), end = gen->define_label();
+        gen->ld_r8(1.0);
+        gen->ld_r8(1.0);
+        gen->branch(BranchEqual, isTrue);
+        gen->ld_i4(2);
+        gen->branch(BranchAlways, end);
+        gen->mark_label(isTrue);
+        gen->ld_i4(3);
+        gen->mark_label(end);
+        gen->ret();
+        auto *jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        JITMethod method = gen->compile(jitInfo, g_jit, 100);
+        REQUIRE(method.m_addr != nullptr);
+        int32_t result = ((Returns_int32) method.getAddr())();
+        CHECK(result == 3);
+    }
+}
 
 TEST_CASE("Test call") {
     SECTION("test call method emitter") {

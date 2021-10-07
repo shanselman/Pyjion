@@ -2,6 +2,7 @@ from pyjion.dis import print_il, dis, dis_native
 import pyjion
 import sys
 import pytest
+import platform
 
 
 def test_offsets():
@@ -77,6 +78,7 @@ def test_thin(capsys):
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="no windows support yet")
+@pytest.mark.skipif(platform.machine() != 'x86_64', reason="Only X64 supported")
 @pytest.mark.external
 def test_dis_native(capsys):
     def test_f():
@@ -90,6 +92,7 @@ def test_dis_native(capsys):
 
 
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="no windows support yet")
+@pytest.mark.skipif(platform.machine() != 'x86_64', reason="Only X64 supported")
 @pytest.mark.external
 def test_dis_native_with_offsets(capsys):
     def test_f():
