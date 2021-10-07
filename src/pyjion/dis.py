@@ -3,6 +3,7 @@ from pyjion import il, native, offsets as get_offsets, symbols
 from collections import namedtuple
 from warnings import warn
 import struct
+from platform import machine
 
 __all__ = [
     "dis",
@@ -513,7 +514,9 @@ def dis_native(f, include_offsets=False, print_pc=True) -> None:
     :param include_offsets: Flag to print python bytecode offsets as comments
     :param print_pc: Flag to print the memory address of each instruction
     """
-
+    if machine() != 'x86_64':
+        print("disassembly only supported on x86_64")
+        return
     try:
         import distorm3
         from rich.console import Console

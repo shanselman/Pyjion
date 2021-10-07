@@ -426,7 +426,7 @@ public:
 
     void ld_i(void* ptr) {
         auto value = (size_t)ptr;
-#ifdef _TARGET_AMD64_
+#ifdef HOST_64BIT
         if ((value & 0xFFFFFFFF) == value) {
             ld_i((int)value);
         }
@@ -610,6 +610,9 @@ public:
         jitInfo->assignIL(m_il);
         auto res = JITMethod(m_module, m_retType, m_params, nullptr, m_sequencePoints, m_callPoints);
         CORINFO_METHOD_INFO methodInfo = to_method(&res, stackSize);
+#if (defined(HOST_OSX) && defined(HOST_ARM64))
+        pthread_jit_write_protect_np(0);
+#endif
         CorJitResult result = jit->compileMethod(
                 jitInfo,
                 &methodInfo,
@@ -617,6 +620,9 @@ public:
                 &nativeEntry,
                 &nativeSizeOfCode
         );
+#if (defined(HOST_OSX) && defined(HOST_ARM64))
+        pthread_jit_write_protect_np(1);
+#endif
         jitInfo->setNativeSize(nativeSizeOfCode);
         switch (result){
             case CORJIT_OK:
