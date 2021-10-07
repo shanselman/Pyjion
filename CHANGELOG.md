@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.0.0 (develop/main)
+
+* Fixed a bug where `pyjion.graph()` would cause an exception if graphing was not enabled when the function was compiled
+* Added support for the `SETUP_ANNOTATIONS` opcode
+
 ## 1.0.0 (rc3)
 
 * Updated to .NET 6 RC1

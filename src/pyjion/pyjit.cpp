@@ -541,6 +541,14 @@ static PyObject *pyjion_get_graph(PyObject *self, PyObject* func) {
     }
 
     PyjionJittedCode* jitted = PyJit_EnsureExtra(code);
+    if (jitted->j_failed){
+        PyErr_SetString(PyExc_ValueError, "Function failed to compile so it has no graph.");
+        return nullptr;
+    }
+    if (jitted->j_graph == nullptr){
+        PyErr_SetString(PyExc_ValueError, "Compiled function has no graph, graphing was not enabled when it was compiled");
+        return nullptr;
+    }
     Py_INCREF(jitted->j_graph);
     return jitted->j_graph;
 }
