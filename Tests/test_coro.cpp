@@ -169,4 +169,23 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
                               "  return [x for x in cr()]\n");
         CHECK(t.raises() == PyExc_TypeError);
     }
+    SECTION("test yielding a tuple.") {
+        auto t = EmissionTest("def f():\n"
+                              "  def cr():\n"
+                              "     for n in range(10):\n"
+                              "         yield f'{n}!', n\n"
+                              "  return [x for x in cr()]\n");
+        CHECK(t.returns() == "[('0!', 0), ('1!', 1), ('2!', 2), ('3!', 3), ('4!', 4), ('5!', 5), ('6!', 6), ('7!', 7), ('8!', 8), ('9!', 9)]");
+    }
+    SECTION("test yielding within a try statement.") {
+        auto t = EmissionTest("def f():\n"
+                              "  def cr():\n"
+                              "     for n in range(10):\n"
+                              "         try:\n"
+                              "            yield f'{n}!', n\n"
+                              "         except ZeroDivisionError:\n"
+                              "            pass\n"
+                              "  return [x for x in cr()]\n");
+        CHECK(t.returns() == "[('0!', 0), ('1!', 1), ('2!', 2), ('3!', 3), ('4!', 4), ('5!', 5), ('6!', 6), ('7!', 7), ('8!', 8), ('9!', 9)]");
+    }
 }

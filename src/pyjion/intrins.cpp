@@ -824,6 +824,9 @@ void PyJit_DebugTrace(char* msg) {
 
 void PyJit_DebugFault(char* msg, char* context, int32_t index, PyFrameObject* frame) {
     printf("%s %s at %s, %s line %d\n", msg, context, PyUnicode_AsUTF8(frame->f_code->co_filename), PyUnicode_AsUTF8(frame->f_code->co_name), PyCode_Addr2Line(frame->f_code, index));
+    if(!PyErr_Occurred()){
+        printf("Instruction failed but no exception set.");
+    }
 }
 
 void PyJit_DebugPtr(void* ptr) {

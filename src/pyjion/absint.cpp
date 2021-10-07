@@ -1568,7 +1568,6 @@ void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, Instruc
     m_comp->emit_incref();
     m_comp->emit_store_local(m_retValue);
     m_comp->emit_set_frame_state(PY_FRAME_SUSPENDED);
-    // TODO: Profile frame exit.
 
     // Stack has submitted result back. Store any other variables
     for (size_t i = (stackSize - 1); i > 0 ; --i) {
@@ -1867,14 +1866,14 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 m_comp->emit_unpack_sequence(oparg, stackInfo.top());
                 decStack();
                 incStack(oparg);
-                intErrorCheck("failed to unpack");
+                intErrorCheck("failed to unpack sequence", stackInfo.top().Value->describe());
                 break;
             case UNPACK_EX: {
                 size_t rightSize = oparg >> 8, leftSize = oparg & 0xff;
                 m_comp->emit_unpack_sequence_ex(leftSize, rightSize, stackInfo.top());
                 decStack();
                 incStack(leftSize + rightSize + 1);
-                intErrorCheck("failed to unpack");
+                intErrorCheck("failed to unpack extended");
                 break;
             }
             case CALL_FUNCTION_KW: {
@@ -2534,11 +2533,11 @@ InstructionGraph* AbstractInterpreter::buildInstructionGraph(bool escapeLocals) 
 }
 
 AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins, PyObject* globals, PyjionCodeProfile* profile, PgcStatus pgc_status) {
-    AbstractInterpreterResult interpreted = interpret(builtins, globals, profile, pgc_status);
-    if (interpreted != Success) {
-        return {nullptr, interpreted};
-    }
     try {
+        AbstractInterpreterResult interpreted = interpret(builtins, globals, profile, pgc_status);
+        if (interpreted != Success) {
+            return {nullptr, interpreted};
+        }
         bool unboxVars = OPT_ENABLED(Unboxing) && !(mCode->co_flags & CO_GENERATOR);
         auto instructionGraph = buildInstructionGraph(unboxVars);
         auto result = compileWorker(pgc_status, instructionGraph);
