@@ -60,7 +60,6 @@ private:
         _PyInterpreterState_SetEvalFrameFunc(PyInterpreterState_Main(), prev);
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();
-        printf("Collected %zu values\n", collected);
         REQUIRE(!m_jittedcode->j_failed);
         return res;
     }
@@ -100,7 +99,9 @@ public:
         auto res = run();
         REQUIRE(res == nullptr);
         auto excType = PyErr_Occurred();
+#ifdef DEBUG_VERBOSE
         PyErr_Print();
+#endif
         PyErr_Clear();
         return excType;
     }
