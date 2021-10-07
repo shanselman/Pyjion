@@ -1748,7 +1748,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case SETUP_ANNOTATIONS:
-                m_comp->emit_set_annotations();
+                m_comp->emit_setup_annotations();
                 intErrorCheck("failed to setup annotations", nullptr, op.index);
                 break;
             case JUMP_ABSOLUTE:
@@ -2581,6 +2581,7 @@ bool AbstractInterpreter::canSkipLastiUpdate(py_opcode opcode) {
         case JUMP_FORWARD:
         case JUMP_ABSOLUTE:
         case GEN_START:
+        case SETUP_ANNOTATIONS:
             return true;
         default:
             return false;

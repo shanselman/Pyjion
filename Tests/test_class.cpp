@@ -34,12 +34,6 @@ TEST_CASE("test classes") {
         );
         CHECK(t.returns() == "<class 'C'>");
     }
-    SECTION("test class definition with annotations") {
-        auto t = EmissionTest(
-                "def f():\n    class C:\n      property: int = 0\n    return C"
-        );
-        CHECK(t.returns() == "<class 'C'>");
-    }
 }
 
 TEST_CASE("test type"){

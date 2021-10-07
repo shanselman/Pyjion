@@ -646,3 +646,18 @@ TEST_CASE("Test builtins") {
         CHECK(t.returns() == "'0b100000000000000000000000000000000000000000000000000000000000000000'");
     }
 }
+
+TEST_CASE("Test type annotations"){
+    SECTION("test variable definition with annotations") {
+        auto t = EmissionTest(
+                "def f():\n    x: int = 2\n    return x"
+        );
+        CHECK(t.returns() == "2");
+    }
+    SECTION("test class definition with annotations") {
+        auto t = EmissionTest(
+                "def f():\n    class C:\n      property: int = 0\n    return C"
+        );
+        CHECK(t.returns() == "<class 'C'>");
+    }
+}
