@@ -188,17 +188,18 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
                               "  return [x for x in cr()]\n");
         CHECK(t.returns() == "[('0!', 0), ('1!', 1), ('2!', 2), ('3!', 3), ('4!', 4), ('5!', 5), ('6!', 6), ('7!', 7), ('8!', 8), ('9!', 9)]");
     }
-    SECTION("test mixed compiled and uncompiled generators"){
+    SECTION("test generator being closed and recreated on exhaustion"){
         auto t = EmissionTest("def f():\n"
-                              "    def cr1():\n"
-                              "        for letter in dir(bytearray)[:4]:\n"
+                              "    def inner():\n"
+                              "        names = ['__add__', '__alloc__',]\n"
+                              "        for letter in names:\n"
                               "            yield letter\n"
                               "\n"
-                              "    def cr2():\n"
-                              "        for n in \"!@#%$^\":\n"
-                              "            for i in cr1():\n"
+                              "    def outer():\n"
+                              "        for n in \"!@\":\n"
+                              "            for i in inner():\n"
                               "                yield n + i\n"
-                              "    return list(cr2())");
-        CHECK(t.returns() == "['!hello', '@hello', '#hello', '%hello', '$hello', '^hello']");
+                              "    return list(outer())");
+        CHECK(t.returns() == "['!__add__', '!__alloc__', '@__add__', '@__alloc__']");
     }
 }

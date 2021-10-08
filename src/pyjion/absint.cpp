@@ -972,7 +972,7 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
             if(!skipEffect){
                 if (static_cast<size_t>(PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump)) != (lastState.stackSize() - curStackLen)){
 #ifdef DEBUG_VERBOSE
-                    printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(opcode), curByte, PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump), (lastState.stackSize() - curStackLen));
+                    printf("Opcode %s at %d should have stack effect %d, but was %lu\n", opcodeName(opcode), curByte, PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump), (lastState.stackSize() - curStackLen));
 #endif
                     return CompilationException;
                 }
@@ -1561,11 +1561,10 @@ void AbstractInterpreter::yieldJumps(){
 
 void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, InstructionGraph* graph) {
     m_comp->emit_lasti_update(index);
+
+    // Unboxed fast locals are not supported in generators yet, so just double check!
     assert (graph->getUnboxedFastLocals().empty());
 
-    // incref and send top of stack
-    m_comp->emit_dup();
-    m_comp->emit_incref();
     m_comp->emit_store_local(m_retValue);
     m_comp->emit_set_frame_state(PY_FRAME_SUSPENDED);
 
@@ -1582,7 +1581,7 @@ void AbstractInterpreter::yieldValue(py_opindex index, size_t stackSize, Instruc
     m_comp->emit_dec_frame_stackdepth(stackSize);
 }
 
-AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc_status, InstructionGraph* graph) {
+AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc_status, InstructionGraph* graph) { // NOLINT(readability-function-cognitive-complexity)
     Label ok;
     OptimizationFlags optimizationsMade = OptimizationFlags();
     m_comp->emit_lasti_init();
@@ -1687,6 +1686,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         switch (byte) {
             case NOP:
             case EXTENDED_ARG:
+                // EXTENDED_ARG is precalculated in the graph loop
                 break;
             case ROT_TWO:
             {
@@ -2108,7 +2108,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                     );
                 }
                 m_offsetStack[op.jumpsTo] = postIterStack;
-                skipEffect = true; // has jump effect
                 break;
             }
             case SET_ADD:
@@ -2340,7 +2339,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                  * in the built dictionary.
                  */
                 // spill TOP into keys and then build a tuple for stack
-                buildTuple(oparg + 1);
+                buildTuple(oparg + (py_oparg)1);
                 incStack();
                 m_comp->emit_dict_build_from_map();
                 decStack(1);
@@ -2449,7 +2448,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             }
             case YIELD_VALUE: {
                 yieldValue(op.index, curStackSize, graph);
-                skipEffect = true;
                 break;
             }
             case GEN_START: {
@@ -2462,7 +2460,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
         }
         if(!skipEffect && static_cast<size_t>(PyCompile_OpcodeStackEffect(byte, oparg)) != (m_stack.size() - curStackSize)){
 #ifdef DEBUG_VERBOSE
-            printf("Opcode %s at %d should have stack effect %d, but was %d\n", opcodeName(byte), op.index, PyCompile_OpcodeStackEffect(byte, oparg), (m_stack.size() - curStackSize));
+            printf("Opcode %s at %d should have stack effect %d, but was %lu\n", opcodeName(byte), op.index, PyCompile_OpcodeStackEffect(byte, oparg), (m_stack.size() - curStackSize));
 #endif
             return {nullptr, CompilationException};
         }
@@ -2635,11 +2633,10 @@ void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources
     else
         m_comp->emit_for_next(*iterator);
 
-    /* Start error branch */
+    /* Check for null on the stack, indicating error (not stopiter) */
     errorCheck("failed to fetch iter");
-    /* End error branch */
 
-    incStack(1);
+    incStack(1); // value
 
     auto next = m_comp->emit_define_label();
 
@@ -2652,7 +2649,6 @@ void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources
     /* Start stop iter branch */
     m_comp->emit_pop(); // Pop the 0xff StopIter value
     m_comp->emit_pop_top(); // POP and DECREF iter
-    m_comp->emit_pyerr_clear();
     m_comp->emit_branch(BranchAlways, getOffsetLabel(loopIndex)); // Goto: post-stack
     /* End stop iter error branch */
 
