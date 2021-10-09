@@ -348,10 +348,12 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                     break;
                 }
                 case DUP_TOP_TWO: {
-                    auto top = lastState[lastState.stackSize() - 1];
-                    auto second = lastState[lastState.stackSize() - 2];
+                    auto top = POP_VALUE();
+                    auto second = POP_VALUE();
                     top.Sources = newSource(new IntermediateSource(curByte));
                     second.Sources = newSource(new IntermediateSource(curByte));
+                    lastState.push(second);
+                    lastState.push(top);
                     lastState.push(second);
                     lastState.push(top);
                     break;
@@ -781,11 +783,11 @@ AbstractInterpreter::interpret(PyObject *builtins, PyObject *globals, PyjionCode
                         queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
 
-                    // When we compile this we don't actually leave the value on the stack,
-                    // but the sequence of opcodes assumes that happens.  to keep our stack
-                    // properly balanced we match what's really going on.
+                    iterator.Sources = newSource(new IntermediateSource(curByte));
+                    lastState.push(iterator);
                     auto out = iterator.Value->next(iterator.Sources);
                     PUSH_INTERMEDIATE(out);
+                    skipEffect = true;
                     break;
                 }
                 case POP_BLOCK:
@@ -2629,7 +2631,7 @@ void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources
 
     // emits NULL on error, 0xff on StopIter and ptr on next
     if (iterator == nullptr)
-        m_comp->emit_for_next(); // ..., iter, iter -> "next", iter, ...
+        m_comp->emit_for_next(); // ..., iter, iter -> iter, iter(), ...
     else
         m_comp->emit_for_next(*iterator);
 
