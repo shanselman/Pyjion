@@ -42,6 +42,16 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
         CHECK(t.returns() == "(1, 2, 3)");
     }
 
+    SECTION("exhausted generator raises stopiteration case") {
+        auto t = EmissionTest("def f():\n"
+                              "  def cr():\n"
+                              "     yield 1\n"
+                              "     yield 2\n"
+                              "  gen = cr()\n"
+                              "  return next(gen), next(gen), next(gen)\n");
+        CHECK(t.raises() == PyExc_StopIteration);
+    }
+
     SECTION("test preservation of boxed variables") {
         auto t = EmissionTest("def f():\n"
                               "  def cr():\n"
@@ -192,6 +202,17 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
         auto t = EmissionTest("def f():\n"
                               "    def inner():\n"
                               "        names = ['__add__', '__alloc__',]\n"
+                              "        for n in \"!@\":\n"
+                              "            for letter in names:\n"
+                              "                yield n + letter\n"
+                              "\n"
+                              "    return list(inner())");
+        CHECK(t.returns() == "['!__add__', '!__alloc__', '@__add__', '@__alloc__']");
+    }
+    SECTION("test nested generator being closed and recreated on exhaustion"){
+        auto t = EmissionTest("def f():\n"
+                              "    def inner():\n"
+                              "        names = ['__add__', '__alloc__',]\n"
                               "        for letter in names:\n"
                               "            yield letter\n"
                               "\n"
@@ -199,7 +220,7 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
                               "        for n in \"!@\":\n"
                               "            for i in inner():\n"
                               "                yield n + i\n"
-                              "    return list(outer())");
+                              "    return [x for x in outer()]");
         CHECK(t.returns() == "['!__add__', '!__alloc__', '@__add__', '@__alloc__']");
     }
 }
