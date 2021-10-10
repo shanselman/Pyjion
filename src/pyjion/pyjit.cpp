@@ -162,6 +162,10 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
     trace_info.cframe.previous = prev_cframe;
     tstate->cframe = &trace_info.cframe;
 
+#ifdef DEBUG_VERBOSE
+    printf("Starting execution of frame %s at %d with state %s\n", PyUnicode_AsUTF8(frame->f_code->co_name), frame->f_lasti, frameStateAsString(frame->f_state));
+#endif
+
     if (frame->f_state != PY_FRAME_SUSPENDED)
         frame->f_stackdepth = -1;
     frame->f_state = PY_FRAME_EXECUTING;
@@ -172,8 +176,17 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
         tstate->cframe->use_tracing = trace_info.cframe.use_tracing;
         Pyjit_LeaveRecursiveCall();
         _Py_CheckFunctionResult(tstate, nullptr, res, __func__);
+#ifdef DEBUG_VERBOSE
+        printf("Ended execution of frame %s at %d with state %s\n",
+               PyUnicode_AsUTF8(frame->f_code->co_name),
+               frame->f_lasti,
+               frameStateAsString(frame->f_state));
+#endif
         return res;
     } catch (const std::exception& e){
+#ifdef DEBUG_VERBOSE
+        printf("Caught exception on execution of frame %s\n", e.what());
+#endif
         PyErr_SetString(PyExc_RuntimeError, e.what());
         Pyjit_LeaveRecursiveCall();
         return nullptr;

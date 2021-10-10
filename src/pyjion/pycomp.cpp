@@ -150,9 +150,10 @@ void PythonCompiler::emit_lasti(){
     m_il.ld_ind_i4();
 }
 
-void PythonCompiler::emit_store_in_frame_value_stack() {
+void PythonCompiler::emit_store_in_frame_value_stack(uint32_t idx) {
     // Equivalent of PUSH() macro in ceval
     load_frame();
+    m_il.ld_u4(idx);
     m_il.emit_call(METHOD_SAVE_TO_VALUESTACK);
 }
 
@@ -2677,7 +2678,7 @@ GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Paramet
 GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT));
 
 GLOBAL_METHOD(METHOD_LOAD_FROM_VALUESTACK, &PyJit_LoadFromFrameValueStack, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_UINT));
-GLOBAL_METHOD(METHOD_SAVE_TO_VALUESTACK, &PyJit_SaveToFrameValueStack, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_SAVE_TO_VALUESTACK, &PyJit_SaveToFrameValueStack, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_UINT));
 
 
 const char* opcodeName(py_opcode opcode) {
@@ -2812,4 +2813,25 @@ const char* opcodeName(py_opcode opcode) {
         OP_TO_STR(ROT_N)
     }
     return "unknown";
+}
+
+const char* frameStateAsString(PyFrameState state) {
+    switch (state) {
+        case PY_FRAME_CREATED:
+            return "PY_FRAME_CREATED";
+        case PY_FRAME_SUSPENDED:
+            return "PY_FRAME_SUSPENDED";
+        case PY_FRAME_EXECUTING:
+            return "PY_FRAME_EXECUTING";
+        case PY_FRAME_RETURNED:
+            return "PY_FRAME_RETURNED";
+        case PY_FRAME_UNWINDING:
+            return "PY_FRAME_UNWINDING";
+        case PY_FRAME_RAISED:
+            return "PY_FRAME_RAISED";
+        case PY_FRAME_CLEARED:
+            return "PY_FRAME_CLEARED";
+        default:
+            return "unknown state";
+    }
 }
