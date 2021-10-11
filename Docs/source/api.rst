@@ -75,7 +75,7 @@ Disassembly module
 
 .. function:: dis_native(f, include_offsets=False, print_pc=True)
 
-   Print the x86 assembly instructions in a disassembly table (requires distorm3 and rich)
+   Print the x86_64 assembly instructions in a disassembly table (requires distorm3 and rich)
    Set ``include_offsets=True`` to print the Python opcodes inline with the assembly.
 
 WSGI middleware

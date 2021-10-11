@@ -164,7 +164,9 @@ public:
         auto res = run();
         REQUIRE(res == nullptr);
         auto excType = PyErr_Occurred();
+#ifdef DEBUG_VERBOSE
         PyErr_Print();
+#endif
         PyErr_Clear();
         return excType;
     }

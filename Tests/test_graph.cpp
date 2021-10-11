@@ -58,7 +58,9 @@ public:
         }
         m_graph = m_absint->buildInstructionGraph(true);
         auto result = m_graph->makeGraph(name);
+#ifdef DEBUG_VERBOSE
         printf("%s", PyUnicode_AsUTF8(result));
+#endif
     }
 
     ~InstructionGraphTest(){

@@ -508,6 +508,10 @@ public:
     void emit_nan_long() override;
     void emit_guard_exception(const char* expected) override;
 
+    void emit_store_in_frame_value_stack(uint32_t idx) override;
+    void emit_load_from_frame_value_stack(uint32_t idx) override;
+    void emit_dec_frame_stackdepth(uint32_t by) override;
+    void emit_set_frame_stackdepth(uint32_t to) override;
 private:
     void load_frame();
     void load_tstate();
@@ -531,5 +535,5 @@ private:
 };
 
 const char* opcodeName(py_opcode opcode) ;
-
+const char* frameStateAsString(PyFrameState state);
 #endif

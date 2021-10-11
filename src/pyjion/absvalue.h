@@ -711,7 +711,7 @@ public:
     }
 
     const char* describe() override {
-        return _type->tp_name;
+        return _PyType_Name(_type);
     }
 
     bool needsGuard() override {

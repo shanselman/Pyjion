@@ -369,7 +369,7 @@ private:
     AbstractSource* addBuiltinSource(py_opindex opcodeIndex, py_oparg constIndex, const char * name, PyObject* value);
 
     void makeFunction(py_oparg oparg);
-    bool canSkipLastiUpdate(py_opindex opcodeIndex);
+    bool canSkipLastiUpdate(py_opcode opcode);
     void buildTuple(py_oparg argCnt);
     void buildList(py_oparg argCnt);
     void extendListRecursively(Local list, py_oparg argCnt);
