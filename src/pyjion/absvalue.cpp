@@ -35,7 +35,6 @@ BigIntegerValue BigInteger;
 FloatValue Float;
 BoolValue Bool;
 ListValue List;
-TupleValue Tuple;
 SetValue Set;
 FrozenSetValue FrozenSet;
 StringValue String;
@@ -65,6 +64,13 @@ StaticMethodValue StaticMethod;
 SuperValue Super;
 ZipValue Zip;
 
+// Container Sub-Types;
+TupleOfValue<AVK_Any> Tuple;
+TupleOfValue<AVK_Integer> TupleOfInteger;
+TupleOfValue<AVK_Float> TupleOfFloat;
+TupleOfValue<AVK_String> TupleOfString;
+
+
 AbstractSource::AbstractSource(py_opindex producer) {
     Sources = shared_ptr<AbstractSources>(new AbstractSources());
     Sources->Sources.insert(this);
@@ -85,6 +91,14 @@ AbstractValue* AbstractValue::iter(AbstractSource* selfSources) {
 
 AbstractValue* AbstractValue::next(AbstractSource* selfSources) {
     return &Any;
+}
+
+AbstractValueKind AbstractValue::itemKind() {
+    return AVK_Any;
+}
+
+AbstractValue* AbstractValue::item(AbstractSource* selfSources) {
+    return avkToAbstractValue(this->itemKind());
 }
 
 AbstractValue* AbstractValue::compare(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {

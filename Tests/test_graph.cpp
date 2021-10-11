@@ -32,77 +32,9 @@
 */
 #include <catch2/catch.hpp>
 #include "testing_util.h"
-#include <Python.h>
-#include <absint.h>
 #include <instructions.h>
 #include <memory>
-#include <util.h>
 
-class InstructionGraphTest {
-private:
-    std::unique_ptr<AbstractInterpreter> m_absint;
-    InstructionGraph* m_graph;
-
-public:
-    explicit InstructionGraphTest(const char* code, const char* name) {
-        auto pyCode = CompileCode(code);
-        m_absint = std::make_unique<AbstractInterpreter>(pyCode, nullptr);
-        auto builtins = PyEval_GetBuiltins();
-        auto globals_dict = PyObject_ptr(PyDict_New());
-        auto profile = new PyjionCodeProfile();
-        auto success = m_absint->interpret(builtins, globals_dict.get(), profile, Uncompiled);
-        delete profile;
-        if (success != Success) {
-            Py_DECREF(pyCode);
-            FAIL("Failed to interpret code");
-        }
-        m_graph = m_absint->buildInstructionGraph(true);
-        auto result = m_graph->makeGraph(name);
-#ifdef DEBUG_VERBOSE
-        printf("%s", PyUnicode_AsUTF8(result));
-#endif
-    }
-
-    ~InstructionGraphTest() {
-        delete m_graph;
-    }
-
-    size_t size() {
-        return m_graph->size();
-    }
-
-    Instruction instruction(size_t n) {
-        return m_graph->operator[](n);
-    }
-
-    void assertInstruction(size_t n, py_opcode opcode, py_oparg oparg, bool escaped) {
-        auto i = instruction(n);
-        CHECK(i.escape == escaped);
-        CHECK(i.opcode == opcode);
-        CHECK(i.index == n);
-        CHECK(i.oparg == oparg);
-    }
-
-    size_t edgesIn(py_opindex idx) {
-        auto edges = m_graph->getEdges(idx);
-        return edges.size();
-    }
-
-    EscapeTransition edgeInIs(py_opindex idx, size_t position) {
-        auto edges = m_graph->getEdges(idx);
-        return edges[position].escaped;
-    }
-
-    size_t edgesOut(py_opindex idx) {
-        auto edges = m_graph->getEdgesFrom(idx);
-        return edges.size();
-    }
-
-    EscapeTransition edgeOutIs(py_opindex idx, size_t position) {
-        auto edges = m_graph->getEdgesFrom(idx);
-        return edges[position].escaped;
-    }
-};
 
 TEST_CASE("Test instruction graphs") {
     SECTION("return parameters") {
@@ -218,17 +150,18 @@ TEST_CASE("Test instruction graphs") {
         t.assertInstruction(8, LOAD_FAST, 1, true);
         t.assertInstruction(10, LOAD_FAST, 2, true);
     }
+
+    setOptimizationLevel(2);
     SECTION("test BINARY_MULTIPLY is unboxed at level 2") {
-        setOptimizationLevel(2);
         auto t = InstructionGraphTest("def f(n=10000):\n"
                                       "  for y in range(n):\n"
                                       "        x = 2\n"
                                       "        z = y * y + x - y\n"
                                       "        x *= z",
                                       "assert_opt_binary_multiply");
-        setOptimizationLevel(1);
         CHECK(t.size() == 23);
         t.assertInstruction(20, BINARY_MULTIPLY, 0, true); // * should be unboxed
         t.assertInstruction(36, INPLACE_MULTIPLY, 0, true); // *= should be unboxed
     }
+    setOptimizationLevel(1);
 }

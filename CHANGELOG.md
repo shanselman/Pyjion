@@ -9,6 +9,7 @@
 * Added support for the `SETUP_ANNOTATIONS` opcode
 * Added support for generators in 3.10
 * Fixed a bug in the DUP_TOP_TWO opcode with escaped variables
+* UNPACK_SEQUENCE will emit types for constant tuples of string, int and float
 
 ## 1.0.0 (rc3)
 
