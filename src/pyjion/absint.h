@@ -184,6 +184,8 @@ public:
         auto existing = mStack[mStack.size() - 1 - stackPosition];
         if (existing.hasSource() && existing.Sources->hasConstValue())
             return existing;
+        if (existing.hasValue() && !existing.Value->needsGuard())
+            return existing;
         if (pyTypeObject == nullptr)
             return existing;
         else {
