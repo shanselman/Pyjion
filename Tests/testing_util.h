@@ -283,7 +283,6 @@ public:
         auto res = run();
         REQUIRE(res == nullptr);
         auto excType = PyErr_Occurred();
-        PyErr_Print();
         PyErr_Clear();
         return excType;
     }
