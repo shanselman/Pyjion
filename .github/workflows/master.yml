@@ -103,7 +103,7 @@ jobs:
       - name: Install scikit-build for wheel
         shell: bash
         run: |
-          python -m pip install -U https://github.com/tonybaloney/scikit-build/archive/vs2019.zip
+          python -m pip install -U scikit-build
 
       - name: Build x64 Linux Docker image
         run: docker build -t pyjion_x64 -f Dockerfile.manylinux.x86_64 .
@@ -226,7 +226,7 @@ jobs:
       - name: Build Python Wheel
         shell: bash
         run: |
-          python -m pip install -U https://github.com/tonybaloney/scikit-build/archive/vs2019.zip
+          python -m pip install -U scikit-build
           python setup.py bdist_wheel
 
       - uses: actions/upload-artifact@v1
@@ -278,7 +278,7 @@ jobs:
 
       - name: Install build deps
         shell: bash
-        run: python -m pip install -U https://github.com/tonybaloney/scikit-build/archive/vs2019.zip
+        run: python -m pip install -U scikit-build
 
       - name: Build Python Package
         shell: bash
