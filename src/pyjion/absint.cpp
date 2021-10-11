@@ -379,6 +379,10 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     break;
                 }
                 case STORE_FAST: {
+                    if (PGC_READY()) {
+                        PGC_PROBE(1);
+                        PGC_UPDATE_STACK(1);
+                    }
                     auto valueInfo = POP_VALUE();
                     m_opcodeSources[opcodeIndex] = valueInfo.Sources;
                     lastState.replaceLocal(oparg, AbstractLocalInfo(valueInfo, valueInfo.Value == &Undefined));
