@@ -4,6 +4,15 @@ import gc
 import warnings
 
 
+@pytest.hookimpl(hookwrapper=True)
+def pytest_pyfunc_call(pyfuncitem):
+    yield
+    # Force pyjion to be disabled, useful when a test raises an exception
+    # so it stops every consequent Python call to be JITted and making it
+    # impossible to figure out what went wrong.
+    pyjion.disable()
+
+
 def pytest_runtest_call(item: pytest.Item) -> None:
     pyjion.enable()
     pyjion.config(level=int(item.config.option.opt_level))

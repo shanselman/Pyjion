@@ -822,8 +822,11 @@ void PyJit_DebugTrace(char* msg) {
     puts(msg);
 }
 
-void PyJit_DebugFault(char* msg, char* context, int32_t index) {
-    printf("%s %s at %d\n", msg, context, index);
+void PyJit_DebugFault(char* msg, char* context, int32_t index, PyFrameObject* frame) {
+    printf("%s %s at %s, %s line %d\n", msg, context, PyUnicode_AsUTF8(frame->f_code->co_filename), PyUnicode_AsUTF8(frame->f_code->co_name), PyCode_Addr2Line(frame->f_code, index));
+    if(!PyErr_Occurred()){
+        printf("Instruction failed but no exception set.");
+    }
 }
 
 void PyJit_DebugPtr(void* ptr) {
@@ -1691,6 +1694,8 @@ PyObject* PyJit_GetIter(PyObject* iterable) {
 
 PyObject* PyJit_IterNext(PyObject* iter) {
     if (iter == nullptr) {
+        if (PyErr_Occurred())
+            return nullptr; // this shouldn't happen.
         PyErr_Format(PyExc_TypeError,
                      "Unable to iterate, iterator is null.");
         return nullptr;
@@ -2874,8 +2879,10 @@ void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
 
 PyObject* PyJit_BlockPop(PyFrameObject* frame){
     if (frame->f_iblock <= 0) {
+#ifdef DEBUG
         printf("Warning: block underflow at %d %s %s line %d\n", frame->f_lasti, PyUnicode_AsUTF8(frame->f_code->co_filename),
                PyUnicode_AsUTF8(frame->f_code->co_name), frame->f_lineno);
+#endif
         return nullptr;
     }
     return reinterpret_cast<PyObject *>(PyFrame_BlockPop(frame));

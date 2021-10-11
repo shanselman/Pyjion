@@ -141,13 +141,53 @@ void PythonCompiler::emit_lasti_init() {
 
 void PythonCompiler::emit_lasti_update(py_opindex index) {
     m_il.ld_loc(m_lasti);
-    m_il.ld_u4(index);
+    m_il.ld_u4(index / 2);
     m_il.st_ind_i4();
 }
 
 void PythonCompiler::emit_lasti(){
     m_il.ld_loc(m_lasti);
     m_il.ld_ind_i4();
+}
+
+void PythonCompiler::emit_store_in_frame_value_stack(uint32_t idx) {
+    Local tmp = emit_define_local(LK_Pointer);
+    emit_store_local(tmp);
+    load_frame();
+    LD_FIELDI(PyFrameObject, f_valuestack);
+    if (idx > 0) {
+        m_il.ld_i(idx * sizeof(size_t));
+        m_il.add();
+    }
+    emit_load_and_free_local(tmp);
+    m_il.st_ind_i();
+}
+
+void PythonCompiler::emit_load_from_frame_value_stack(uint32_t idx) {
+    load_frame();
+    LD_FIELDI(PyFrameObject, f_valuestack);
+    if (idx > 0) {
+        m_il.ld_i(idx * sizeof(size_t));
+        m_il.add();
+    }
+    m_il.ld_ind_i();
+}
+
+void PythonCompiler::emit_dec_frame_stackdepth(uint32_t by) {
+    load_frame();
+    LD_FIELDA(PyFrameObject , f_stackdepth);
+    m_il.dup();
+    m_il.ld_ind_i();
+    m_il.ld_u4(by);
+    m_il.sub();
+    m_il.st_ind_i();
+}
+
+void PythonCompiler::emit_set_frame_stackdepth(uint32_t to) {
+    load_frame();
+    LD_FIELDA(PyFrameObject , f_stackdepth);
+    m_il.ld_u4(to);
+    m_il.st_ind_i();
 }
 
 void PythonCompiler::load_local(py_oparg oparg) {
@@ -1771,6 +1811,7 @@ void PythonCompiler::emit_debug_fault(const char* msg, const char* context, py_o
     m_il.ld_i((void*)msg);
     m_il.ld_i((void*)context);
     m_il.ld_i4(index);
+    load_frame();
     m_il.emit_call(METHOD_DEBUG_FAULT);
 #endif
 }
@@ -2561,7 +2602,7 @@ GLOBAL_METHOD(METHOD_DEBUG_TRACE, &PyJit_DebugTrace, CORINFO_TYPE_VOID, Paramete
 GLOBAL_METHOD(METHOD_DEBUG_PTR, &PyJit_DebugPtr, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DEBUG_TYPE, &PyJit_DebugType, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DEBUG_PYOBJECT, &PyJit_DebugPyObject, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_DEBUG_FAULT, &PyJit_DebugFault, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT));
+GLOBAL_METHOD(METHOD_DEBUG_FAULT, &PyJit_DebugFault, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_PY_POPFRAME, &PyJit_PopFrame, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_PY_PUSHFRAME, &PyJit_PushFrame, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
@@ -2767,6 +2808,35 @@ const char* opcodeName(py_opcode opcode) {
         OP_TO_STR(SET_UPDATE)
         OP_TO_STR(DICT_MERGE)
         OP_TO_STR(DICT_UPDATE)
+        OP_TO_STR(GEN_START)
+        OP_TO_STR(COPY_DICT_WITHOUT_KEYS)
+        OP_TO_STR(MATCH_CLASS)
+        OP_TO_STR(GET_LEN)
+        OP_TO_STR(MATCH_MAPPING)
+        OP_TO_STR(MATCH_SEQUENCE)
+        OP_TO_STR(MATCH_KEYS)
+        OP_TO_STR(ROT_N)
     }
     return "unknown";
+}
+
+const char* frameStateAsString(PyFrameState state) {
+    switch (state) {
+        case PY_FRAME_CREATED:
+            return "PY_FRAME_CREATED";
+        case PY_FRAME_SUSPENDED:
+            return "PY_FRAME_SUSPENDED";
+        case PY_FRAME_EXECUTING:
+            return "PY_FRAME_EXECUTING";
+        case PY_FRAME_RETURNED:
+            return "PY_FRAME_RETURNED";
+        case PY_FRAME_UNWINDING:
+            return "PY_FRAME_UNWINDING";
+        case PY_FRAME_RAISED:
+            return "PY_FRAME_RAISED";
+        case PY_FRAME_CLEARED:
+            return "PY_FRAME_CLEARED";
+        default:
+            return "unknown state";
+    }
 }

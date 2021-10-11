@@ -50,9 +50,7 @@ private:
         auto frame = PyFrame_New(tstate, m_code.get(), globals.get(), PyObject_ptr(PyDict_New()).get());
         auto res = PyJit_ExecuteAndCompileFrame(m_jittedcode, frame, tstate, nullptr);
         Py_DECREF(frame);
-        size_t collected = PyGC_Collect();
-        printf("Collected %zu values\n", collected);
-        printf("Result %d\n", m_jittedcode->j_compile_result);
+        PyGC_Collect();
         REQUIRE(!m_jittedcode->j_failed);
         return res;
     }
@@ -61,9 +59,9 @@ public:
     explicit ExceptionTest(const char *code) {
         PyErr_Clear();
         PyErr_SetExcInfo(nullptr, nullptr, nullptr);
-        printf("\t\t--- Executing Code ---\n");
-        puts(code);
-        printf("-----------------\n");
+#ifdef DEBUG_VERBOSE
+        printf("--- Executing Code ---\n%s \n-----------------\n", code);
+#endif
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile code");
@@ -91,15 +89,21 @@ public:
         }
         auto exc_info = _PyErr_GetTopmostException(tstate);
         if (exc_info->exc_type != nullptr) {
+#ifdef DEBUG_VERBOSE
             printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_type)));
+#endif
             FAIL("tstate->exc_info->exc_type is not cleared");
         }
         if (exc_info->exc_value != nullptr) {
+#ifdef DEBUG_VERBOSE
             printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_value)));
+#endif
             FAIL("tstate->exc_info->exc_value is not cleared");
         }
         if (exc_info->exc_traceback != nullptr) {
-//            printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_traceback)));
+#ifdef DEBUG_VERBOSE
+            printf("Expected nullptr, got %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_traceback)));
+#endif
             FAIL("tstate->exc_info->exc_traceback is not cleared");
         }
         return {repr};
@@ -112,6 +116,7 @@ public:
         PyErr_Clear();
         auto tstate = PyThreadState_GET();
         auto exc_info = _PyErr_GetTopmostException(tstate);
+#ifdef DEBUG_VERBOSE
         if (exc_info->exc_type != nullptr) {
             printf("Exc info exception type is %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_type)));
         }
@@ -121,6 +126,7 @@ public:
         if (exc_info->exc_traceback != nullptr) {
             printf("Exc info exception traceback is %s\n", PyUnicode_AsUTF8(PyObject_Repr(tstate->exc_info->exc_traceback)));
         }
+#endif
         return excType;
     }
 
