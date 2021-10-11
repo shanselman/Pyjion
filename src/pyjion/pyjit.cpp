@@ -634,7 +634,7 @@ pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
             PyErr_SetString(PyExc_ValueError, "Level not in range of 0-2");
             return nullptr;
         }
-        g_pyjionSettings.optimizationLevel = newLevel;
+        setOptimizationLevel(newLevel);
     }
     debug = PyDict_GetItemString(kwargs, "debug");
     if (debug != nullptr){
