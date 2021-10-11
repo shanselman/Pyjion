@@ -2887,11 +2887,3 @@ PyObject* PyJit_BlockPop(PyFrameObject* frame){
     }
     return reinterpret_cast<PyObject *>(PyFrame_BlockPop(frame));
 }
-
-void PyJit_SaveToFrameValueStack(PyObject* obj, PyFrameObject* frame, uint32_t idx){
-    frame->f_valuestack[idx] = obj;
-}
-
-PyObject* PyJit_LoadFromFrameValueStack(PyFrameObject* frame, uint32_t idx){
-    return frame->f_valuestack[idx];
-}

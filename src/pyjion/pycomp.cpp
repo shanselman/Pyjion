@@ -151,17 +151,26 @@ void PythonCompiler::emit_lasti(){
 }
 
 void PythonCompiler::emit_store_in_frame_value_stack(uint32_t idx) {
-    // Equivalent of PUSH() macro in ceval
+    Local tmp = emit_define_local(LK_Pointer);
+    emit_store_local(tmp);
     load_frame();
-    m_il.ld_u4(idx);
-    m_il.emit_call(METHOD_SAVE_TO_VALUESTACK);
+    LD_FIELDI(PyFrameObject, f_valuestack);
+    if (idx > 0) {
+        m_il.ld_i(idx * sizeof(size_t));
+        m_il.add();
+    }
+    emit_load_and_free_local(tmp);
+    m_il.st_ind_i();
 }
 
 void PythonCompiler::emit_load_from_frame_value_stack(uint32_t idx) {
-    // Equivalent of POP() macro in ceval
     load_frame();
-    m_il.ld_u4(idx);
-    m_il.emit_call(METHOD_LOAD_FROM_VALUESTACK);
+    LD_FIELDI(PyFrameObject, f_valuestack);
+    if (idx > 0) {
+        m_il.ld_i(idx * sizeof(size_t));
+        m_il.add();
+    }
+    m_il.ld_ind_i();
 }
 
 void PythonCompiler::emit_dec_frame_stackdepth(uint32_t by) {
@@ -2676,10 +2685,6 @@ GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parame
 
 GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT),  Parameter(CORINFO_TYPE_INT));
-
-GLOBAL_METHOD(METHOD_LOAD_FROM_VALUESTACK, &PyJit_LoadFromFrameValueStack, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_UINT));
-GLOBAL_METHOD(METHOD_SAVE_TO_VALUESTACK, &PyJit_SaveToFrameValueStack, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT),  Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_UINT));
-
 
 const char* opcodeName(py_opcode opcode) {
 #define OP_TO_STR(x)   case x: return #x;

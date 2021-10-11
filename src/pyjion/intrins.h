@@ -334,7 +334,4 @@ long long PyJit_LongMod(long long x, long long y);
 long long PyJit_LongPow(long long x, long long y);
 double PyJit_DoublePow(double iv, double iw);
 long long PyJit_LongAsLongLong(PyObject*);
-
-void PyJit_SaveToFrameValueStack(PyObject* obj, PyFrameObject* frame, uint32_t idx);
-PyObject* PyJit_LoadFromFrameValueStack(PyFrameObject* frame, uint32_t idx);
 #endif
