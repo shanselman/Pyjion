@@ -713,9 +713,9 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                         PGC_PROBE(1);
                         PGC_UPDATE_STACK(1);
                     }
-                    POP_VALUE();
+                    auto container = POP_VALUE();
                     for (int i = 0; i < oparg; i++) {
-                        PUSH_INTERMEDIATE(&Any);
+                        PUSH_INTERMEDIATE(container.Value->item(container.Sources));
                     }
                     break;
                 }
@@ -1039,7 +1039,25 @@ AbstractValue* AbstractInterpreter::toAbstract(PyObject* obj) {
     } else if (PyDict_CheckExact(obj)) {
         return &Dict;
     } else if (PyTuple_CheckExact(obj)) {
-        return &Tuple;
+        if (PyTuple_GET_SIZE(obj) == 0){
+            return &Tuple;
+        }
+        auto t = Py_TYPE(PyTuple_GET_ITEM(obj, 0));
+        for (int i = 1; i < PyTuple_GET_SIZE(obj); i++){
+            if (Py_TYPE(PyTuple_GET_ITEM(obj, i)) != t)
+                return &Tuple;
+        }
+        auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)), PyTuple_GET_ITEM(obj, 0));
+        switch (abstractType){
+            case AVK_String:
+                return &TupleOfString;
+            case AVK_Integer:
+                return &TupleOfInteger;
+            case AVK_Float:
+                return &TupleOfFloat;
+            default:
+                return &Tuple;
+        }
     } else if (PyBool_Check(obj)) {
         return &Bool;
     } else if (PyFloat_CheckExact(obj)) {

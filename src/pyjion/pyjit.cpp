@@ -66,52 +66,8 @@ void setOptimizationLevel(unsigned short level) {
     SET_OPT(IntegerUnboxingPower, level, 2);
 }
 
-PgcStatus nextPgcStatus(PgcStatus status) {
-    switch (status) {
-        case PgcStatus::Uncompiled:
-            return PgcStatus::CompiledWithProbes;
-        case PgcStatus::CompiledWithProbes:
-        case PgcStatus::Optimized:
-        default:
-            return PgcStatus::Optimized;
-    }
-}
-
 PyjionJittedCode::~PyjionJittedCode() {
     delete j_profile;
-}
-
-PyjionCodeProfile::~PyjionCodeProfile() {
-    // Don't decref types so that comparisons can be made to jumps
-    //    for (auto &pos: this->stackTypes) {
-    //        for(auto &observed: pos.second){
-    //            Py_XDECREF(observed.second);
-    //        }
-    //    }
-}
-
-void PyjionCodeProfile::record(size_t opcodePosition, size_t stackPosition, PyObject* value) {
-    if (PyGen_CheckExact(value) || PyCoro_CheckExact(value))
-        return;
-    if (this->stackTypes[opcodePosition][stackPosition] == nullptr) {
-        this->stackTypes[opcodePosition][stackPosition] = Py_TYPE(value);
-        Py_INCREF(Py_TYPE(value));
-    }
-    this->stackKinds[opcodePosition][stackPosition] = GetAbstractType(Py_TYPE(value), value);
-}
-
-PyTypeObject* PyjionCodeProfile::getType(size_t opcodePosition, size_t stackPosition) {
-    return this->stackTypes[opcodePosition][stackPosition];
-}
-
-AbstractValueKind PyjionCodeProfile::getKind(size_t opcodePosition, size_t stackPosition) {
-    return this->stackKinds[opcodePosition][stackPosition];
-}
-
-void capturePgcStackValue(PyjionCodeProfile* profile, PyObject* value, size_t opcodePosition, size_t stackPosition) {
-    if (value != nullptr && profile != nullptr) {
-        profile->record(opcodePosition, stackPosition, value);
-    }
 }
 
 int Pyjit_CheckRecursiveCall(PyThreadState* tstate, const char* where) {

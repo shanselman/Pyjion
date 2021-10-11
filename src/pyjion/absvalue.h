@@ -311,6 +311,8 @@ public:
     virtual AbstractValue* compare(AbstractSource* selfSources, int op, AbstractValueWithSources& other);
     virtual AbstractValue* iter(AbstractSource* selfSources);
     virtual AbstractValue* next(AbstractSource* selfSources);
+    virtual AbstractValue* item(AbstractSource* selfSources);
+    virtual AbstractValueKind itemKind();
 
     virtual bool isAlwaysTrue() {
         return false;
@@ -486,6 +488,14 @@ class TupleValue : public AbstractValue {
     AbstractValue* binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) override;
     AbstractValue* unary(AbstractSource* selfSources, int op) override;
     const char* describe() override;
+};
+
+template <AbstractValueKind Kind>
+class TupleOfValue : public TupleValue {
+public:
+    AbstractValueKind itemKind() override {
+        return Kind;
+    }
 };
 
 class ListValue : public AbstractValue {
@@ -746,7 +756,6 @@ extern InternIntegerValue InternInteger;
 extern BigIntegerValue BigInteger;
 extern FloatValue Float;
 extern ListValue List;
-extern TupleValue Tuple;
 extern SetValue Set;
 extern FrozenSetValue FrozenSet;
 extern StringValue String;
@@ -775,6 +784,11 @@ extern ReversedValue Reversed;
 extern StaticMethodValue StaticMethod;
 extern SuperValue Super;
 extern ZipValue Zip;
+
+extern TupleOfValue<AVK_Any> Tuple;
+extern TupleOfValue<AVK_Integer> TupleOfInteger;
+extern TupleOfValue<AVK_Float> TupleOfFloat;
+extern TupleOfValue<AVK_String> TupleOfString;
 
 AbstractValue* avkToAbstractValue(AbstractValueKind);
 AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value = nullptr);

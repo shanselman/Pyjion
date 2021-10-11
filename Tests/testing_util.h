@@ -296,4 +296,71 @@ public:
         return m_jittedcode->j_pgc_status;
     }
 };
+
+class InstructionGraphTest {
+private:
+    std::unique_ptr<AbstractInterpreter> m_absint;
+    InstructionGraph* m_graph;
+
+public:
+    explicit InstructionGraphTest(const char* code, const char* name) {
+        auto pyCode = CompileCode(code);
+        m_absint = std::make_unique<AbstractInterpreter>(pyCode, nullptr);
+        auto builtins = PyEval_GetBuiltins();
+        auto globals_dict = PyObject_ptr(PyDict_New());
+        auto profile = new PyjionCodeProfile();
+        auto success = m_absint->interpret(builtins, globals_dict.get(), profile, Uncompiled);
+        delete profile;
+        if (success != Success) {
+            Py_DECREF(pyCode);
+            FAIL("Failed to interpret code");
+        }
+        m_graph = m_absint->buildInstructionGraph(true);
+        auto result = m_graph->makeGraph(name);
+#ifdef DEBUG_VERBOSE
+        printf("%s", PyUnicode_AsUTF8(result));
+#endif
+    }
+
+    ~InstructionGraphTest() {
+        delete m_graph;
+    }
+
+    size_t size() {
+        return m_graph->size();
+    }
+
+    Instruction instruction(size_t n) {
+        return m_graph->operator[](n);
+    }
+
+    void assertInstruction(size_t n, py_opcode opcode, py_oparg oparg, bool escaped) {
+        auto i = instruction(n);
+        CHECK(i.escape == escaped);
+        CHECK(i.opcode == opcode);
+        CHECK(i.index == n);
+        CHECK(i.oparg == oparg);
+    }
+
+    size_t edgesIn(py_opindex idx) {
+        auto edges = m_graph->getEdges(idx);
+        return edges.size();
+    }
+
+    EscapeTransition edgeInIs(py_opindex idx, size_t position) {
+        auto edges = m_graph->getEdges(idx);
+        return edges[position].escaped;
+    }
+
+    size_t edgesOut(py_opindex idx) {
+        auto edges = m_graph->getEdgesFrom(idx);
+        return edges.size();
+    }
+
+    EscapeTransition edgeOutIs(py_opindex idx, size_t position) {
+        auto edges = m_graph->getEdgesFrom(idx);
+        return edges[position].escaped;
+    }
+};
+
 #endif// !PYJION_TESTING_UTIL_H
