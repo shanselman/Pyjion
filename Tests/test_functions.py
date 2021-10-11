@@ -771,7 +771,7 @@ class TestObjectMethodCalls:
                 return a + b + c + d
 
         f = F()
-        assert sys.getrefcount(F) == 6
+        assert sys.getrefcount(F) in [6, 7]  # PGC will keep a ref on first pass
         assert sys.getrefcount(f) == 2
         assert f.arg0() == 10
         assert sys.getrefcount(F.arg0) == 3
@@ -800,7 +800,7 @@ class TestObjectMethodCalls:
         f = F()
         test_arg1_arg1 = '5'
         pre_refcnt_a = sys.getrefcount(test_arg1_arg1)
-        assert sys.getrefcount(F) == 6
+        assert sys.getrefcount(F) in [6, 7]  # PGC will keep a ref on first pass
         assert sys.getrefcount(f) == 2
         assert f.arg1(test_arg1_arg1) == '12345'
         assert sys.getrefcount(f) == 2
@@ -972,7 +972,7 @@ class TestObjectMethodCalls:
         arg1 = '5'
         pre_refcnt_a = sys.getrefcount(arg1)
         assert sys.getrefcount(F.arg15) == 3
-        assert sys.getrefcount(F) == 6
+        assert sys.getrefcount(F) in [6, 7]  # PGC will keep a ref on first pass
         assert sys.getrefcount(f) == 2
         assert f.arg15(arg1, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15' ,'16', '17', '18') == '123456789101112131415'
         assert sys.getrefcount(F.arg15) == 3
@@ -989,7 +989,7 @@ class TestObjectMethodCalls:
         arg1 = '5'
         pre_refcnt_a = sys.getrefcount(arg1)
         assert sys.getrefcount(F.arg15) == 3
-        assert sys.getrefcount(F) == 6
+        assert sys.getrefcount(F) in [6, 7]  # PGC will keep a ref on first pass
         assert sys.getrefcount(f) == 2
         pytest.raises(ValueError, f.arg15, arg1, '6', '7', '8', '9', '10', '11', '12', '13', '14', '15' ,'16', '17', '18')
         assert sys.getrefcount(F.arg15) == 3
