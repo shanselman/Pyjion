@@ -30,13 +30,12 @@
 TEST_CASE("test classes") {
     SECTION("test class definition") {
         auto t = EmissionTest(
-                "def f():\n    class C:\n        pass\n    return C"
-        );
+                "def f():\n    class C:\n        pass\n    return C");
         CHECK(t.returns() == "<class 'C'>");
     }
 }
 
-TEST_CASE("test type"){
+TEST_CASE("test type") {
     SECTION("test define custom type") {
         auto t = EmissionTest(
                 "def f():\n"
@@ -48,8 +47,7 @@ TEST_CASE("test type"){
                 "        x = A()\n"
                 "        assert type(x) is A\n"
                 "        assert x.__class__ is A\n"
-                "        return A.__name__\n"
-        );
+                "        return A.__name__\n");
         CHECK(t.returns() == "'A'");
     }
     SECTION("test disappearing custom type") {
@@ -59,8 +57,7 @@ TEST_CASE("test type"){
                 "        assert A.__name__ == 'A'\n"
                 "        x = A()\n"
                 "        del A\n"
-                "        return x.__class__\n"
-        );
+                "        return x.__class__\n");
         CHECK(t.returns() == "<class 'A'>");
     }
     SECTION("test PGC custom type") {
@@ -71,13 +68,12 @@ TEST_CASE("test type"){
                 "        x = A()\n"
                 "        assert type(x) is A\n"
                 "        assert x.__class__ is A\n"
-                "        return A.__name__\n"
-        );
+                "        return A.__name__\n");
         CHECK(t.returns() == "'A'");
         CHECK(t.returns() == "'A'");
         CHECK(t.returns() == "'A'");
     }
-    SECTION("test define custom subtype"){
+    SECTION("test define custom subtype") {
         auto t = EmissionTest(
                 "def f():\n"
                 "       class B:\n"
@@ -97,11 +93,10 @@ TEST_CASE("test type"){
                 "       assert x.ham() == 'ham42'\n"
                 "       assert x.spam() == 'spam42'\n"
                 "       assert x.to_bytes(2, 'little') == b'\\x2a\\x00'\n"
-                "       return x"
-                );
+                "       return x");
         CHECK(t.returns() == "42");
     }
-    SECTION("test define custom subtype PGC"){
+    SECTION("test define custom subtype PGC") {
         auto t = PgcProfilingTest(
                 "def f():\n"
                 "       class B:\n"
@@ -121,15 +116,14 @@ TEST_CASE("test type"){
                 "       assert x.ham() == 'ham42'\n"
                 "       assert x.spam() == 'spam42'\n"
                 "       assert x.to_bytes(2, 'little') == b'\\x2a\\x00'\n"
-                "       return x"
-                );
+                "       return x");
         CHECK(t.returns() == "42");
         CHECK(t.returns() == "42");
         CHECK(t.returns() == "42");
     }
 }
 
-TEST_CASE("Test methods"){
+TEST_CASE("Test methods") {
     SECTION("test simple method + argument") {
         auto t = EmissionTest(
                 "def f():\n"
@@ -137,8 +131,7 @@ TEST_CASE("Test methods"){
                 "            def ham(self, _with):\n"
                 "                return 'ham + %s' % _with\n"
                 "       b = B()\n"
-                "       return b.ham('eggs')\n"
-        );
+                "       return b.ham('eggs')\n");
         CHECK(t.returns() == "'ham + eggs'");
     }
     SECTION("test simple method raising exception") {
@@ -148,8 +141,7 @@ TEST_CASE("Test methods"){
                 "            def ham(self, _with):\n"
                 "                raise ValueError\n"
                 "       b = B()\n"
-                "       return b.ham('eggs')\n"
-        );
+                "       return b.ham('eggs')\n");
         CHECK(t.raises() == PyExc_ValueError);
     }
     SECTION("test simple classmethod + argument") {
@@ -160,8 +152,7 @@ TEST_CASE("Test methods"){
                 "            def ham(cls, _with):\n"
                 "                return 'ham + %s' % _with\n"
                 "       b = B()\n"
-                "       return b.ham('eggs')\n"
-        );
+                "       return b.ham('eggs')\n");
         CHECK(t.returns() == "'ham + eggs'");
     }
     SECTION("test simple staticmethod + argument") {
@@ -172,8 +163,7 @@ TEST_CASE("Test methods"){
                 "            def ham(_with):\n"
                 "                return 'ham + %s' % _with\n"
                 "       b = B()\n"
-                "       return b.ham('eggs')\n"
-        );
+                "       return b.ham('eggs')\n");
         CHECK(t.returns() == "'ham + eggs'");
     }
 }
@@ -201,8 +191,7 @@ TEST_CASE("Test inheritance") {
                 "  node = GrandchildNode('a', 'b', 'c')\n"
                 "  x = repr(node)\n"
                 "  del node\n"
-                "  return x\n"
-        );
+                "  return x\n");
         CHECK(t.returns() == "\"GrandchildNode(tag='b', value='a')\"");
     }
 }

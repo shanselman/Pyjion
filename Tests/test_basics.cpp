@@ -114,7 +114,7 @@ TEST_CASE("General dict comprehensions") {
         CHECK(t.returns() == "{0: 1, 1: 2, 2: 3}");
     }
 
-    SECTION("test inline"){
+    SECTION("test inline") {
         auto t = EmissionTest("def f():\n  return {k: k + 10 for k in range(10)}");
         CHECK(t.returns() == "{0: 10, 1: 11, 2: 12, 3: 13, 4: 14, 5: 15, 6: 16, 7: 17, 8: 18, 9: 19}");
     }
@@ -200,7 +200,7 @@ TEST_CASE("General method calls") {
 }
 
 TEST_CASE("General set unpacking") {
-    SECTION("string unpack"){
+    SECTION("string unpack") {
         auto t = EmissionTest("def f(): return {*'oooooo'}");
         CHECK(t.returns() == "{'o'}");
     }
@@ -260,7 +260,7 @@ TEST_CASE("General dict unpacking") {
     }
 }
 
-TEST_CASE("Dict Merging"){
+TEST_CASE("Dict Merging") {
     SECTION("merging a dict with | operator") {
         auto t = EmissionTest("def f(): \n  a=dict()\n  b=dict()\n  a['x']=1\n  b['y']=2\n  return a | b");
         CHECK(t.returns() == "{'x': 1, 'y': 2}");
@@ -414,8 +414,7 @@ TEST_CASE("Iterators") {
                 "       tot += i\n"
                 "     return tot\n"
                 "  v = _sum((0,1,2)) + _sum([0,1,2])\n"
-                "  return v\n"
-        );
+                "  return v\n");
         CHECK(t.returns() == "6");
     };
 }
@@ -527,7 +526,7 @@ TEST_CASE("Simple methods") {
     }
 }
 
-TEST_CASE("Test nested stacks"){
+TEST_CASE("Test nested stacks") {
     SECTION("assert nested method optimized case") {
         auto t = EmissionTest("def f():\n"
                               "    l = {'a': 1, 'b': 2}\n"
@@ -547,7 +546,7 @@ TEST_CASE("Type object methods") {
         auto t = EmissionTest("def f(): return int.__format__(2, '%')");
         CHECK(t.returns() == "'200.000000%'");
     }
-    SECTION("assert pow with mixed locals"){
+    SECTION("assert pow with mixed locals") {
         auto t = EmissionTest(
                 "def f():\n"
                 "   f = 12\n"
@@ -557,14 +556,14 @@ TEST_CASE("Type object methods") {
         CHECK(t.returns() == "36");
     }
 
-    SECTION("assert int from_bytes instance"){
+    SECTION("assert int from_bytes instance") {
         auto t = EmissionTest(
                 "def f():\n"
                 "   f = 12\n"
                 "   return f.from_bytes(b'1234', 'little')");
         CHECK(t.returns() == "875770417");
     }
-    SECTION("assert const instance"){
+    SECTION("assert const instance") {
         auto t = EmissionTest(
                 "def f():\n"
                 "   f = 1.1234e90\n"
@@ -633,31 +632,29 @@ TEST_CASE("Test builtins") {
         auto t = EmissionTest("def f(): args=('a', 'aaa', 'aaaaa'); return max(map(len, args))");
         CHECK(t.returns() == "5");
     }
-    SECTION("call chr()"){
+    SECTION("call chr()") {
         auto t = EmissionTest("def f(): return chr(32) * 10");
         CHECK(t.returns() == "'          '");
     }
-    SECTION("call bin()"){
+    SECTION("call bin()") {
         auto t = EmissionTest("def f(): return bin(2**6)");
         CHECK(t.returns() == "'0b1000000'");
     }
-    SECTION("call bin() with a big number!"){
+    SECTION("call bin() with a big number!") {
         auto t = EmissionTest("def f(): return bin(2**65)");
         CHECK(t.returns() == "'0b100000000000000000000000000000000000000000000000000000000000000000'");
     }
 }
 
-TEST_CASE("Test type annotations"){
+TEST_CASE("Test type annotations") {
     SECTION("test variable definition with annotations") {
         auto t = EmissionTest(
-                "def f():\n    x: int = 2\n    return x"
-        );
+                "def f():\n    x: int = 2\n    return x");
         CHECK(t.returns() == "2");
     }
     SECTION("test class definition with annotations") {
         auto t = EmissionTest(
-                "def f():\n    class C:\n      property: int = 0\n    return C"
-        );
+                "def f():\n    class C:\n      property: int = 0\n    return C");
         CHECK(t.returns() == "<class 'C'>");
     }
 }

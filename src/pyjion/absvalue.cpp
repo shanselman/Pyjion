@@ -99,14 +99,14 @@ AbstractValue* AbstractValue::compare(AbstractSource* selfSources, int op, Abstr
     return &Any;
 }
 
-AbstractValue* AbstractValue::mergeWith(AbstractValue*other) {
+AbstractValue* AbstractValue::mergeWith(AbstractValue* other) {
     if (this == other) {
         return this;
     }
     return &Any;
 }
 
-PyTypeObject *AbstractValue::pythonType() {
+PyTypeObject* AbstractValue::pythonType() {
     return GetPyType(this->kind());
 }
 
@@ -134,8 +134,7 @@ AbstractSource* AbstractSource::combine(AbstractSource* one, AbstractSource* two
                 }
                 two->Sources = one->Sources;
                 return one;
-            }
-            else {
+            } else {
                 for (auto source : one->Sources->Sources) {
                     two->Sources->Sources.insert(source);
                     if (source != one) {
@@ -145,13 +144,11 @@ AbstractSource* AbstractSource::combine(AbstractSource* one, AbstractSource* two
                 one->Sources = two->Sources;
                 return two;
             }
-        }
-        else {
+        } else {
             // merging with an unknown source...
             return one;
         }
-    }
-    else if (two != nullptr) {
+    } else if (two != nullptr) {
         // merging with an unknown source...
         return two;
     }
@@ -175,8 +172,7 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_XOR:
                 return this;
             case BINARY_TRUE_DIVIDE:
-            case INPLACE_TRUE_DIVIDE:
-            {
+            case INPLACE_TRUE_DIVIDE: {
                 return &Float;
             }
             case BINARY_ADD:
@@ -197,15 +193,13 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_SUBTRACT:
                 return &Integer;
         }
-    }
-    else if (other_kind == AVK_Bytes) {
+    } else if (other_kind == AVK_Bytes) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return &Bytes;
         }
-    }
-    else if (other_kind == AVK_Complex) {
+    } else if (other_kind == AVK_Complex) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_MULTIPLY:
@@ -219,8 +213,7 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_TRUE_DIVIDE:
                 return &Complex;
         }
-    }
-    else if (other_kind == AVK_Float) {
+    } else if (other_kind == AVK_Float) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_FLOOR_DIVIDE:
@@ -235,20 +228,17 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_MULTIPLY:
             case INPLACE_POWER:
             case INPLACE_SUBTRACT:
-            case INPLACE_TRUE_DIVIDE:
-            {
+            case INPLACE_TRUE_DIVIDE: {
                 return &Float;
             }
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_MODULO:
             case INPLACE_MODULO:
                 return this;
             case BINARY_TRUE_DIVIDE:
-            case INPLACE_TRUE_DIVIDE:
-            {
+            case INPLACE_TRUE_DIVIDE: {
                 return &Float;
             }
             case BINARY_ADD:
@@ -273,22 +263,19 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_XOR:
                 return &Integer;
         }
-    }
-    else if (other_kind == AVK_List) {
+    } else if (other_kind == AVK_List) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return &List;
         }
-    }
-    else if (other_kind == AVK_String) {
+    } else if (other_kind == AVK_String) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return &String;
         }
-    }
-    else if (other_kind == AVK_Tuple) {
+    } else if (other_kind == AVK_Tuple) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
@@ -327,8 +314,7 @@ AbstractValue* BytesValue::binary(AbstractSource* selfSources, int op, AbstractV
             case INPLACE_MULTIPLY:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Bytes) {
+    } else if (other_kind == AVK_Bytes) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_MODULO:
@@ -336,15 +322,13 @@ AbstractValue* BytesValue::binary(AbstractSource* selfSources, int op, AbstractV
             case INPLACE_MODULO:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Dict) {
+    } else if (other_kind == AVK_Dict) {
         switch (op) {
             case BINARY_MODULO:
             case INPLACE_MODULO:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
@@ -352,21 +336,18 @@ AbstractValue* BytesValue::binary(AbstractSource* selfSources, int op, AbstractV
             case BINARY_SUBSCR:
                 return &Integer;
         }
-    }
-    else if (other_kind == AVK_List) {
+    } else if (other_kind == AVK_List) {
         switch (op) {
             case BINARY_MODULO:
             case INPLACE_MODULO:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Slice) {
+    } else if (other_kind == AVK_Slice) {
         switch (op) {
             case BINARY_SUBSCR:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Tuple) {
+    } else if (other_kind == AVK_Tuple) {
         switch (op) {
             case BINARY_MODULO:
             case INPLACE_MODULO:
@@ -388,8 +369,8 @@ const char* BytesValue::describe() {
     return "bytes";
 }
 
-AbstractValueKind BytesValue::resolveMethod(const char *name) {
-    for (auto const &b: bytesMethodReturnTypes){
+AbstractValueKind BytesValue::resolveMethod(const char* name) {
+    for (auto const& b : bytesMethodReturnTypes) {
         if (strcmp(name, b.first) == 0)
             return b.second;
     }
@@ -417,8 +398,7 @@ AbstractValue* ComplexValue::binary(AbstractSource* selfSources, int op, Abstrac
             case INPLACE_TRUE_DIVIDE:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Complex) {
+    } else if (other_kind == AVK_Complex) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_MULTIPLY:
@@ -432,8 +412,7 @@ AbstractValue* ComplexValue::binary(AbstractSource* selfSources, int op, Abstrac
             case INPLACE_TRUE_DIVIDE:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Float) {
+    } else if (other_kind == AVK_Float) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_MULTIPLY:
@@ -447,8 +426,7 @@ AbstractValue* ComplexValue::binary(AbstractSource* selfSources, int op, Abstrac
             case INPLACE_TRUE_DIVIDE:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_MULTIPLY:
@@ -495,8 +473,7 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
     if (other_kind == AVK_Bool) {
         switch (op) {
             case BINARY_TRUE_DIVIDE:
-            case INPLACE_TRUE_DIVIDE:
-            {
+            case INPLACE_TRUE_DIVIDE: {
                 return &Float;
             }
             case BINARY_ADD:
@@ -521,17 +498,15 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_RSHIFT:
             case INPLACE_SUBTRACT:
             case INPLACE_XOR:
-				return &Integer;
+                return &Integer;
         }
-    }
-    else if (other_kind == AVK_Bytes) {
+    } else if (other_kind == AVK_Bytes) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return &Bytes;
         }
-    }
-    else if (other_kind == AVK_Complex) {
+    } else if (other_kind == AVK_Complex) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_MULTIPLY:
@@ -545,8 +520,7 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_TRUE_DIVIDE:
                 return &Complex;
         }
-    }
-    else if (other_kind == AVK_Float) {
+    } else if (other_kind == AVK_Float) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_FLOOR_DIVIDE:
@@ -561,17 +535,14 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_MULTIPLY:
             case INPLACE_POWER:
             case INPLACE_SUBTRACT:
-            case INPLACE_TRUE_DIVIDE:
-            {
+            case INPLACE_TRUE_DIVIDE: {
                 return &Float;
             }
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_TRUE_DIVIDE:
-            case INPLACE_TRUE_DIVIDE:
-            {
+            case INPLACE_TRUE_DIVIDE: {
                 return &Float;
             }
             case BINARY_MULTIPLY:
@@ -608,22 +579,19 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_XOR:
                 return &Integer;
         }
-    }
-    else if (other_kind == AVK_List) {
+    } else if (other_kind == AVK_List) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return &List;
         }
-    }
-    else if (other_kind == AVK_String) {
+    } else if (other_kind == AVK_String) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return &String;
         }
-    }
-    else if (other_kind == AVK_Tuple) {
+    } else if (other_kind == AVK_Tuple) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
@@ -649,8 +617,8 @@ const char* IntegerValue::describe() {
     return "int";
 }
 
-AbstractValueKind IntegerValue::resolveMethod(const char *name) {
-    for (auto const &b: intMethodReturnTypes){
+AbstractValueKind IntegerValue::resolveMethod(const char* name) {
+    for (auto const& b : intMethodReturnTypes) {
         if (strcmp(name, b.first) == 0)
             return b.second;
     }
@@ -675,22 +643,19 @@ AbstractValue* StringValue::binary(AbstractSource* selfSources, int op, Abstract
             case INPLACE_MULTIPLY:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_MULTIPLY:
             case BINARY_SUBSCR:
             case INPLACE_MULTIPLY:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Slice) {
+    } else if (other_kind == AVK_Slice) {
         switch (op) {
             case BINARY_SUBSCR:
                 return this;
         }
-    }
-    else if (other_kind == AVK_String) {
+    } else if (other_kind == AVK_String) {
         switch (op) {
             case BINARY_ADD:
             case INPLACE_ADD:
@@ -712,8 +677,8 @@ const char* StringValue::describe() {
     return "str";
 }
 
-AbstractValueKind StringValue::resolveMethod(const char *name) {
-    for (auto const &b: stringMethodReturnTypes){
+AbstractValueKind StringValue::resolveMethod(const char* name) {
+    for (auto const& b : stringMethodReturnTypes) {
         if (strcmp(name, b.first) == 0)
             return b.second;
     }
@@ -749,8 +714,7 @@ AbstractValue* FloatValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_TRUE_DIVIDE:
                 return &Float;
         }
-    }
-    else if (other_kind == AVK_Complex) {
+    } else if (other_kind == AVK_Complex) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_MULTIPLY:
@@ -764,8 +728,7 @@ AbstractValue* FloatValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_TRUE_DIVIDE:
                 return &Complex;
         }
-    }
-    else if (other_kind == AVK_Float) {
+    } else if (other_kind == AVK_Float) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_FLOOR_DIVIDE:
@@ -783,8 +746,7 @@ AbstractValue* FloatValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_TRUE_DIVIDE:
                 return &Float;
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_FLOOR_DIVIDE:
@@ -821,8 +783,8 @@ const char* FloatValue::describe() {
     return "float";
 }
 
-AbstractValueKind FloatValue::resolveMethod(const char *name) {
-    for (auto const &b: floatMethodReturnTypes){
+AbstractValueKind FloatValue::resolveMethod(const char* name) {
+    for (auto const& b : floatMethodReturnTypes) {
         if (strcmp(name, b.first) == 0)
             return b.second;
     }
@@ -842,21 +804,18 @@ AbstractValue* TupleValue::binary(AbstractSource* selfSources, int op, AbstractV
             case INPLACE_MULTIPLY:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Slice) {
+    } else if (other_kind == AVK_Slice) {
         switch (op) {
             case BINARY_SUBSCR:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Tuple) {
+    } else if (other_kind == AVK_Tuple) {
         switch (op) {
             case BINARY_ADD:
             case INPLACE_ADD:
@@ -891,52 +850,44 @@ AbstractValue* ListValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_MULTIPLY:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Bytes) {
+    } else if (other_kind == AVK_Bytes) {
         switch (op) {
             case INPLACE_ADD:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Dict) {
+    } else if (other_kind == AVK_Dict) {
         switch (op) {
             case INPLACE_ADD:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Integer) {
+    } else if (other_kind == AVK_Integer) {
         switch (op) {
             case BINARY_MULTIPLY:
             case INPLACE_MULTIPLY:
                 return this;
         }
-    }
-    else if (other_kind == AVK_List) {
+    } else if (other_kind == AVK_List) {
         switch (op) {
             case BINARY_ADD:
             case INPLACE_ADD:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Set) {
+    } else if (other_kind == AVK_Set) {
         switch (op) {
             case INPLACE_ADD:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Slice) {
+    } else if (other_kind == AVK_Slice) {
         switch (op) {
             case BINARY_SUBSCR:
                 return this;
         }
-    }
-    else if (other_kind == AVK_String) {
+    } else if (other_kind == AVK_String) {
         switch (op) {
             case INPLACE_ADD:
                 return this;
         }
-    }
-    else if (other_kind == AVK_Tuple) {
+    } else if (other_kind == AVK_Tuple) {
         switch (op) {
             case INPLACE_ADD:
                 return this;
@@ -958,8 +909,8 @@ const char* ListValue::describe() {
 }
 
 
-AbstractValueKind ListValue::resolveMethod(const char *name) {
-    for (auto const &b: listMethodReturnTypes){
+AbstractValueKind ListValue::resolveMethod(const char* name) {
+    for (auto const& b : listMethodReturnTypes) {
         if (strcmp(name, b.first) == 0)
             return b.second;
     }
@@ -983,8 +934,8 @@ const char* DictValue::describe() {
     return "dict";
 }
 
-AbstractValueKind DictValue::resolveMethod(const char *name) {
-    for (auto const &b: dictMethodReturnTypes){
+AbstractValueKind DictValue::resolveMethod(const char* name) {
+    for (auto const& b : dictMethodReturnTypes) {
         if (strcmp(name, b.first) == 0)
             return b.second;
     }
@@ -1122,13 +1073,13 @@ const char* IterableValue::describe() {
     return "iterable";
 }
 
-AbstractValueKind ModuleValue::kind(){
+AbstractValueKind ModuleValue::kind() {
     return AVK_Module;
 }
-AbstractValue *ModuleValue::unary(AbstractSource *selfSources, int op){
+AbstractValue* ModuleValue::unary(AbstractSource* selfSources, int op) {
     return AbstractValue::unary(selfSources, op);
 }
-const char *ModuleValue::describe(){
+const char* ModuleValue::describe() {
     return "module";
 }
 
@@ -1136,11 +1087,11 @@ AbstractValueKind TypeValue::kind() {
     return AVK_Type;
 }
 
-AbstractValue *TypeValue::unary(AbstractSource *selfSources, int op) {
+AbstractValue* TypeValue::unary(AbstractSource* selfSources, int op) {
     return AbstractValue::unary(selfSources, op);
 }
 
-const char *TypeValue::describe() {
+const char* TypeValue::describe() {
     return "type";
 }
 
@@ -1149,18 +1100,18 @@ AbstractValueKind ByteArrayValue::kind() {
     return AVK_Bytearray;
 }
 
-AbstractValue *ByteArrayValue::unary(AbstractSource *selfSources, int op) {
+AbstractValue* ByteArrayValue::unary(AbstractSource* selfSources, int op) {
     if (op == UNARY_NOT)
         return &Bool;
     return AbstractValue::unary(selfSources, op);
 }
 
-const char *ByteArrayValue::describe() {
+const char* ByteArrayValue::describe() {
     return "bytearray";
 }
 
-AbstractValueKind ByteArrayValue::resolveMethod(const char *name) {
-    for (auto const &b: bytearrayMethodReturnTypes){
+AbstractValueKind ByteArrayValue::resolveMethod(const char* name) {
+    for (auto const& b : bytearrayMethodReturnTypes) {
         if (strcmp(name, b.first) == 0)
             return b.second;
     }
@@ -1172,11 +1123,11 @@ AbstractValueKind MethodValue::kind() {
     return AVK_Method;
 }
 
-AbstractValue *MethodValue::unary(AbstractSource *selfSources, int op) {
+AbstractValue* MethodValue::unary(AbstractSource* selfSources, int op) {
     return AbstractValue::unary(selfSources, op);
 }
 
-const char *MethodValue::describe() {
+const char* MethodValue::describe() {
     return "method";
 }
 
@@ -1185,11 +1136,11 @@ AbstractValueKind EnumeratorValue::kind() {
     return AVK_Enumerate;
 }
 
-AbstractValue *EnumeratorValue::unary(AbstractSource *selfSources, int op) {
+AbstractValue* EnumeratorValue::unary(AbstractSource* selfSources, int op) {
     return AbstractValue::unary(selfSources, op);
 }
 
-const char *EnumeratorValue::describe() {
+const char* EnumeratorValue::describe() {
     return "enumerator";
 }
 
@@ -1198,11 +1149,11 @@ AbstractValueKind CodeObjectValue::kind() {
     return AVK_Code;
 }
 
-AbstractValue *CodeObjectValue::unary(AbstractSource *selfSources, int op) {
+AbstractValue* CodeObjectValue::unary(AbstractSource* selfSources, int op) {
     return AbstractValue::unary(selfSources, op);
 }
 
-const char *CodeObjectValue::describe() {
+const char* CodeObjectValue::describe() {
     return "codeobject";
 }
 
@@ -1216,12 +1167,11 @@ AbstractValue* RangeIteratorValue::next(AbstractSource* selfSources) {
     return &Integer;
 }
 
-AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source){
+AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source) {
     // IS this a builtin?
-    if (source.hasSource() && source.Sources->isBuiltin())
-    {
+    if (source.hasSource() && source.Sources->isBuiltin()) {
         auto globalSource = dynamic_cast<BuiltinSource*>(source.Sources);
-        for (auto const &b: builtinReturnTypes){
+        for (auto const& b : builtinReturnTypes) {
             if (strcmp(globalSource->getName(), b.first) == 0)
                 return b.second;
         }
@@ -1229,7 +1179,7 @@ AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source){
     return AVK_Any;
 }
 
-AbstractValue* avkToAbstractValue(AbstractValueKind kind){
+AbstractValue* avkToAbstractValue(AbstractValueKind kind) {
     switch (kind) {
         case AVK_Any:
             return &Any;
@@ -1323,101 +1273,69 @@ AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
             return AVK_BigInteger;
         }
         return AVK_Integer;
-    }
-    else if (type == &PyFloat_Type) {
+    } else if (type == &PyFloat_Type) {
         return AVK_Float;
-    }
-    else if (type == &PyDict_Type) {
+    } else if (type == &PyDict_Type) {
         return AVK_Dict;
-    }
-    else if (type == &PyTuple_Type) {
+    } else if (type == &PyTuple_Type) {
         return AVK_Tuple;
-    }
-    else if (type == &PyList_Type) {
+    } else if (type == &PyList_Type) {
         return AVK_List;
-    }
-    else if (type == &PyBool_Type) {
+    } else if (type == &PyBool_Type) {
         return AVK_Bool;
-    }
-    else if (type == &PyUnicode_Type) {
+    } else if (type == &PyUnicode_Type) {
         return AVK_String;
-    }
-    else if (type == &PyBytes_Type) {
+    } else if (type == &PyBytes_Type) {
         return AVK_Bytes;
-    }
-    else if (type == &PyByteArray_Type) {
+    } else if (type == &PyByteArray_Type) {
         return AVK_Bytearray;
-    }
-    else if (type == &PySet_Type) {
+    } else if (type == &PySet_Type) {
         return AVK_Set;
-    }
-    else if (type == &PyFrozenSet_Type) {
+    } else if (type == &PyFrozenSet_Type) {
         return AVK_FrozenSet;
-    }
-    else if (type == &_PyNone_Type) {
+    } else if (type == &_PyNone_Type) {
         return AVK_None;
-    }
-    else if (type == &PyFunction_Type || type == &PyCFunction_Type) {
+    } else if (type == &PyFunction_Type || type == &PyCFunction_Type) {
         return AVK_Function;
-    }
-    else if (type == &PySlice_Type) {
+    } else if (type == &PySlice_Type) {
         return AVK_Slice;
-    }
-    else if (type == &PyComplex_Type) {
+    } else if (type == &PyComplex_Type) {
         return AVK_Complex;
-    }
-    else if (type == &PyType_Type) {
+    } else if (type == &PyType_Type) {
         return AVK_Type;
-    }
-    else if (type == &PyEnum_Type) {
+    } else if (type == &PyEnum_Type) {
         return AVK_Enumerate;
-    }
-    else if (type == &PyCode_Type) {
+    } else if (type == &PyCode_Type) {
         return AVK_Code;
-    }
-    else if (type == &PyMemoryView_Type) {
+    } else if (type == &PyMemoryView_Type) {
         return AVK_MemoryView;
-    }
-    else if (type == &PyMethod_Type) {
+    } else if (type == &PyMethod_Type) {
         return AVK_Method;
-    }
-    else if (type == &PyModule_Type) {
+    } else if (type == &PyModule_Type) {
         return AVK_Module;
-    }
-    else if (type == &PyRange_Type) {
+    } else if (type == &PyRange_Type) {
         return AVK_Range;
-    }
-    else if (type == &PyRangeIter_Type) {
+    } else if (type == &PyRangeIter_Type) {
         return AVK_RangeIterator;
-    }
-    else if (type == &PyMemoryView_Type) {
+    } else if (type == &PyMemoryView_Type) {
         return AVK_MemoryView;
-    }
-    else if (type == &PyClassMethod_Type) {
+    } else if (type == &PyClassMethod_Type) {
         return AVK_Classmethod;
-    }
-    else if (type == &PyFilter_Type) {
+    } else if (type == &PyFilter_Type) {
         return AVK_Filter;
-    }
-    else if (type == &PyProperty_Type) {
+    } else if (type == &PyProperty_Type) {
         return AVK_Property;
-    }
-    else if (type == &PyMap_Type) {
+    } else if (type == &PyMap_Type) {
         return AVK_Map;
-    }
-    else if (type == &PyBaseObject_Type) {
+    } else if (type == &PyBaseObject_Type) {
         return AVK_Baseobject;
-    }
-    else if (type == &PyReversed_Type) {
+    } else if (type == &PyReversed_Type) {
         return AVK_Reversed;
-    }
-    else if (type == &PyStaticMethod_Type) {
+    } else if (type == &PyStaticMethod_Type) {
         return AVK_Staticmethod;
-    }
-    else if (type == &PySuper_Type) {
+    } else if (type == &PySuper_Type) {
         return AVK_Super;
-    }
-    else if (type == &PyZip_Type) {
+    } else if (type == &PyZip_Type) {
         return AVK_Zip;
     }
     return AVK_Any;
@@ -1425,43 +1343,76 @@ AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
 
 PyTypeObject* GetPyType(AbstractValueKind type) {
     switch (type) {
-        case AVK_Any: return &PyType_Type;
-        case AVK_Integer: return &PyLong_Type;
-        case AVK_BigInteger: return &PyLong_Type;
-        case AVK_Float: return &PyFloat_Type;
-        case AVK_Dict: return &PyDict_Type;
-        case AVK_Tuple: return &PyTuple_Type;
-        case AVK_List: return &PyList_Type;
-        case AVK_Bool: return &PyBool_Type;
-        case AVK_String: return &PyUnicode_Type;
-        case AVK_Bytes: return &PyBytes_Type;
-        case AVK_Set: return &PySet_Type;
-        case AVK_FrozenSet: return &PyFrozenSet_Type;
-        case AVK_None: return &_PyNone_Type;
-        case AVK_Function: return &PyFunction_Type;
-        case AVK_Slice: return &PySlice_Type;
-        case AVK_Complex: return &PyComplex_Type;
-        case AVK_Type: return &PyType_Type;
-        case AVK_Enumerate: return &PyEnum_Type;
-        case AVK_Code: return &PyCode_Type;
-        case AVK_Bytearray: return &PyByteArray_Type;
-        case AVK_Module: return &PyModule_Type;
-        case AVK_Method: return &PyMethod_Type;
-        case AVK_MemoryView: return &PyMemoryView_Type;
-        case AVK_Classmethod: return &PyClassMethod_Type;
-        case AVK_Filter: return &PyFilter_Type;
-        case AVK_Property: return &PyProperty_Type;
-        case AVK_Map: return &PyMap_Type;
-        case AVK_Baseobject: return &PyBaseObject_Type;
-        case AVK_Reversed: return &PyReversed_Type;
-        case AVK_Staticmethod: return &PyStaticMethod_Type;
-        case AVK_Super: return &PySuper_Type;
-        case AVK_Zip: return &PyZip_Type;
-        case AVK_Iterable: return nullptr; // Could be anything
+        case AVK_Any:
+            return &PyType_Type;
+        case AVK_Integer:
+            return &PyLong_Type;
+        case AVK_BigInteger:
+            return &PyLong_Type;
+        case AVK_Float:
+            return &PyFloat_Type;
+        case AVK_Dict:
+            return &PyDict_Type;
+        case AVK_Tuple:
+            return &PyTuple_Type;
+        case AVK_List:
+            return &PyList_Type;
+        case AVK_Bool:
+            return &PyBool_Type;
+        case AVK_String:
+            return &PyUnicode_Type;
+        case AVK_Bytes:
+            return &PyBytes_Type;
+        case AVK_Set:
+            return &PySet_Type;
+        case AVK_FrozenSet:
+            return &PyFrozenSet_Type;
+        case AVK_None:
+            return &_PyNone_Type;
+        case AVK_Function:
+            return &PyFunction_Type;
+        case AVK_Slice:
+            return &PySlice_Type;
+        case AVK_Complex:
+            return &PyComplex_Type;
+        case AVK_Type:
+            return &PyType_Type;
+        case AVK_Enumerate:
+            return &PyEnum_Type;
+        case AVK_Code:
+            return &PyCode_Type;
+        case AVK_Bytearray:
+            return &PyByteArray_Type;
+        case AVK_Module:
+            return &PyModule_Type;
+        case AVK_Method:
+            return &PyMethod_Type;
+        case AVK_MemoryView:
+            return &PyMemoryView_Type;
+        case AVK_Classmethod:
+            return &PyClassMethod_Type;
+        case AVK_Filter:
+            return &PyFilter_Type;
+        case AVK_Property:
+            return &PyProperty_Type;
+        case AVK_Map:
+            return &PyMap_Type;
+        case AVK_Baseobject:
+            return &PyBaseObject_Type;
+        case AVK_Reversed:
+            return &PyReversed_Type;
+        case AVK_Staticmethod:
+            return &PyStaticMethod_Type;
+        case AVK_Super:
+            return &PySuper_Type;
+        case AVK_Zip:
+            return &PyZip_Type;
+        case AVK_Iterable:
+            return nullptr;// Could be anything
         default:
-        #ifdef DEBUG_VERBOSE
+#ifdef DEBUG_VERBOSE
             printf("Warning: Missing GetPyType for %d", type);
-        #endif
+#endif
             return nullptr;
     }
 }
@@ -1479,7 +1430,7 @@ AbstractValueKind PgcValue::kind() {
 }
 
 AbstractValue* VolatileValue::binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {
-    switch(this->kind()){
+    switch (this->kind()) {
         case AVK_Float:
             return FloatValue::binary(op, other);
         case AVK_Integer:

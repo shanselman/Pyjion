@@ -31,31 +31,31 @@
 typedef ssize_t tagged_ptr;
 
 #ifdef _TARGET_AMD64_
-#define NEW_LONG PyLong_FromLongLong
+#define NEW_LONG             PyLong_FromLongLong
 #define AS_LONG_AND_OVERFLOW PyLong_AsLongLongAndOverflow
 #else
-#define NEW_LONG PyLong_FromLong
+#define NEW_LONG             PyLong_FromLong
 #define AS_LONG_AND_OVERFLOW PyLong_AsLongAndOverflow
 #endif
 
-#define MAX_BITS ((sizeof(tagged_ptr) * 8) - 1)
+#define MAX_BITS         ((sizeof(tagged_ptr) * 8) - 1)
 
-#define MAX_TAGGED_VALUE (((tagged_ptr)1<<(MAX_BITS-1)) - 1)
-#define MIN_TAGGED_VALUE (- ((tagged_ptr)1 << (MAX_BITS-1)))
+#define MAX_TAGGED_VALUE (((tagged_ptr) 1 << (MAX_BITS - 1)) - 1)
+#define MIN_TAGGED_VALUE (-((tagged_ptr) 1 << (MAX_BITS - 1)))
 
 inline bool can_tag(tagged_ptr value) {
     return value >= MIN_TAGGED_VALUE && value <= MAX_TAGGED_VALUE;
 }
 
-#define TAG_IT(x) ((PyObject*) (((x) << 1) | 0x01))
-#define UNTAG_IT(x) ((x) >> 1)
-#define IS_TAGGED(x) ((x) & 0x01)
+#define TAG_IT(x)            ((PyObject*) (((x) << 1) | 0x01))
+#define UNTAG_IT(x)          ((x) >> 1)
+#define IS_TAGGED(x)         ((x) &0x01)
 
 // Gets the number of "digits" (as defined by the Python long object) that fit into our tagged pointers
 #define DIGITS_IN_TAGGED_PTR ((MAX_BITS + PYLONG_BITS_IN_DIGIT - 1) / PYLONG_BITS_IN_DIGIT)
 // Gets the size of a PyNumber object to be allocated on the stack that can hold our tagged pointer
-#define NUMBER_SIZE (((sizeof(PyVarObject) + sizeof(PY_UINT32_T) * DIGITS_IN_TAGGED_PTR) / sizeof(size_t)) + sizeof(size_t))
+#define NUMBER_SIZE          (((sizeof(PyVarObject) + sizeof(PY_UINT32_T) * DIGITS_IN_TAGGED_PTR) / sizeof(size_t)) + sizeof(size_t))
 #define INIT_TMP_NUMBER(name, value) \
-	size_t tmp_##name[NUMBER_SIZE];  \
-	PyObject* name = init_number(tmp_##name, value);
+    size_t tmp_##name[NUMBER_SIZE];  \
+    PyObject* name = init_number(tmp_##name, value);
 #endif

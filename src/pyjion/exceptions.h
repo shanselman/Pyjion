@@ -28,99 +28,90 @@
 
 using namespace std;
 
-class PyjionJitRuntimeException: public std::exception{};
+class PyjionJitRuntimeException : public std::exception {};
 
-class GuardStackException: public PyjionJitRuntimeException {
+class GuardStackException : public PyjionJitRuntimeException {
 public:
-    GuardStackException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    GuardStackException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Guard Stack error.";
     }
 };
 
-class IntegerOverflowException: public PyjionJitRuntimeException {
+class IntegerOverflowException : public PyjionJitRuntimeException {
 public:
-    IntegerOverflowException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    IntegerOverflowException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Compiled CIL function contains an integer overflow.";
     }
 };
 
-class RangeCheckException: public PyjionJitRuntimeException {
+class RangeCheckException : public PyjionJitRuntimeException {
 public:
-    RangeCheckException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    RangeCheckException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Range check validation failed.";
     }
 };
 
-class DivisionByZeroException: public PyjionJitRuntimeException {
+class DivisionByZeroException : public PyjionJitRuntimeException {
 public:
-    DivisionByZeroException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    DivisionByZeroException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Division by zero error.";
     }
 };
 
-class NullReferenceException: public PyjionJitRuntimeException {
+class NullReferenceException : public PyjionJitRuntimeException {
 public:
-    NullReferenceException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    NullReferenceException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Null reference exception within JIT.";
     }
 };
 
-class CilVerficationException: public PyjionJitRuntimeException {
+class CilVerficationException : public PyjionJitRuntimeException {
 public:
-    CilVerficationException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    CilVerficationException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "CIL verification error.";
     }
 };
 
-class UnmanagedCodeSecurityException: public PyjionJitRuntimeException {
+class UnmanagedCodeSecurityException : public PyjionJitRuntimeException {
 public:
-    UnmanagedCodeSecurityException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    UnmanagedCodeSecurityException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Unmanaged code security exception.";
     }
 };
 
-class UnsupportedHelperException: public PyjionJitRuntimeException {
+class UnsupportedHelperException : public PyjionJitRuntimeException {
     int ftn;
+
 public:
     UnsupportedHelperException(int ftnNum) : PyjionJitRuntimeException() {
         ftn = ftnNum;
     };
-    const char * what () const noexcept override
-    {
+    const char* what() const noexcept override {
         return "Unsupported EE helper requested.";
     }
 };
 
-class OutOfMemoryException: public PyjionJitRuntimeException {
+class OutOfMemoryException : public PyjionJitRuntimeException {
 public:
-    OutOfMemoryException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    OutOfMemoryException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Out of memory exception.";
     }
 };
 
 
-class UnexpectedValueException: public PyjionJitRuntimeException {
+class UnexpectedValueException : public PyjionJitRuntimeException {
 public:
-    UnexpectedValueException() : PyjionJitRuntimeException() {};
-    const char * what () const noexcept override
-    {
+    UnexpectedValueException() : PyjionJitRuntimeException(){};
+    const char* what() const noexcept override {
         return "Unexpected value in compiler.";
     }
 };
-#endif // PYJION_EXCEPTIONS_H
+#endif// PYJION_EXCEPTIONS_H

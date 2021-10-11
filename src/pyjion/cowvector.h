@@ -33,28 +33,30 @@
 using namespace std;
 
 // Copy on write data implementation
-template<typename T> class CowData {
+template<typename T>
+class CowData {
     shared_ptr<T> m_data;
+
 public:
     CowData() = default;
 
-    explicit CowData(T *data) : m_data(data) {
+    explicit CowData(T* data) : m_data(data) {
     }
 
     explicit CowData(shared_ptr<T> data) : m_data(data) {
     }
 
-    bool operator ==(CowData<T> other) {
+    bool operator==(CowData<T> other) {
         return m_data.get() == other.m_data.get();
     }
 
-    bool operator !=(CowData<T> other) {
+    bool operator!=(CowData<T> other) {
         return m_data.get() != other.m_data.get();
     }
 
 protected:
     // Returns an instance of the data which isn't shared and is safe to mutate.
-    T & get_mutable() {
+    T& get_mutable() {
         if (m_data.use_count() != 1) {
             m_data = shared_ptr<T>(new T(*m_data));
         }
@@ -63,13 +65,14 @@ protected:
 
     // Returns an instance of the data which may be shared and is not safe to
     // mutate.
-    T & get_current() {
+    T& get_current() {
         return *m_data;
     }
 };
 
 // Copy on write vector implementation
-template<typename T> class CowVector : public CowData<vector<T>> {
+template<typename T>
+class CowVector : public CowData<vector<T>> {
 public:
     CowVector() = default;
 
@@ -101,13 +104,15 @@ public:
     }
 };
 
-template<typename T> class CowSet : public CowData<unordered_set<T>> {
+template<typename T>
+class CowSet : public CowData<unordered_set<T>> {
     typedef typename unordered_set<T>::value_type value_type;
     typedef typename unordered_set<T>::key_type key_type;
     typedef typename unordered_set<T>::iterator iterator;
     static shared_ptr<unordered_set<T>> s_empty;
+
 public:
-    CowSet() : CowData<unordered_set<T>>(get_empty()) { } ;
+    CowSet() : CowData<unordered_set<T>>(get_empty()){};
 
     iterator find(const key_type& k) {
         return this->get_current().find(k);
@@ -131,8 +136,7 @@ public:
     CowSet<T> combine(CowSet<T> other) {
         if (other.size() == 0) {
             return *this;
-        }
-        else if (size() == 0) {
+        } else if (size() == 0) {
             return other;
         }
 
@@ -155,6 +159,7 @@ private:
     }
 };
 
-template<typename T> shared_ptr<unordered_set<T>> CowSet<T>::s_empty;
+template<typename T>
+shared_ptr<unordered_set<T>> CowSet<T>::s_empty;
 
 #endif

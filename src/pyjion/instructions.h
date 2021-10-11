@@ -36,12 +36,12 @@ using namespace std;
 
 class InterpreterStack;
 
-#define SIZEOF_CODEUNIT sizeof(_Py_CODEUNIT)
-#define GET_OPARG(index)  (py_oparg)_Py_OPARG(mByteCode[(index)/SIZEOF_CODEUNIT])
-#define GET_OPCODE(index) (py_opcode)_Py_OPCODE(mByteCode[(index)/SIZEOF_CODEUNIT])
+#define SIZEOF_CODEUNIT   sizeof(_Py_CODEUNIT)
+#define GET_OPARG(index)  (py_oparg) _Py_OPARG(mByteCode[(index) / SIZEOF_CODEUNIT])
+#define GET_OPCODE(index) (py_opcode) _Py_OPCODE(mByteCode[(index) / SIZEOF_CODEUNIT])
 
-inline py_opindex jumpsTo(py_opcode opcode, py_oparg oparg, py_opindex index){
-    switch (opcode){
+inline py_opindex jumpsTo(py_opcode opcode, py_oparg oparg, py_opindex index) {
+    switch (opcode) {
         // Absolute jumps
         case JUMP_ABSOLUTE:
         case JUMP_IF_FALSE_OR_POP:
@@ -98,24 +98,25 @@ typedef unordered_map<py_opindex, Edge> EdgeMap;
 
 class InstructionGraph {
 private:
-    PyCodeObject * code;
+    PyCodeObject* code;
     bool invalid = false;
     map<py_opindex, Instruction> instructions;
-    unordered_map<py_oparg, AbstractValueKind> unboxedFastLocals ;
+    unordered_map<py_oparg, AbstractValueKind> unboxedFastLocals;
     vector<Edge> edges;
     void fixEdges();
     void fixInstructions();
     void deoptimizeInstructions();
     void fixLocals(py_oparg startIdx, py_oparg endIdx);
+
 public:
-    InstructionGraph(PyCodeObject* code, unordered_map<py_opindex, const InterpreterStack*> stacks, bool escapeLocals) ;
-    Instruction & operator [](py_opindex i) {return instructions[i];}
-    size_t size() {return instructions.size();}
-    PyObject* makeGraph(const char* name) ;
+    InstructionGraph(PyCodeObject* code, unordered_map<py_opindex, const InterpreterStack*> stacks, bool escapeLocals);
+    Instruction& operator[](py_opindex i) { return instructions[i]; }
+    size_t size() { return instructions.size(); }
+    PyObject* makeGraph(const char* name);
     vector<Edge> getEdges(py_opindex i);
     vector<Edge> getEdgesFrom(py_opindex i);
     unordered_map<py_oparg, AbstractValueKind> getUnboxedFastLocals();
     bool isValid() const;
 };
 
-#endif //PYJION_INSTRUCTIONS_H
+#endif//PYJION_INSTRUCTIONS_H

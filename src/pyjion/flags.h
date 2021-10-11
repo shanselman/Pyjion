@@ -42,4 +42,4 @@ enum ehFlags {
     EhfInExceptHandler = 0x20,
 };
 
-#endif //PYJION_FLAGS_H
+#endif//PYJION_FLAGS_H

@@ -29,12 +29,11 @@
 #include <pyjit.h>
 
 
-TEST_CASE("test BINARY PGC"){
+TEST_CASE("test BINARY PGC") {
     SECTION("test simple") {
         CHECK(g_pyjionSettings.pgc);
         auto t = PgcProfilingTest(
-                "def f():\n  a = 1\n  b = 2.0\n  c=3\n  return a + b + c\n"
-        );
+                "def f():\n  a = 1\n  b = 2.0\n  c=3\n  return a + b + c\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "6.0");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -52,8 +51,7 @@ TEST_CASE("test BINARY PGC"){
                 "  def add(left,right):\n"
                 "     return left + right\n"
                 "  v = add(a, b) + add(c, d) + add(a, b)\n"
-                "  return v\n"
-        );
+                "  return v\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "4007.0");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -71,8 +69,7 @@ TEST_CASE("test BINARY PGC"){
                 "  def add(left,right):\n"
                 "     return left + right\n"
                 "  v = str(add(a, b)) + add(c, d)\n"
-                "  return a,b,c,d\n"
-        );
+                "  return a,b,c,d\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "(1000, 2.0, 'cheese', ' shop')");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -89,8 +86,7 @@ TEST_CASE("test BINARY PGC"){
                 "  d = ' shop'\n"
                 "  def equal(left,right):\n"
                 "     return left == right\n"
-                "  return equal(a,b), equal (c,d), equal(a, d)\n"
-        );
+                "  return equal(a,b), equal (c,d), equal(a, d)\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "(False, False, False)");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -102,8 +98,7 @@ TEST_CASE("test BINARY PGC"){
 TEST_CASE("test UNPACK_SEQUENCE PGC") {
     SECTION("test simple") {
         auto t = PgcProfilingTest(
-                "def f():\n  a, b, c = ['a', 'b', 'c']\n  return a, b, c"
-        );
+                "def f():\n  a, b, c = ['a', 'b', 'c']\n  return a, b, c");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "('a', 'b', 'c')");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -111,15 +106,14 @@ TEST_CASE("test UNPACK_SEQUENCE PGC") {
         CHECK(t.returns() == "('a', 'b', 'c')");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
-    SECTION("test for_iter stacked"){
+    SECTION("test for_iter stacked") {
         auto t = PgcProfilingTest(
                 "def f():\n"
                 "  x = [(1,2), (3,4)]\n"
                 "  results = []\n"
                 "  for i, j in x:\n"
                 "    results.append(i); results.append(j)\n"
-                "  return results\n"
-        );
+                "  return results\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "[1, 2, 3, 4]");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -128,15 +122,14 @@ TEST_CASE("test UNPACK_SEQUENCE PGC") {
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     }
 
-    SECTION("test changed types"){
+    SECTION("test changed types") {
         auto t = PgcProfilingTest(
                 "def f():\n"
                 "  results = []\n"
                 "  def x(it):\n"
                 "    a, b = it\n"
                 "    return int(a) + int(b)\n"
-                "  return x((1,2)) + x([3, 4]) + x('56')\n"
-        );
+                "  return x((1,2)) + x([3, 4]) + x('56')\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "21");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -149,8 +142,7 @@ TEST_CASE("test UNPACK_SEQUENCE PGC") {
 TEST_CASE("test CALL_FUNCTION PGC") {
     SECTION("test callable type object") {
         auto t = PgcProfilingTest(
-                "def f():\n  return int('2000')"
-        );
+                "def f():\n  return int('2000')");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "2000");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -162,8 +154,7 @@ TEST_CASE("test CALL_FUNCTION PGC") {
 
     SECTION("test builtin function") {
         auto t = PgcProfilingTest(
-                "def f():\n  return len('2000')"
-        );
+                "def f():\n  return len('2000')");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "4");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -178,8 +169,7 @@ TEST_CASE("test CALL_FUNCTION PGC") {
                 "def f():\n"
                 "  def half(x):\n"
                 "     return x/2\n"
-                "  return half(2000)"
-        );
+                "  return half(2000)");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "1000.0");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -199,8 +189,7 @@ TEST_CASE("test CALL_FUNCTION PGC") {
                 "  r1 = result_of(len, 'hello')\n"
                 "  result_of(len, 'hello')\n"
                 "  r2 = result_of(float, 1000)\n"
-                "  return r1, r2"
-        );
+                "  return r1, r2");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "(5, 1000.0)");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -215,8 +204,7 @@ TEST_CASE("test CALL_FUNCTION PGC") {
                 "def f():\n"
                 "  def two_x_squared(x):\n"
                 "     return x + x * x\n"
-                "  return two_x_squared(9_000_000_000_000_000_000)\n"
-        );
+                "  return two_x_squared(9_000_000_000_000_000_000)\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "81000000000000000009000000000000000000");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -230,8 +218,7 @@ TEST_CASE("test CALL_FUNCTION PGC") {
         auto t = PgcProfilingTest(
                 "def f():\n"
                 "  x = 9_000_000_000_000_000_000\n"
-                "  return x * x\n"
-        );
+                "  return x * x\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "81000000000000000000000000000000000000");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -248,8 +235,7 @@ TEST_CASE("test STORE_SUBSCR PGC") {
                 "def f():\n"
                 "  text = list('hello')\n"
                 "  text[0] = 'H'\n"
-                "  return text"
-        );
+                "  return text");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "['H', 'e', 'l', 'l', 'o']");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -267,8 +253,7 @@ TEST_CASE("test STORE_SUBSCR PGC") {
                 "def f():\n"
                 "  text = [0,1,2,3,4]\n"
                 "  text[0] += 2\n"
-                "  return text"
-        );
+                "  return text");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "[2, 1, 2, 3, 4]");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -282,8 +267,7 @@ TEST_CASE("test STORE_SUBSCR PGC") {
                 "  text = [0,1,2,3,4]\n"
                 "  n = 2\n"
                 "  text[0] += 2 ** n\n"
-                "  return text"
-        );
+                "  return text");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "[4, 1, 2, 3, 4]");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -297,8 +281,7 @@ TEST_CASE("test STORE_SUBSCR PGC") {
                 "  text = [0.1,1.32,2.4,3.55,4.5]\n"
                 "  n = 2.00\n"
                 "  text[0] += 2. ** n\n"
-                "  return text"
-        );
+                "  return text");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "[4.1, 1.32, 2.4, 3.55, 4.5]");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -313,8 +296,7 @@ TEST_CASE("test STORE_SUBSCR PGC") {
                 "  if len(test) > 3:\n"
                 "    return True\n"
                 "  else:\n"
-                "    return False\n"
-        );
+                "    return False\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "True");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -331,8 +313,7 @@ TEST_CASE("Test PGC integer logic") {
                 "     x = 2\n"
                 "     z = y * y + x - y\n"
                 "     x *= z\n"
-                "  return x\n"
-        );
+                "  return x\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "19408");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
@@ -340,7 +321,7 @@ TEST_CASE("Test PGC integer logic") {
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
 }
-TEST_CASE("Test range iter yielding unboxed values"){
+TEST_CASE("Test range iter yielding unboxed values") {
     SECTION("test unboxed backward range in for iter") {
         auto t = PgcProfilingTest(
                 "def f():\n"
@@ -348,8 +329,7 @@ TEST_CASE("Test range iter yielding unboxed values"){
                 "  strides = list(shape[1:]) + [1]\n"
                 "  for i in range(1, -1, -1):\n"
                 "    strides[i] *= strides[i+1]\n"
-                "  return strides\n"
-        );
+                "  return strides\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
         CHECK(t.returns() == "[10, 5, 1]");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);

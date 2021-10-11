@@ -43,11 +43,10 @@ typedef SIZE_T size_t;
 typedef SSIZE_T ssize_t;
 #endif
 
-class InvalidLocalException: public std::exception {
+class InvalidLocalException : public std::exception {
 public:
-    InvalidLocalException(): std::exception() {};
-    const char * what () const noexcept override
-    {
+    InvalidLocalException() : std::exception(){};
+    const char* what() const noexcept override {
         return "Invalid CIL Local";
     }
 };
@@ -142,11 +141,11 @@ public:
     /*****************************************************
      * Primitives */
 
-     // Defines a label that can be branched to and marked at some point
+    // Defines a label that can be branched to and marked at some point
     virtual Label emit_define_label() = 0;
     // Marks the location of a label at the current code offset
     virtual void emit_mark_label(Label label) = 0;
-    // Emits a branch to the specified label 
+    // Emits a branch to the specified label
     virtual void emit_branch(BranchType branchType, Label label) = 0;
 
     // Emits an unboxed integer value onto the stack
@@ -170,7 +169,7 @@ public:
 
     /*****************************************************
      * Stack based locals */
-     // Stores the top stack value into a local (only supports pointer types)
+    // Stores the top stack value into a local (only supports pointer types)
     virtual Local emit_spill() = 0;
     // Stores the top value into a local
     virtual void emit_store_local(Local local) = 0;
@@ -192,7 +191,7 @@ public:
     /*****************************************************
      * Frames, basic function semantics */
 
-     // Pushes the current Python frame into the list of frames
+    // Pushes the current Python frame into the list of frames
     virtual bool emit_push_frame() = 0;
     // Pops the current Python frame from the list of frames
     virtual bool emit_pop_frame() = 0;
@@ -211,7 +210,7 @@ public:
     /*****************************************************
      * Loads/Stores to/from various places */
 
-     // Loads/stores/deletes from the frame objects fast local variables
+    // Loads/stores/deletes from the frame objects fast local variables
     virtual void emit_load_fast(py_oparg local) = 0;
     virtual void emit_store_fast(py_oparg local) = 0;
     virtual void emit_delete_fast(py_oparg index) = 0;
@@ -255,11 +254,11 @@ public:
     /*****************************************************
      * Collection operations */
 
-     // Creates a new tuple of the specified size
+    // Creates a new tuple of the specified size
     virtual void emit_new_tuple(py_oparg size) = 0;
     // Stores all of the values on the stack into a tuple
     virtual void emit_tuple_store(py_oparg size) = 0;
-	virtual void emit_tuple_load(py_oparg index) = 0;
+    virtual void emit_tuple_load(py_oparg index) = 0;
     virtual void emit_list_load(py_oparg index) = 0;
     virtual void emit_tuple_length() = 0;
     virtual void emit_list_length() = 0;
@@ -281,31 +280,31 @@ public:
 
     // Creates a new set
     virtual void emit_new_set() = 0;
-	// Extends a set with a single iterable
+    // Extends a set with a single iterable
     virtual void emit_set_extend() = 0;
     // Adds a single item to a set
     virtual void emit_set_add() = 0;
     // Updates a single item in a set
     virtual void emit_set_update() = 0;
 
-	// Joins an array of string values into a single string (takes string values and length)
-	virtual void emit_unicode_joinarray() = 0;
-	virtual void emit_format_value() = 0;
-	// Calls PyObject_Str on the value
-	virtual void emit_pyobject_str() = 0;
-	// Calls PyObject_Repr on the value
-	virtual void emit_pyobject_repr() = 0;
-	// Calls PyObject_Ascii on the value
-	virtual void emit_pyobject_ascii() = 0;
-	// Calls PyObject_Ascii on the value
-	virtual void emit_pyobject_format() = 0;
+    // Joins an array of string values into a single string (takes string values and length)
+    virtual void emit_unicode_joinarray() = 0;
+    virtual void emit_format_value() = 0;
+    // Calls PyObject_Str on the value
+    virtual void emit_pyobject_str() = 0;
+    // Calls PyObject_Repr on the value
+    virtual void emit_pyobject_repr() = 0;
+    // Calls PyObject_Ascii on the value
+    virtual void emit_pyobject_ascii() = 0;
+    // Calls PyObject_Ascii on the value
+    virtual void emit_pyobject_format() = 0;
 
-	// Creates a new dictionary
+    // Creates a new dictionary
     virtual void emit_new_dict(py_oparg size) = 0;
     // Stores a key/value pair into a dict
     virtual void emit_dict_store() = 0;
-	// Stores a key/value pair into a dict w/o doing a decref on the key/value
-	virtual void emit_dict_store_no_decref() = 0;
+    // Stores a key/value pair into a dict w/o doing a decref on the key/value
+    virtual void emit_dict_store_no_decref() = 0;
     // Adds a single key/value pair to a dict
     virtual void emit_map_add() = 0;
     // Extends a map by another mapping
@@ -348,17 +347,17 @@ public:
     // Emits a call with the arguments to be invoked in a tuple object
     virtual void emit_call_with_tuple() = 0;
 
-	virtual void emit_kwcall_with_tuple() = 0;
+    virtual void emit_kwcall_with_tuple() = 0;
 
-    // Emits a call which includes *args 
-	virtual void emit_call_args() = 0;
-	// Emits a call which includes *args and **kwargs
-	virtual void emit_call_kwargs() = 0;
+    // Emits a call which includes *args
+    virtual void emit_call_args() = 0;
+    // Emits a call which includes *args and **kwargs
+    virtual void emit_call_kwargs() = 0;
 
     /*****************************************************
      * Function creation */
 
-     // Creates a new function object
+    // Creates a new function object
     virtual void emit_new_function() = 0;
     // Creates a new closure object
     virtual void emit_set_closure() = 0;
@@ -380,7 +379,7 @@ public:
 
     /*****************************************************
      * Operators */
-     // Performs a unary positive, pushing the result onto the stack
+    // Performs a unary positive, pushing the result onto the stack
     virtual void emit_unary_positive() = 0;
     // Performs a unary negative, pushing the result onto the stack
     virtual void emit_unary_negative() = 0;
@@ -413,14 +412,14 @@ public:
     // Performs a comparison for values on the stack which are objects, keeping a boxed Python object as the result.
     virtual void emit_compare_object(uint16_t compareType) = 0;
     virtual void emit_compare_floats(uint16_t compareType) = 0;
-    virtual void emit_compare_ints(uint16_t compareType) = 0 ;
+    virtual void emit_compare_ints(uint16_t compareType) = 0;
 
     virtual void emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) = 0;
     // Performs a comparison for values on the stack which are objects, keeping a boxed Python object as the result.
     virtual void emit_compare_known_object(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) = 0;
     /*****************************************************
      * Exception handling */
-     // Raises an exception taking the exception, type, and cause
+    // Raises an exception taking the exception, type, and cause
     virtual void emit_raise_varargs() = 0;
     // Clears the current exception
     // Updates the trace back as it propagates through a function
@@ -434,7 +433,7 @@ public:
     // Compares to see if an exception is handled, pushing a Python bool onto the stack
     virtual void emit_compare_exceptions() = 0;
     // Sets the current exception type and text
-    virtual void emit_pyerr_setstring(void* exception, const char*msg) = 0;
+    virtual void emit_pyerr_setstring(void* exception, const char* msg) = 0;
     virtual void emit_pyerr_clear() = 0;
     virtual void emit_incref() = 0;
 

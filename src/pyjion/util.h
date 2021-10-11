@@ -34,7 +34,8 @@ Use RAII to Py_XDECREF a pointer.
 
 Inspired by std::unique_ptr.
 */
-template <class T> class py_ptr {
+template<class T>
+class py_ptr {
 private:
     T* m_ptr;
 
@@ -73,7 +74,7 @@ A concrete PyObject instance of py_ptr.
 */
 class PyObject_ptr : public py_ptr<PyObject> {
 public:
-    explicit PyObject_ptr(PyObject *ptr) : py_ptr(ptr) {}
+    explicit PyObject_ptr(PyObject* ptr) : py_ptr(ptr) {}
 };
 
-#endif // !UTIL_H
+#endif// !UTIL_H

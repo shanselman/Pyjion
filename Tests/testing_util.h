@@ -34,18 +34,17 @@ public:
     const char* m_code;
     vector<TestInput> m_inputs;
 
-    TestCase(const char *code, const char* expected) {
+    TestCase(const char* code, const char* expected) {
         m_code = code;
         m_inputs.emplace_back(expected);
-
     }
 
-    TestCase(const char *code, const TestInput& input) {
+    TestCase(const char* code, const TestInput& input) {
         m_code = code;
         m_inputs.push_back(input);
     }
 
-    TestCase(const char *code, vector<TestInput> inputs) {
+    TestCase(const char* code, vector<TestInput> inputs) {
         m_code = code;
         m_inputs = std::move(inputs);
     }
@@ -62,8 +61,9 @@ private:
     AbstractValueKind m_kind;
     // Has the value been defined yet?
     bool m_undefined;
+
 public:
-    VariableVerifier(size_t byteCodeIndex, size_t localIndex, AbstractValueKind kind, bool undefined = false) ;
+    VariableVerifier(size_t byteCodeIndex, size_t localIndex, AbstractValueKind kind, bool undefined = false);
     void verify(AbstractInterpreter& interpreter);
 };
 
@@ -73,17 +73,17 @@ public:
     const char* m_code;
     vector<VariableVerifier*> m_verifiers;
 
-    AITestCase(const char *code, VariableVerifier* verifier) {
+    AITestCase(const char* code, VariableVerifier* verifier) {
         m_code = code;
         m_verifiers.push_back(verifier);
     }
 
-    AITestCase(const char *code, vector<VariableVerifier*> verifiers) {
+    AITestCase(const char* code, vector<VariableVerifier*> verifiers) {
         m_code = code;
         m_verifiers = std::move(verifiers);
     }
 
-    AITestCase(const char *code, std::initializer_list<VariableVerifier*> list) {
+    AITestCase(const char* code, std::initializer_list<VariableVerifier*> list) {
         m_code = code;
         m_verifiers = list;
     }
@@ -132,7 +132,7 @@ private:
     }
 
 public:
-    explicit EmissionTest(const char *code) {
+    explicit EmissionTest(const char* code) {
         PyErr_Clear();
 #ifdef DEBUG_VERBOSE
         printf("--- Executing Code ---\n%s \n-----------------\n", code);
@@ -141,14 +141,14 @@ public:
         if (m_code.get() == nullptr) {
             FAIL("failed to compile in JIT code");
         }
-        auto jitted = PyJit_EnsureExtra((PyObject*)*m_code);
+        auto jitted = PyJit_EnsureExtra((PyObject*) *m_code);
         m_jittedcode = jitted;
     }
 
     std::string returns() {
         auto res = PyObject_ptr(run());
         CHECK(res.get() != nullptr);
-        if (res.get() == nullptr || PyErr_Occurred()){
+        if (res.get() == nullptr || PyErr_Occurred()) {
             PyErr_PrintEx(-1);
             FAIL("Error on Python execution");
             return nullptr;
@@ -170,7 +170,7 @@ public:
 
     PyObject* raises() {
         auto res = run();
-        if(res != nullptr){
+        if (res != nullptr) {
             FAIL(PyUnicode_AsUTF8(PyObject_Repr(res)));
             return nullptr;
         }
@@ -180,20 +180,20 @@ public:
     }
 
 
-    BYTE* il (){
+    BYTE* il() {
         return m_jittedcode->j_il;
     }
 
-    unsigned long native_len(){
+    unsigned long native_len() {
         return m_jittedcode->j_nativeSize;
     }
 
-    PyObject* native(){
+    PyObject* native() {
         auto result_t = PyTuple_New(3);
         if (result_t == nullptr)
             return nullptr;
 
-        auto res = PyByteArray_FromStringAndSize(reinterpret_cast<const char *>(m_jittedcode->j_addr), m_jittedcode->j_nativeSize);
+        auto res = PyByteArray_FromStringAndSize(reinterpret_cast<const char*>(m_jittedcode->j_addr), m_jittedcode->j_nativeSize);
         if (res == nullptr)
             return nullptr;
 
@@ -218,11 +218,11 @@ public:
 
 class PgcProfilingTest {
 private:
-    py_ptr <PyCodeObject> m_code;
+    py_ptr<PyCodeObject> m_code;
     PyjionJittedCode* m_jittedcode;
     PyjionCodeProfile* profile;
 
-    PyObject *run() {
+    PyObject* run() {
         auto sysModule = PyObject_ptr(PyImport_ImportModule("sys"));
         auto globals = PyObject_ptr(PyDict_New());
         auto builtins = PyEval_GetBuiltins();
@@ -244,14 +244,14 @@ private:
     }
 
 public:
-    explicit PgcProfilingTest(const char *code) {
+    explicit PgcProfilingTest(const char* code) {
         PyErr_Clear();
         profile = new PyjionCodeProfile();
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile code");
         }
-        auto jitted = PyJit_EnsureExtra((PyObject *) *m_code);
+        auto jitted = PyJit_EnsureExtra((PyObject*) *m_code);
         m_jittedcode = jitted;
     }
 
@@ -275,11 +275,11 @@ public:
         return std::string(repr);
     }
 
-    PyObject* ret(){
+    PyObject* ret() {
         return run();
     }
 
-    PyObject *raises() {
+    PyObject* raises() {
         auto res = run();
         REQUIRE(res == nullptr);
         auto excType = PyErr_Occurred();
@@ -296,4 +296,4 @@ public:
         return m_jittedcode->j_pgc_status;
     }
 };
-#endif // !PYJION_TESTING_UTIL_H
+#endif// !PYJION_TESTING_UTIL_H

@@ -69,6 +69,7 @@ public:
 class BaseModule {
     unordered_map<void*, int> existingSlots;
     int slotCursor = 0;
+
 public:
     unordered_map<int32_t, BaseMethod*> m_methods;
     SymbolTable symbolTable;
@@ -86,9 +87,9 @@ public:
 
 class UserModule : public BaseModule {
     BaseModule& m_parent;
+
 public:
     explicit UserModule(BaseModule& parent) : m_parent(parent) {
-
     }
 
     BaseMethod* ResolveMethod(int32_t tokenId) override {
@@ -119,14 +120,13 @@ struct CallPoint {
 
 class BaseMethod {
 public:
-
-    virtual void getCallInfo(CORINFO_CALL_INFO *pResult) = 0;
+    virtual void getCallInfo(CORINFO_CALL_INFO* pResult) = 0;
     virtual uint32_t getMethodAttrs() {
-        return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE ;
+        return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE;
     }
-    virtual void findSig(CORINFO_SIG_INFO  *sig) = 0;
+    virtual void findSig(CORINFO_SIG_INFO* sig) = 0;
     virtual void* getAddr() = 0;
-    virtual void getFunctionEntryPoint(CORINFO_CONST_LOOKUP *  pResult) = 0;
+    virtual void getFunctionEntryPoint(CORINFO_CONST_LOOKUP* pResult) = 0;
     virtual unsigned int getSequencePointCount() = 0;
     virtual uint32_t* getSequencePointOffsets() = 0;
     virtual void recordSequencePointOffsetPosition(uint32_t ilOffset, uint32_t nativeOffset) = 0;
@@ -137,6 +137,7 @@ public:
 
 class JITMethod : public BaseMethod {
     BaseModule* m_module;
+
 public:
     vector<Parameter> m_params;
     CorInfoType m_retType;
@@ -151,24 +152,19 @@ public:
         m_addr = addr;
     }
 
-    JITMethod(BaseModule *module, CorInfoType returnType, vector<Parameter> params, void* addr,
+    JITMethod(BaseModule* module, CorInfoType returnType, vector<Parameter> params, void* addr,
               const vector<pair<size_t, uint32_t>>& sequencePoints,
-              const vector<pair<size_t, int32_t>>& callPoints) :
-            JITMethod(module, returnType, std::move(params), addr){
-        for (auto & point: sequencePoints){
-            m_sequencePoints.push_back({
-                static_cast<uint32_t>(point.first),
-                0,
-                point.second
-            });
+              const vector<pair<size_t, int32_t>>& callPoints) : JITMethod(module, returnType, std::move(params), addr) {
+        for (auto& point : sequencePoints) {
+            m_sequencePoints.push_back({static_cast<uint32_t>(point.first),
+                                        0,
+                                        point.second});
         }
 
-        for (auto & point: callPoints){
-            m_callPoints.push_back({
-               static_cast<uint32_t>(point.first),
-               0,
-               point.second
-           });
+        for (auto& point : callPoints) {
+            m_callPoints.push_back({static_cast<uint32_t>(point.first),
+                                    0,
+                                    point.second});
         }
     }
 
@@ -176,24 +172,24 @@ public:
         return m_addr;
     }
 
-    void getCallInfo(CORINFO_CALL_INFO *pResult) override {
+    void getCallInfo(CORINFO_CALL_INFO* pResult) override {
         pResult->codePointerLookup.lookupKind.needsRuntimeLookup = false;
         pResult->codePointerLookup.constLookup.accessType = IAT_PVALUE;
         pResult->codePointerLookup.constLookup.addr = &m_addr;
         pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC;
         pResult->kind = CORINFO_CALL;
-        pResult->sig.args = (CORINFO_ARG_LIST_HANDLE)(m_params.empty() ? nullptr : &m_params[0]);
+        pResult->sig.args = (CORINFO_ARG_LIST_HANDLE) (m_params.empty() ? nullptr : &m_params[0]);
         pResult->sig.retType = m_retType;
         pResult->sig.numArgs = m_params.size();
     }
-    void findSig(CORINFO_SIG_INFO  *sig) override {
+    void findSig(CORINFO_SIG_INFO* sig) override {
         sig->retType = m_retType;
         sig->callConv = CORINFO_CALLCONV_DEFAULT;
         sig->retTypeClass = nullptr;
-        sig->args = (CORINFO_ARG_LIST_HANDLE)(!m_params.empty() ? &m_params[0] : nullptr);
+        sig->args = (CORINFO_ARG_LIST_HANDLE) (!m_params.empty() ? &m_params[0] : nullptr);
         sig->numArgs = m_params.size();
     }
-    void getFunctionEntryPoint(CORINFO_CONST_LOOKUP *  pResult) override {
+    void getFunctionEntryPoint(CORINFO_CONST_LOOKUP* pResult) override {
         pResult->accessType = IAT_PVALUE;
         pResult->addr = &m_addr;
     }
@@ -202,13 +198,13 @@ public:
         return static_cast<unsigned int>(m_sequencePoints.size());
     }
 
-    uint32_t * getSequencePointOffsets() override {
-        auto * pts = static_cast<uint32_t *>(PyMem_RawMalloc(sizeof(uint32_t) * m_sequencePoints.size()));
-        if (pts == nullptr){
+    uint32_t* getSequencePointOffsets() override {
+        auto* pts = static_cast<uint32_t*>(PyMem_RawMalloc(sizeof(uint32_t) * m_sequencePoints.size()));
+        if (pts == nullptr) {
             throw OutOfMemoryException();
         }
         size_t i = 0;
-        for (auto & p: m_sequencePoints){
+        for (auto& p : m_sequencePoints) {
             pts[i] = p.ilOffset;
             i++;
         }
@@ -216,16 +212,16 @@ public:
     }
 
     void recordSequencePointOffsetPosition(uint32_t ilOffset, uint32_t nativeOffset) override {
-        for (auto & pt: m_sequencePoints){
-            if (pt.ilOffset == ilOffset){
+        for (auto& pt : m_sequencePoints) {
+            if (pt.ilOffset == ilOffset) {
                 pt.nativeOffset = nativeOffset;
             }
         }
     }
 
     void recordCallPointOffsetPosition(uint32_t ilOffset, uint32_t nativeOffset) override {
-        for (auto & pt: m_callPoints){
-            if (pt.ilOffset == ilOffset){
+        for (auto& pt : m_callPoints) {
+            if (pt.ilOffset == ilOffset) {
                 pt.nativeOffset = nativeOffset;
             }
         }

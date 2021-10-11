@@ -36,10 +36,10 @@
 
 class ScopedCompilerTest {
 private:
-    py_ptr <PyCodeObject> m_code;
+    py_ptr<PyCodeObject> m_code;
     PyjionJittedCode* m_jittedcode;
 
-    PyObject *run() {
+    PyObject* run() {
         auto sysModule = PyObject_ptr(PyImport_ImportModule("sys"));
         auto globals = PyObject_ptr(PyDict_New());
         auto locals = PyObject_ptr(PyDict_New());
@@ -65,13 +65,13 @@ private:
     }
 
 public:
-    explicit ScopedCompilerTest(const char *code) {
+    explicit ScopedCompilerTest(const char* code) {
         PyErr_Clear();
         m_code.reset(CompileCode(code, {"loc1", "loc2"}, {"gvar1"}));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile code");
         }
-        auto jitted = PyJit_EnsureExtra((PyObject *) *m_code);
+        auto jitted = PyJit_EnsureExtra((PyObject*) *m_code);
         m_jittedcode = jitted;
     }
 
@@ -95,7 +95,7 @@ public:
         return std::string(repr);
     }
 
-    PyObject *raises() {
+    PyObject* raises() {
         auto res = run();
         REQUIRE(res == nullptr);
         auto excType = PyErr_Occurred();
@@ -110,36 +110,31 @@ public:
 TEST_CASE("Test globals") {
     SECTION("test load global") {
         auto t = ScopedCompilerTest(
-                "def f():\n  return gvar1"
-        );
+                "def f():\n  return gvar1");
         CHECK(t.returns() == "'hello'");
     }
 
     SECTION("test set global") {
         auto t = ScopedCompilerTest(
-                "def f():\n  global gvar1\n  gvar1 = 'goodbye'\n  return gvar1"
-        );
+                "def f():\n  global gvar1\n  gvar1 = 'goodbye'\n  return gvar1");
         CHECK(t.returns() == "'goodbye'");
     }
 
     SECTION("test delete name with the same name as global raises unbound local") {
         auto t = ScopedCompilerTest(
-                "def f():\n  del gvar1\n  return gvar1"
-        );
+                "def f():\n  del gvar1\n  return gvar1");
         CHECK(t.raises() == PyExc_UnboundLocalError);
     }
 
     SECTION("test explicit global") {
         auto t = ScopedCompilerTest(
-                "def f():\n    global gvar1\n    gvar1 = 2\n    return gvar1"
-        );
+                "def f():\n    global gvar1\n    gvar1 = 2\n    return gvar1");
         CHECK(t.returns() == "2");
     }
 
     SECTION("test delete explicit global") {
         auto t = ScopedCompilerTest(
-                "def f():\n    global gvar1\n    del gvar1\n    return gvar1"
-        );
+                "def f():\n    global gvar1\n    del gvar1\n    return gvar1");
         CHECK(t.raises() == PyExc_NameError);
     }
 }
@@ -154,8 +149,7 @@ TEST_CASE("Test nonlocals") {
                 "    nonlocal x\n"
                 "    x = 'sally'\n"
                 "  f2() \n"
-                "  return x"
-        );
+                "  return x");
         CHECK(t.returns() == "'sally'");
     }
 
@@ -167,8 +161,7 @@ TEST_CASE("Test nonlocals") {
                 "    nonlocal x\n"
                 "    del x\n"
                 "  f2() \n"
-                "  return x"
-        );
+                "  return x");
         CHECK(t.raises() == PyExc_UnboundLocalError);
     }
 
@@ -180,8 +173,7 @@ TEST_CASE("Test nonlocals") {
                 "  def f2(*letters):\n"
                 "    nonlocal sep\n"
                 "    return sep.join([letter.upper() for letter in letters])\n"
-                "  return f2(iter(letters)) \n"
-        );
+                "  return f2(iter(letters)) \n");
         CHECK(t.raises() == PyExc_AttributeError);
     }
 
@@ -193,8 +185,7 @@ TEST_CASE("Test nonlocals") {
                 "  def f2(*letters):\n"
                 "    nonlocal sep\n"
                 "    return sep.join([letter.upper() for letter in letters])\n"
-                "  return f2(*letters) \n"
-        );
+                "  return f2(*letters) \n");
         CHECK(t.returns() == "'B-I-N-G-O'");
     }
 
@@ -209,8 +200,7 @@ TEST_CASE("Test nonlocals") {
                 "    for letter in letters:"
                 "       res.append(letter.upper())\n"
                 "    return sep.join(res)\n"
-                "  return f2(*letters) \n"
-        );
+                "  return f2(*letters) \n");
         CHECK(t.returns() == "'B-I-N-G-O'");
     }
 }

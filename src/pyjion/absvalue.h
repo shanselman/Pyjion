@@ -98,6 +98,7 @@ class AbstractSource {
     vector<pair<py_opindex, size_t>> _consumers;
     bool single_use = false;
     py_opindex _producer;
+
 public:
     shared_ptr<AbstractSources> Sources;
 
@@ -115,20 +116,20 @@ public:
         return "unknown source";
     }
 
-    void addConsumer(py_opindex index, size_t position){
+    void addConsumer(py_opindex index, size_t position) {
         _consumers.emplace_back(index, position);
     }
 
-    ssize_t isConsumedBy(py_opindex idx){
-        for (auto & _consumer : _consumers){
+    ssize_t isConsumedBy(py_opindex idx) {
+        for (auto& _consumer : _consumers) {
             if (_consumer.first == idx)
                 return _consumer.second;
         };
         return -1;
     }
 
-    bool markForSingleUse(){
-        if (_consumers.size() == 1 || _consumers.empty()){
+    bool markForSingleUse() {
+        if (_consumers.size() == 1 || _consumers.empty()) {
             single_use = true;
         }
         return single_use;
@@ -138,15 +139,15 @@ public:
         return single_use;
     }
 
-    py_opindex producer() const{
+    py_opindex producer() const {
         return _producer;
     }
 
-    void setProducer(py_opindex i){
+    void setProducer(py_opindex i) {
         _producer = i;
     }
 
-    static AbstractSource* combine(AbstractSource* one, AbstractSource*two);
+    static AbstractSource* combine(AbstractSource* one, AbstractSource* two);
 };
 
 struct AbstractSources {
@@ -163,16 +164,17 @@ class ConstSource : public AbstractSource {
     bool hasHashValueSet = false;
     bool hasNumericValueSet = false;
     Py_ssize_t numericValue = -1;
+
 public:
-    explicit ConstSource(PyObject* value, py_opindex producer): AbstractSource(producer) {
+    explicit ConstSource(PyObject* value, py_opindex producer) : AbstractSource(producer) {
         this->value = value;
         this->hash = PyObject_Hash(value);
-        if (PyErr_Occurred()){
+        if (PyErr_Occurred()) {
             PyErr_Clear();
         } else {
             hasHashValueSet = true;
         }
-        if (PyLong_CheckExact(value)){
+        if (PyLong_CheckExact(value)) {
             numericValue = PyLong_AsSsize_t(value);
             if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
                 hasNumericValueSet = false;
@@ -193,7 +195,7 @@ public:
 
     Py_ssize_t getNumericValue() const { return numericValue; }
 
-    Py_hash_t getHash () const{
+    Py_hash_t getHash() const {
         return this->hash;
     }
 
@@ -205,6 +207,7 @@ public:
 class GlobalSource : public AbstractSource {
     const char* _name;
     PyObject* _value;
+
 public:
     explicit GlobalSource(const char* name, PyObject* value, py_opindex producer) : AbstractSource(producer) {
         _name = name;
@@ -223,8 +226,9 @@ public:
 class BuiltinSource : public AbstractSource {
     const char* _name;
     PyObject* _value;
+
 public:
-    explicit BuiltinSource(const char* name, PyObject* value, py_opindex producer) : AbstractSource(producer)  {
+    explicit BuiltinSource(const char* name, PyObject* value, py_opindex producer) : AbstractSource(producer) {
         _name = name;
         _value = value;
     };
@@ -248,7 +252,7 @@ public:
 
 class LocalSource : public AbstractSource {
 public:
-    explicit LocalSource(py_opindex producer): AbstractSource(producer) { } ;
+    explicit LocalSource(py_opindex producer) : AbstractSource(producer){};
 
     const char* describe() override {
         return "Local";
@@ -257,7 +261,7 @@ public:
 
 class IntermediateSource : public AbstractSource {
 public:
-    explicit IntermediateSource(py_opindex producer): AbstractSource(producer) { } ;
+    explicit IntermediateSource(py_opindex producer) : AbstractSource(producer){};
 
     const char* describe() override {
         return "Intermediate";
@@ -270,8 +274,9 @@ public:
 
 class IteratorSource : public AbstractSource {
     AbstractValueKind _kind;
+
 public:
-    IteratorSource(AbstractValueKind iterableKind, py_opindex producer) : AbstractSource(producer){
+    IteratorSource(AbstractValueKind iterableKind, py_opindex producer) : AbstractSource(producer) {
         _kind = iterableKind;
     }
 
@@ -284,8 +289,9 @@ public:
 
 class MethodSource : public AbstractSource {
     const char* _name = "";
+
 public:
-    explicit MethodSource(const char* name, py_opindex producer) : AbstractSource(producer){
+    explicit MethodSource(const char* name, py_opindex producer) : AbstractSource(producer) {
         _name = name;
     }
 
@@ -319,7 +325,7 @@ public:
         return false;
     }
 
-    virtual AbstractValue* mergeWith(AbstractValue*other);
+    virtual AbstractValue* mergeWith(AbstractValue* other);
     virtual AbstractValueKind kind() = 0;
     virtual const char* describe() {
         return "";
@@ -338,12 +344,12 @@ struct AbstractValueWithSources {
     AbstractValue* Value;
     AbstractSource* Sources;
 
-    AbstractValueWithSources(AbstractValue *type = nullptr) { // NOLINT(google-explicit-constructor)
+    AbstractValueWithSources(AbstractValue* type = nullptr) {// NOLINT(google-explicit-constructor)
         Value = type;
         Sources = nullptr;
     }
 
-    AbstractValueWithSources(AbstractValue *type, AbstractSource* source) {
+    AbstractValueWithSources(AbstractValue* type, AbstractSource* source) {
         Value = type;
         Sources = source;
     }
@@ -360,26 +366,24 @@ struct AbstractValueWithSources {
         // TODO: Is defining a new source at the merge point better?
         return {
                 Value->mergeWith(other.Value),
-            AbstractSource::combine(Sources, other.Sources)
-            };
+                AbstractSource::combine(Sources, other.Sources)};
     }
 
-    bool operator== (AbstractValueWithSources const & other) const {
+    bool operator==(AbstractValueWithSources const& other) const {
         if (Value != other.Value) {
             return false;
         }
 
         if (Sources == nullptr) {
             return other.Sources == nullptr;
-        }
-        else if (other.Sources == nullptr) {
+        } else if (other.Sources == nullptr) {
             return false;
         }
 
         return Sources->Sources.get() == other.Sources->Sources.get();
     }
 
-    bool operator!= (AbstractValueWithSources const & other) const {
+    bool operator!=(AbstractValueWithSources const& other) const {
         return !(*this == other);
     }
 };
@@ -394,7 +398,7 @@ class AnyValue : public AbstractValue {
 };
 
 class UndefinedValue : public AbstractValue {
-    AbstractValue* mergeWith(AbstractValue*other) override {
+    AbstractValue* mergeWith(AbstractValue* other) override {
         return other;
     }
     AbstractValueKind kind() override {
@@ -418,7 +422,6 @@ class BytesValue : public AbstractValue {
     AbstractValue* unary(AbstractSource* selfSources, int op) override;
     const char* describe() override;
     AbstractValueKind resolveMethod(const char* name) override;
-
 };
 
 class ComplexValue : public AbstractValue {
@@ -430,10 +433,11 @@ class ComplexValue : public AbstractValue {
 
 class IntegerValue : public AbstractValue {
     AbstractValueKind kind() override;
-    AbstractValue* binary(AbstractSource*selfSources, int op, AbstractValueWithSources& other) override;
+    AbstractValue* binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) override;
     AbstractValue* unary(AbstractSource* selfSources, int op) override;
     const char* describe() override;
     AbstractValueKind resolveMethod(const char* name) override;
+
 public:
     static AbstractValue* binary(int op, AbstractValueWithSources& other);
 };
@@ -453,7 +457,7 @@ public:
     AbstractValueKind kind() override {
         return AVK_BigInteger;
     }
-    const char * describe() override{
+    const char* describe() override {
         return "big int";
     }
 };
@@ -472,6 +476,7 @@ class FloatValue : public AbstractValue {
     AbstractValue* unary(AbstractSource* selfSources, int op) override;
     const char* describe() override;
     AbstractValueKind resolveMethod(const char* name) override;
+
 public:
     static AbstractValue* binary(int op, AbstractValueWithSources& other);
 };
@@ -536,11 +541,10 @@ class IterableValue : public AbstractValue {
     const char* describe() override;
 };
 
-class ModuleValue : public AbstractValue
-{
+class ModuleValue : public AbstractValue {
     AbstractValueKind kind() override;
-    AbstractValue *unary(AbstractSource *selfSources, int op) override;
-    const char *describe() override;
+    AbstractValue* unary(AbstractSource* selfSources, int op) override;
+    const char* describe() override;
 };
 
 class TypeValue : public AbstractValue {
@@ -684,14 +688,15 @@ class ZipValue : public AbstractValue {
     }
 };
 
-class VolatileValue: public AbstractValue{
+class VolatileValue : public AbstractValue {
     PyTypeObject* _type;
     PyObject* _object;
+
 protected:
     AbstractValueKind _kind;
-public:
 
-    VolatileValue(PyTypeObject* type, PyObject* object, AbstractValueKind kind){
+public:
+    VolatileValue(PyTypeObject* type, PyObject* object, AbstractValueKind kind) {
         _type = type;
         _object = object;
         _kind = kind;
@@ -705,7 +710,7 @@ public:
         return true;
     }
     PyObject* lastValue() {
-        if (_PyObject_IsFreed(_object) || _object == (PyObject*)0xFFFFFFFFFFFFFFFF)
+        if (_PyObject_IsFreed(_object) || _object == (PyObject*) 0xFFFFFFFFFFFFFFFF)
             return nullptr;
         return _object;
     }
@@ -722,13 +727,13 @@ public:
 
 class PgcValue : public VolatileValue {
 public:
-    PgcValue(PyTypeObject* type, AbstractValueKind kind) : VolatileValue(type, nullptr, kind){}
+    PgcValue(PyTypeObject* type, AbstractValueKind kind) : VolatileValue(type, nullptr, kind) {}
     AbstractValueKind kind() override;
 };
 
-class ArgumentValue: public VolatileValue {
+class ArgumentValue : public VolatileValue {
 public:
-    ArgumentValue(PyTypeObject* type, PyObject* object, AbstractValueKind kind) : VolatileValue(type, object, kind){}
+    ArgumentValue(PyTypeObject* type, PyObject* object, AbstractValueKind kind) : VolatileValue(type, object, kind) {}
 };
 
 AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source);
@@ -775,4 +780,3 @@ AbstractValue* avkToAbstractValue(AbstractValueKind);
 AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value = nullptr);
 PyTypeObject* GetPyType(AbstractValueKind type);
 #endif
-

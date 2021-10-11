@@ -28,17 +28,16 @@
 #include "unboxing.h"
 #include <set>
 
-InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex , const InterpreterStack*> stacks, bool escapeLocals) {
+InstructionGraph::InstructionGraph(PyCodeObject* code, unordered_map<py_opindex, const InterpreterStack*> stacks, bool escapeLocals) {
     this->code = code;
-    auto mByteCode = (_Py_CODEUNIT *)PyBytes_AS_STRING(code->co_code);
+    auto mByteCode = (_Py_CODEUNIT*) PyBytes_AS_STRING(code->co_code);
     auto size = PyBytes_Size(code->co_code);
     for (py_opindex curByte = 0; curByte < size; curByte += SIZEOF_CODEUNIT) {
         py_opindex index = curByte;
         auto opcode = GET_OPCODE(curByte);
         auto oparg = GET_OPARG(curByte);
 
-        if (opcode == EXTENDED_ARG)
-        {
+        if (opcode == EXTENDED_ARG) {
             instructions[index] = {
                     .index = index,
                     .opcode = opcode,
@@ -51,53 +50,50 @@ InstructionGraph::InstructionGraph(PyCodeObject *code, unordered_map<py_opindex 
             opcode = GET_OPCODE(curByte);
             index = curByte;
         }
-        if (stacks[index] != nullptr){
-            for (const auto & si: *stacks[index]){
-                if (si.hasSource()){
+        if (stacks[index] != nullptr) {
+            for (const auto& si : *stacks[index]) {
+                if (si.hasSource()) {
                     ssize_t stackPosition = si.Sources->isConsumedBy(index);
                     if (stackPosition != -1) {
-                        edges.push_back({
-                            .from = si.Sources->producer(),
-                            .to = index,
-                            .label = si.Sources->describe(),
-                            .value = si.Value,
-                            .source = si.Sources,
-                            .escaped = NoEscape,
-                            .kind = si.hasValue() ? si.Value->kind() : AVK_Any,
-                            .position = static_cast<py_opindex>(stackPosition)
-                        });
+                        edges.push_back({.from = si.Sources->producer(),
+                                         .to = index,
+                                         .label = si.Sources->describe(),
+                                         .value = si.Value,
+                                         .source = si.Sources,
+                                         .escaped = NoEscape,
+                                         .kind = si.hasValue() ? si.Value->kind() : AVK_Any,
+                                         .position = static_cast<py_opindex>(stackPosition)});
                     }
                 }
             }
         }
         instructions[index] = {
-            .index = index,
-            .opcode = opcode,
-            .oparg = oparg,
-            .jumpsTo = jumpsTo(opcode, oparg, index),
-            .escape = false
-        };
+                .index = index,
+                .opcode = opcode,
+                .oparg = oparg,
+                .jumpsTo = jumpsTo(opcode, oparg, index),
+                .escape = false};
     }
     fixInstructions();
-    if (escapeLocals){
+    if (escapeLocals) {
         fixLocals(code->co_argcount, code->co_nlocals);
     }
     deoptimizeInstructions();
     fixEdges();
 }
 
-void InstructionGraph::fixEdges(){
-    for (auto & edge: this->edges){
+void InstructionGraph::fixEdges() {
+    for (auto& edge : this->edges) {
         if (!this->instructions[edge.from].escape) {
             // From non-escaped operation
-            if (this->instructions[edge.to].escape){
+            if (this->instructions[edge.to].escape) {
                 edge.escaped = Unbox;
             } else {
                 edge.escaped = NoEscape;
             }
         } else {
             // From escaped operation
-            if (this->instructions[edge.to].escape){
+            if (this->instructions[edge.to].escape) {
                 edge.escaped = Unboxed;
             } else {
                 edge.escaped = Box;
@@ -106,18 +102,18 @@ void InstructionGraph::fixEdges(){
     }
 }
 
-void InstructionGraph::fixInstructions(){
-    for (auto & instruction: this->instructions) {
+void InstructionGraph::fixInstructions() {
+    for (auto& instruction : this->instructions) {
         if (!supportsUnboxing(instruction.second.opcode))
             continue;
-        if (instruction.second.opcode == LOAD_FAST || instruction.second.opcode == STORE_FAST || instruction.second.opcode == DELETE_FAST )
-            continue; // handled in fixLocals();
+        if (instruction.second.opcode == LOAD_FAST || instruction.second.opcode == STORE_FAST || instruction.second.opcode == DELETE_FAST)
+            continue;// handled in fixLocals();
 
         // Check that all inbound edges can be escaped.
         bool allEdgesEscapable = true;
         auto edgesIn = getEdges(instruction.first);
         vector<AbstractValueKind> typesIn;
-        for (auto & edgeIn: edgesIn){
+        for (auto& edgeIn : edgesIn) {
             typesIn.push_back(edgeIn.kind);
             if (!supportsEscaping(edgeIn.kind))
                 allEdgesEscapable = false;
@@ -127,7 +123,7 @@ void InstructionGraph::fixInstructions(){
 
         // Check that all inbound edges can be escaped.
         bool allOutputsEscapable = true;
-        for (auto & edgeOut: getEdgesFrom(instruction.first)){
+        for (auto& edgeOut : getEdgesFrom(instruction.first)) {
             if (!supportsEscaping(edgeOut.kind))
                 allOutputsEscapable = false;
         }
@@ -144,11 +140,11 @@ void InstructionGraph::fixInstructions(){
 }
 
 void InstructionGraph::deoptimizeInstructions() {
-    for (auto & instruction: this->instructions) {
+    for (auto& instruction : this->instructions) {
         if (!instruction.second.escape)
             continue;
-        if (instruction.second.opcode == LOAD_FAST || instruction.second.opcode == STORE_FAST || instruction.second.opcode == DELETE_FAST )
-            continue; // handled in fixLocals();
+        if (instruction.second.opcode == LOAD_FAST || instruction.second.opcode == STORE_FAST || instruction.second.opcode == DELETE_FAST)
+            continue;// handled in fixLocals();
 
         auto edgesIn = getEdges(instruction.first);
         auto edgesOut = getEdgesFrom(instruction.first);
@@ -164,9 +160,9 @@ void InstructionGraph::deoptimizeInstructions() {
         }
 
         // If op has no inputs and only 1 output edge and the next instruction is not escaped.. dont
-        if (edgesIn.empty() && edgesOut.size() == 1){
+        if (edgesIn.empty() && edgesOut.size() == 1) {
             // Get next instruction
-            if (!this->instructions[edgesOut[0].to].escape){
+            if (!this->instructions[edgesOut[0].to].escape) {
                 instruction.second.escape = false;
                 instruction.second.deoptimized = true;
                 continue;
@@ -174,9 +170,9 @@ void InstructionGraph::deoptimizeInstructions() {
         }
 
         // If op has no outputs and only 1 input edge and the previous instruction is not escaped.. dont
-        if (edgesIn.size() == 1 && edgesOut.empty()){
+        if (edgesIn.size() == 1 && edgesOut.empty()) {
             // Get previous instruction
-            if (!this->instructions[edgesIn[0].from].escape){
+            if (!this->instructions[edgesIn[0].from].escape) {
                 instruction.second.escape = false;
                 instruction.second.deoptimized = true;
                 continue;
@@ -184,20 +180,20 @@ void InstructionGraph::deoptimizeInstructions() {
         }
 
         // If none of the previous instructions are boxed and the next one's aren't either
-        if (!edgesIn.empty() && !edgesOut.empty()){
+        if (!edgesIn.empty() && !edgesOut.empty()) {
             auto previousOperationsBoxed = false;
-            for (auto &edge: edgesIn){
+            for (auto& edge : edgesIn) {
                 if (this->instructions[edge.from].escape)
                     previousOperationsBoxed = true;
             }
 
             auto nextOperationsBoxed = false;
-            for (auto &edge: edgesOut){
+            for (auto& edge : edgesOut) {
                 if (this->instructions[edge.to].escape)
                     nextOperationsBoxed = true;
             }
 
-            if (!previousOperationsBoxed && !nextOperationsBoxed){
+            if (!previousOperationsBoxed && !nextOperationsBoxed) {
                 instruction.second.escape = false;
                 instruction.second.deoptimized = true;
                 continue;
@@ -205,14 +201,14 @@ void InstructionGraph::deoptimizeInstructions() {
         }
 
         // If none of the previous instructions are boxed and the next is a pop operation
-        if (!edgesIn.empty() && !edgesOut.empty() && edgesOut.size() == 1){
+        if (!edgesIn.empty() && !edgesOut.empty() && edgesOut.size() == 1) {
             auto previousOperationsBoxed = false;
-            for (auto &edge: edgesIn){
+            for (auto& edge : edgesIn) {
                 if (this->instructions[edge.from].escape)
                     previousOperationsBoxed = true;
             }
 
-            if (!previousOperationsBoxed && getEdgesFrom(edgesOut[0].to).empty()){
+            if (!previousOperationsBoxed && getEdgesFrom(edgesOut[0].to).empty()) {
                 instruction.second.escape = false;
                 if (this->instructions[edgesOut[0].to].opcode != STORE_FAST) {
                     this->instructions[edgesOut[0].to].escape = false;
@@ -224,22 +220,22 @@ void InstructionGraph::deoptimizeInstructions() {
     }
 }
 
-void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx){
-    for (py_oparg localNumber = startIdx; localNumber <= endIdx; localNumber++){
+void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx) {
+    for (py_oparg localNumber = startIdx; localNumber <= endIdx; localNumber++) {
         // get all LOAD_FAST instructions
         bool loadsCanBeEscaped = true;
         bool storesCanBeEscaped = true;
         bool abstractTypesMatch = true;
         AbstractValueKind localAvk = AVK_Undefined;
         bool hasStores = false;
-        for (auto & instruction : this->instructions){
+        for (auto& instruction : this->instructions) {
             if (instruction.second.opcode == LOAD_FAST && instruction.second.oparg == localNumber) {
                 // if load doesn't have output edge, dont trust this graph
                 auto loadEdges = getEdgesFrom(instruction.first);
                 if (loadEdges.size() != 1 || !supportsEscaping(loadEdges[0].kind)) {
                     loadsCanBeEscaped = false;
                 } else {
-                    if (localAvk != AVK_Undefined  && localAvk != loadEdges[0].kind) {
+                    if (localAvk != AVK_Undefined && localAvk != loadEdges[0].kind) {
                         abstractTypesMatch = false;
                     }
                     localAvk = loadEdges[0].kind;
@@ -252,16 +248,16 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx){
                 if (storeEdges.size() != 1 || !supportsEscaping(storeEdges[0].kind))
                     storesCanBeEscaped = false;
                 else {
-                    if (localAvk != AVK_Undefined  && localAvk != storeEdges[0].kind) {
+                    if (localAvk != AVK_Undefined && localAvk != storeEdges[0].kind) {
                         abstractTypesMatch = false;
                     }
                     localAvk = storeEdges[0].kind;
                 }
             }
         }
-        if (loadsCanBeEscaped && storesCanBeEscaped && hasStores && abstractTypesMatch){
+        if (loadsCanBeEscaped && storesCanBeEscaped && hasStores && abstractTypesMatch) {
             unboxedFastLocals.insert({localNumber, localAvk});
-            for (auto & instruction : this->instructions){
+            for (auto& instruction : this->instructions) {
                 if (instruction.second.opcode == LOAD_FAST && instruction.second.oparg == localNumber) {
                     instruction.second.escape = true;
                 }
@@ -279,8 +275,8 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx){
 PyObject* InstructionGraph::makeGraph(const char* name) {
     PyObject* g = PyUnicode_FromFormat("digraph %s { \n", name);
     PyUnicode_AppendAndDel(&g, PyUnicode_FromString("\tnode [shape=box];\n\tFRAME [label=FRAME];\n"));
-    set<py_opindex> exceptionHandlers ;
-    for (const auto & node: instructions){
+    set<py_opindex> exceptionHandlers;
+    for (const auto& node : instructions) {
         const char* blockColor;
         if (node.second.escape) {
             blockColor = "blue";
@@ -289,12 +285,12 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
         } else {
             blockColor = "black";
         }
-        if (exceptionHandlers.find(node.second.index) != exceptionHandlers.end()){
+        if (exceptionHandlers.find(node.second.index) != exceptionHandlers.end()) {
             PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("subgraph cluster_%u {\nlabel=\"except block\"\n", node.first));
         }
 
         PyObject* op;
-        switch(node.second.opcode){
+        switch (node.second.opcode) {
             case LOAD_ATTR:
             case STORE_ATTR:
             case DELETE_ATTR:
@@ -308,17 +304,17 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
             case IMPORT_NAME:
             case LOAD_METHOD:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
-                       PyUnicode_AsUTF8(PyTuple_GetItem(this->code->co_names, node.second.oparg)), blockColor);
+                                          PyUnicode_AsUTF8(PyTuple_GetItem(this->code->co_names, node.second.oparg)), blockColor);
                 break;
             case LOAD_CONST:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
-                       PyUnicode_AsUTF8(PyUnicode_Substring(PyObject_Repr(PyTuple_GetItem(this->code->co_consts, node.second.oparg)), 0, 40)), blockColor);
+                                          PyUnicode_AsUTF8(PyUnicode_Substring(PyObject_Repr(PyTuple_GetItem(this->code->co_consts, node.second.oparg)), 0, 40)), blockColor);
                 break;
             case LOAD_FAST:
             case STORE_FAST:
             case DELETE_FAST:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
-                       PyUnicode_AsUTF8(PyObject_Repr(PyTuple_GetItem(this->code->co_varnames, node.second.oparg))), blockColor);
+                                          PyUnicode_AsUTF8(PyObject_Repr(PyTuple_GetItem(this->code->co_varnames, node.second.oparg))), blockColor);
                 break;
             case POP_EXCEPT:
             case POP_BLOCK:
@@ -340,10 +336,10 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
         }
         PyUnicode_AppendAndDel(&g, op);
 
-        switch(node.second.opcode){
+        switch (node.second.opcode) {
             case JUMP_FORWARD:
             case JUMP_ABSOLUTE:
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.jumpsTo));
+                PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump\" color=yellow];\n", node.second.index, node.second.jumpsTo));
                 break;
             case FOR_ITER:
             case JUMP_IF_NOT_EXC_MATCH:
@@ -351,28 +347,28 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
             case JUMP_IF_TRUE_OR_POP:
             case POP_JUMP_IF_TRUE:
             case POP_JUMP_IF_FALSE:
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.index + 2));
-                PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.jumpsTo));
+                PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.index + 2));
+                PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"Jump (conditional)\" color=orange];\n", node.second.index, node.second.jumpsTo));
                 break;
         }
     }
 
-    for (const auto & edge: edges){
+    for (const auto& edge : edges) {
         if (edge.from == -1) {
-            PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tFRAME -> OP%u [label=\"%s (%s)\"];\n", edge.to, edge.label, edge.value->describe()));
+            PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tFRAME -> OP%u [label=\"%s (%s)\"];\n", edge.to, edge.label, edge.value->describe()));
         } else {
             switch (edge.escaped) {
                 case NoEscape:
-                    PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) -%u\" color=black];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
+                    PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) -%u\" color=black];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
                     break;
                 case Unbox:
-                    PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) U%u\" color=red];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
+                    PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) U%u\" color=red];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
                     break;
                 case Box:
-                    PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) B%u\" color=green];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
+                    PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) B%u\" color=green];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
                     break;
                 case Unboxed:
-                    PyUnicode_AppendAndDel(&g,PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) UN%u\" color=purple];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
+                    PyUnicode_AppendAndDel(&g, PyUnicode_FromFormat("\tOP%u -> OP%u [label=\"%s (%s) UN%u\" color=purple];\n", edge.from, edge.to, edge.label, edge.value->describe(), edge.position));
                     break;
             }
         }
@@ -381,43 +377,43 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
     return g;
 }
 
-vector<Edge> InstructionGraph::getEdges(py_opindex idx){
+vector<Edge> InstructionGraph::getEdges(py_opindex idx) {
     EdgeMap filteredEdges;
     size_t max_position = 0;
-    for (auto & edge: this->edges){
+    for (auto& edge : this->edges) {
         if (edge.to == idx) {
             filteredEdges[edge.position] = edge;
             if (edge.position > max_position)
                 max_position = edge.position;
         }
     }
-    vector<Edge> result ;
-    for (size_t i = 0 ; i <= max_position; i++){
+    vector<Edge> result;
+    for (size_t i = 0; i <= max_position; i++) {
         if (filteredEdges.find(i) != filteredEdges.end())
             result.push_back(filteredEdges[i]);
     }
     return result;
 }
 
-vector<Edge> InstructionGraph::getEdgesFrom(py_opindex idx){
+vector<Edge> InstructionGraph::getEdgesFrom(py_opindex idx) {
     EdgeMap filteredEdges;
     size_t max_position = 0;
-    for (auto & edge: this->edges){
+    for (auto& edge : this->edges) {
         if (edge.from == idx) {
             filteredEdges[edge.position] = edge;
             if (edge.position > max_position)
                 max_position = edge.position;
         }
     }
-    vector<Edge> result ;
-    for (size_t i = 0 ; i <= max_position; i++){
+    vector<Edge> result;
+    for (size_t i = 0; i <= max_position; i++) {
         if (filteredEdges.find(i) != filteredEdges.end())
             result.push_back(filteredEdges[i]);
     }
     return result;
 }
 
-unordered_map<py_oparg, AbstractValueKind> InstructionGraph::getUnboxedFastLocals(){
+unordered_map<py_oparg, AbstractValueKind> InstructionGraph::getUnboxedFastLocals() {
     return unboxedFastLocals;
 }
 

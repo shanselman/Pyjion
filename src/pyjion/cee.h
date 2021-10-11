@@ -54,17 +54,18 @@ using namespace std;
 class CCorJitHost : public ICorJitHost {
 protected:
 #ifdef WINDOWS
-    map<const WCHAR *, int> intSettings;
-    map<const WCHAR *, const WCHAR *> strSettings;
-    typedef pair <const WCHAR*, int> Str_Int_Pair;
-    typedef pair <const WCHAR*, const WCHAR*> Str_Str_Pair;
+    map<const WCHAR*, int> intSettings;
+    map<const WCHAR*, const WCHAR*> strSettings;
+    typedef pair<const WCHAR*, int> Str_Int_Pair;
+    typedef pair<const WCHAR*, const WCHAR*> Str_Str_Pair;
 #else
     map<std::u16string, int> intSettings;
     map<std::u16string, const char16_t*> strSettings;
 #endif
 
-public: CCorJitHost(){
-    
+public:
+    CCorJitHost() {
+
 #ifdef DUMP_JIT_TRACES
 #ifndef WINDOWS
         intSettings[u"DumpJittedMethods"] = 1;
@@ -78,44 +79,37 @@ public: CCorJitHost(){
 #endif
     }
 
-	void * allocateMemory(size_t size) override
-	{
+    void* allocateMemory(size_t size) override {
         // Use CPython's memory allocator (alignment 16)
         return PyMem_Malloc(size);
-	}
+    }
 
-	void freeMemory(void * block) override
-	{
-	    return PyMem_Free(block);
-	}
+    void freeMemory(void* block) override {
+        return PyMem_Free(block);
+    }
 
-	int getIntConfigValue(const WCHAR* name, int defaultValue) override
-	{
+    int getIntConfigValue(const WCHAR* name, int defaultValue) override {
         if (intSettings.find(name) != intSettings.end())
             return intSettings.at(name);
         return defaultValue;
-	}
+    }
 
-	const WCHAR * getStringConfigValue(const WCHAR* name) override
-	{
+    const WCHAR* getStringConfigValue(const WCHAR* name) override {
         if (strSettings.find(name) != strSettings.end())
             return strSettings.at(name);
         return nullptr;
-	}
+    }
 
-	void freeStringConfigValue(const WCHAR* value) override
-	{
+    void freeStringConfigValue(const WCHAR* value) override {
         // TODO : Figure out what this is for? Delete key?
-	}
+    }
 
-	void* allocateSlab(size_t size, size_t* pActualSize) override
-    {
+    void* allocateSlab(size_t size, size_t* pActualSize) override {
         *pActualSize = size;
         return allocateMemory(size);
     }
 
-    void freeSlab(void* slab, size_t actualSize) override
-    {
+    void freeSlab(void* slab, size_t actualSize) override {
         freeMemory(slab);
     }
 };

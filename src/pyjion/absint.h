@@ -116,18 +116,17 @@ struct AbstractLocalInfo {
 
     AbstractLocalInfo mergeWith(AbstractLocalInfo other) const {
         return {
-            ValueInfo.mergeWith(other.ValueInfo),
-            IsMaybeUndefined || other.IsMaybeUndefined
-            };
+                ValueInfo.mergeWith(other.ValueInfo),
+                IsMaybeUndefined || other.IsMaybeUndefined};
     }
 
-    bool operator== (AbstractLocalInfo other) const {
+    bool operator==(AbstractLocalInfo other) const {
         return other.ValueInfo == ValueInfo &&
-            other.IsMaybeUndefined == IsMaybeUndefined;
+               other.IsMaybeUndefined == IsMaybeUndefined;
     }
-    bool operator!= (AbstractLocalInfo other) const {
+    bool operator!=(AbstractLocalInfo other) const {
         return other.ValueInfo != ValueInfo ||
-            other.IsMaybeUndefined != IsMaybeUndefined;
+               other.IsMaybeUndefined != IsMaybeUndefined;
     }
 };
 
@@ -173,7 +172,7 @@ public:
             throw StackUnderflowException();
         auto res = mStack.back();
         mStack.pop_back();
-        if (res.hasSource()){
+        if (res.hasSource()) {
             res.Sources->addConsumer(idx, position);
         }
         return res;
@@ -190,8 +189,7 @@ public:
         else {
             return {
                     new PgcValue(pyTypeObject, kind),
-                    existing.Sources
-            };
+                    existing.Sources};
         }
     }
 
@@ -207,7 +205,7 @@ public:
         return mStack[index];
     }
 
-    void push_n(const size_t n, const AbstractValueWithSources& value){
+    void push_n(const size_t n, const AbstractValueWithSources& value) {
         mStack[mStack.size() - 1 - n] = value;
     }
 };
@@ -224,11 +222,11 @@ enum AbstractInterpreterResult {
     Success = 1,
 
     // Failure codes
-    CompilationException = 10,  // Exception within Pyjion
-    CompilationJitFailure = 11, // JIT failed
+    CompilationException = 10, // Exception within Pyjion
+    CompilationJitFailure = 11,// JIT failed
 
     // Incompat codes.
-    IncompatibleCompilerFlags  = 100,
+    IncompatibleCompilerFlags = 100,
     IncompatibleSize = 101,
     IncompatibleOpcode_Yield = 102,
     IncompatibleOpcode_WithExcept = 103,
@@ -244,27 +242,25 @@ struct AbstactInterpreterCompileResult {
     OptimizationFlags optimizations = OptimizationFlags();
 };
 
-class StackImbalanceException: public std::exception {
+class StackImbalanceException : public std::exception {
 public:
-    StackImbalanceException() : std::exception() {};
-    const char * what () const noexcept override
-    {
+    StackImbalanceException() : std::exception(){};
+    const char* what() const noexcept override {
         return "Stack imbalance";
     }
 };
 
-class InvalidStackEffectException: public std::exception {
+class InvalidStackEffectException : public std::exception {
 public:
-    InvalidStackEffectException() : std::exception() {};
-    const char * what () const noexcept override
-    {
+    InvalidStackEffectException() : std::exception(){};
+    const char* what() const noexcept override {
         return "Invalid stack effect";
     }
 };
 
 #ifdef _WIN32
 class __declspec(dllexport) AbstractInterpreter {
-#pragma warning (disable:4251)
+#pragma warning(disable : 4251)
 #else
 class AbstractInterpreter {
 #endif
@@ -273,7 +269,7 @@ class AbstractInterpreter {
     unordered_map<py_opindex, InterpreterState> mStartStates;
     // ** Inputs:
     PyCodeObject* mCode;
-    _Py_CODEUNIT *mByteCode; // Used by macros
+    _Py_CODEUNIT* mByteCode;// Used by macros
     size_t mSize;
     Local mErrorCheckLocal;
     bool mTracingEnabled;
@@ -327,14 +323,14 @@ class AbstractInterpreter {
     unordered_map<py_opindex, bool> m_unboxableProducers;
     unordered_map<py_opindex, Label> m_yieldOffsets;
 
-#pragma warning (default:4251)
+#pragma warning(default : 4251)
 
 public:
-    AbstractInterpreter(PyCodeObject *code, IPythonCompiler* compiler);
+    AbstractInterpreter(PyCodeObject* code, IPythonCompiler* compiler);
     ~AbstractInterpreter();
 
     AbstactInterpreterCompileResult compile(PyObject* builtins, PyObject* globals, PyjionCodeProfile* profile, PgcStatus pgc_status);
-    AbstractInterpreterResult interpret(PyObject *builtins, PyObject *globals, PyjionCodeProfile *profile, PgcStatus status);
+    AbstractInterpreterResult interpret(PyObject* builtins, PyObject* globals, PyjionCodeProfile* profile, PgcStatus status);
 
     void setLocalType(size_t index, PyObject* val);
     // Returns information about the specified local variable at a specific
@@ -351,6 +347,7 @@ public:
     void enableProfiling();
     void disableProfiling();
     InstructionGraph* buildInstructionGraph(bool escapeLocals);
+
 private:
     AbstractValue* toAbstract(PyObject* obj);
 
@@ -365,8 +362,8 @@ private:
 
     AbstractSource* addLocalSource(py_opindex opcodeIndex, py_oparg localIndex);
     AbstractSource* addConstSource(py_opindex opcodeIndex, py_oparg constIndex, PyObject* value);
-    AbstractSource* addGlobalSource(py_opindex opcodeIndex, py_oparg constIndex, const char * name, PyObject* value);
-    AbstractSource* addBuiltinSource(py_opindex opcodeIndex, py_oparg constIndex, const char * name, PyObject* value);
+    AbstractSource* addGlobalSource(py_opindex opcodeIndex, py_oparg constIndex, const char* name, PyObject* value);
+    AbstractSource* addBuiltinSource(py_opindex opcodeIndex, py_oparg constIndex, const char* name, PyObject* value);
 
     void makeFunction(py_oparg oparg);
     bool canSkipLastiUpdate(py_opcode opcode);
@@ -396,12 +393,12 @@ private:
 
     void ensureLabels(vector<Label>& labels, size_t count);
 
-    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force=false, bool trace=true);
+    void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force = false, bool trace = true);
     void raiseOnNegativeOne(py_opindex curByte);
 
     void unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler = nullptr);
 
-    ExceptionHandler * currentHandler();
+    ExceptionHandler* currentHandler();
 
     void markOffsetLabel(py_opindex index);
     void jumpAbsolute(py_opindex index, py_opindex from);

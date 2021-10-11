@@ -31,8 +31,8 @@
 #include <pyjit.h>
 
 
-int TestTraceFunc(PyObject * state, PyFrameObject *frame, int type, PyObject * arg){
-    switch(type){
+int TestTraceFunc(PyObject* state, PyFrameObject* frame, int type, PyObject* arg) {
+    switch (type) {
         case PyTrace_CALL:
             CHECK(arg == Py_None);
             break;
@@ -63,8 +63,8 @@ int TestTraceFunc(PyObject * state, PyFrameObject *frame, int type, PyObject * a
     return 0;
 }
 
-int TestProfileFunc(PyObject * state, PyFrameObject *frame, int type, PyObject * arg){
-    switch(type){
+int TestProfileFunc(PyObject* state, PyFrameObject* frame, int type, PyObject* arg) {
+    switch (type) {
         case PyTrace_CALL:
             CHECK(arg == Py_None);
             break;
@@ -98,12 +98,12 @@ int TestProfileFunc(PyObject * state, PyFrameObject *frame, int type, PyObject *
 
 class TracingTest {
 private:
-    py_ptr <PyCodeObject> m_code;
+    py_ptr<PyCodeObject> m_code;
     PyjionJittedCode* m_jittedcode;
     PyObject_ptr m_recordedTraces = PyObject_ptr(PyDict_New());
     PyObject_ptr m_recordedProfiles = PyObject_ptr(PyDict_New());
 
-    PyObject *run() {
+    PyObject* run() {
         auto sysModule = PyObject_ptr(PyImport_ImportModule("sys"));
         auto globals = PyObject_ptr(PyDict_New());
         auto builtins = PyEval_GetBuiltins();
@@ -129,13 +129,13 @@ private:
     }
 
 public:
-    explicit TracingTest(const char *code) {
+    explicit TracingTest(const char* code) {
         PyErr_Clear();
         m_code.reset(CompileCode(code));
         if (m_code.get() == nullptr) {
             FAIL("failed to compile code");
         }
-        auto jitted = PyJit_EnsureExtra((PyObject *) *m_code);
+        auto jitted = PyJit_EnsureExtra((PyObject*) *m_code);
 
         m_jittedcode = jitted;
     }
@@ -160,7 +160,7 @@ public:
         return {repr};
     }
 
-    PyObject *raises() {
+    PyObject* raises() {
         auto res = run();
         REQUIRE(res == nullptr);
         auto excType = PyErr_Occurred();
@@ -171,14 +171,14 @@ public:
         return excType;
     }
 
-    bool traced(int ty){
+    bool traced(int ty) {
         auto item = PyDict_GetItem(m_recordedTraces.get(), PyLong_FromLong(ty));
         if (item == nullptr)
             return false;
         return item == Py_True;
     }
 
-    bool profiled(int ty){
+    bool profiled(int ty) {
         auto item = PyDict_GetItem(m_recordedProfiles.get(), PyLong_FromLong(ty));
         if (item == nullptr)
             return false;
@@ -186,7 +186,7 @@ public:
     }
 };
 
-TEST_CASE("test tracing hooks"){
+TEST_CASE("test tracing hooks") {
     SECTION("test simple") {
         auto t = TracingTest(
                 "def f():\n"
@@ -194,8 +194,7 @@ TEST_CASE("test tracing hooks"){
                 "  a = 1\n"
                 "  b = 2\n"
                 "  c = 3\n"
-                "  return a + b + c\n"
-        );
+                "  return a + b + c\n");
         CHECK(t.returns() == "6");
         CHECK(t.traced(PyTrace_CALL));
         CHECK(t.traced(PyTrace_RETURN));
@@ -211,8 +210,7 @@ TEST_CASE("test tracing hooks"){
                 "  b = 2\n"
                 "  c = 3\n"
                 "  print(a + b + c)\n"
-                "  return a + b + c\n"
-        );
+                "  return a + b + c\n");
         CHECK(t.returns() == "6");
         CHECK(t.traced(PyTrace_CALL));
         CHECK(t.traced(PyTrace_RETURN));
