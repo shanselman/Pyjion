@@ -218,4 +218,17 @@ TEST_CASE("Test instruction graphs"){
         t.assertInstruction(8, LOAD_FAST, 1, true);
         t.assertInstruction(10, LOAD_FAST, 2, true);
     }
+    SECTION("test BINARY_MULTIPLY is unboxed at level 2") {
+        setOptimizationLevel(2);
+        auto t = InstructionGraphTest("def f(n=10000):\n"
+                                      "  for y in range(n):\n"
+                                      "        x = 2\n"
+                                      "        z = y * y + x - y\n"
+                                      "        x *= z",
+                                      "assert_opt_binary_multiply");
+        setOptimizationLevel(1);
+        CHECK(t.size() == 23);
+        t.assertInstruction(20, BINARY_MULTIPLY, 0, true); // * should be unboxed
+        t.assertInstruction(36, INPLACE_MULTIPLY, 0, true); // *= should be unboxed
+    }
 }
