@@ -6,6 +6,8 @@
 * Added ARM64 for Apple macOS (M1 Silicon). The JIT will emit native ARM64 assembly. Disassembler not supported.
 * Fixed a bug where `pyjion.graph()` would cause an exception if graphing was not enabled when the function was compiled
 * Added support for the `SETUP_ANNOTATIONS` opcode
+* Added support for generators in 3.10
+* Fixed a bug in the DUP_TOP_TWO opcode with escaped variables
 
 ## 1.0.0 (rc3)
 
