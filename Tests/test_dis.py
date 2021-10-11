@@ -80,12 +80,14 @@ def test_thin(capsys):
 @pytest.mark.skipif(sys.platform.startswith("win"), reason="no windows support yet")
 @pytest.mark.skipif(platform.machine() != 'x86_64', reason="Only X64 supported")
 @pytest.mark.external
+@pytest.mark.graph
 def test_dis_native(capsys):
     def test_f():
         numbers = (1, 2, 3, 4)
         return sum(numbers)
 
     assert test_f() == 10
+    pyjion.disable()
     dis_native(test_f)
     captured = capsys.readouterr()
     assert "PUSH RBP" in captured.out
@@ -100,6 +102,7 @@ def test_dis_native_with_offsets(capsys):
         return sum(numbers)
 
     assert test_f() == 10
+    pyjion.disable()
     dis_native(test_f, True)
     captured = capsys.readouterr()
 
