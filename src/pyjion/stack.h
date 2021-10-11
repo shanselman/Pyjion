@@ -33,30 +33,29 @@
 
 
 enum StackEntryKind {
-    STACK_KIND_VALUE_FLOAT = 0, // An unboxed float
-    STACK_KIND_VALUE_INT = 1, // An unboxed int
-    STACK_KIND_OBJECT = 2 // A Python object, or a tagged int which might be an object
+    STACK_KIND_VALUE_FLOAT = 0,// An unboxed float
+    STACK_KIND_VALUE_INT = 1,  // An unboxed int
+    STACK_KIND_OBJECT = 2      // A Python object, or a tagged int which might be an object
 };
 
 StackEntryKind avkAsStackEntryKind(AbstractValueKind k);
 StackEntryKind lkAsStackEntryKind(LocalKind k);
 LocalKind stackEntryKindAsLocalKind(StackEntryKind k);
 
-class StackUnderflowException: public std::exception {
+class StackUnderflowException : public std::exception {
 public:
-    StackUnderflowException() : std::exception() {};
-    const char * what () const noexcept override
-    {
+    StackUnderflowException() : std::exception(){};
+    const char* what() const noexcept override {
         return "Stack underflow";
     }
 };
 
- class ValueStack : std::vector<StackEntryKind> {
+class ValueStack : std::vector<StackEntryKind> {
 
- public:
-     ValueStack() = default;
+public:
+    ValueStack() = default;
 
-    ValueStack(ValueStack const &old) {
+    ValueStack(ValueStack const& old) {
         for (size_t i = 0; i < old.size(); i++) {
             push_back(old[i]);
         }
@@ -69,78 +68,78 @@ public:
         return std::vector<StackEntryKind>::size();
     }
 
-    void dup_top(){
+    void dup_top() {
         if (empty())
             throw StackUnderflowException();
-        push_back(back()); // does inc_stack
+        push_back(back());// does inc_stack
     }
 
-    reverse_iterator rbegin(){
+    reverse_iterator rbegin() {
         return std::vector<StackEntryKind>::rbegin();
     }
 
-    reverse_iterator rend(){
-     return std::vector<StackEntryKind>::rend();
+    reverse_iterator rend() {
+        return std::vector<StackEntryKind>::rend();
     }
 
-    StackEntryKind peek(size_t n){
+    StackEntryKind peek(size_t n) {
         return std::vector<StackEntryKind>::at(size() - 1 - n);
     }
 };
 
- class BlockStack : std::vector<BlockInfo> {
+class BlockStack : std::vector<BlockInfo> {
 
- public:
-     BlockStack() = default;
+public:
+    BlockStack() = default;
 
-     BlockStack(BlockStack const &old) {
-         for (size_t i = 0; i < old.size(); i++) {
-             push_back(old[i]);
-         }
-     }
+    BlockStack(BlockStack const& old) {
+        for (size_t i = 0; i < old.size(); i++) {
+            push_back(old[i]);
+        }
+    }
 
-     bool empty(){
-         return vector<BlockInfo>::empty();
-     }
+    bool empty() {
+        return vector<BlockInfo>::empty();
+    }
 
-     void pop_back() {
-         if (empty())
-             throw StackUnderflowException();
-         return vector<BlockInfo>::pop_back();
-     }
+    void pop_back() {
+        if (empty())
+            throw StackUnderflowException();
+        return vector<BlockInfo>::pop_back();
+    }
 
-     void push_back(BlockInfo block){
-         return vector<BlockInfo>::push_back(block);
-     }
+    void push_back(BlockInfo block) {
+        return vector<BlockInfo>::push_back(block);
+    }
 
-     bool beyond(py_opindex curByte){
-         return (size() > 1 &&
-             curByte >= back().EndOffset &&
-             !back().Root);
-     }
+    bool beyond(py_opindex curByte) {
+        return (size() > 1 &&
+                curByte >= back().EndOffset &&
+                !back().Root);
+    }
 
-     size_t size() const{
-         return vector<BlockInfo>::size();
-     }
+    size_t size() const {
+        return vector<BlockInfo>::size();
+    }
 
-     BlockInfo back(){
-         if (empty())
-             throw StackUnderflowException();
-         return vector<BlockInfo>::back();
-     }
+    BlockInfo back() {
+        if (empty())
+            throw StackUnderflowException();
+        return vector<BlockInfo>::back();
+    }
 
-     reverse_iterator rbegin(){
-         return std::vector<BlockInfo>::rbegin();
-     }
+    reverse_iterator rbegin() {
+        return std::vector<BlockInfo>::rbegin();
+    }
 
-     reverse_iterator rend(){
-         return std::vector<BlockInfo>::rend();
-     }
+    reverse_iterator rend() {
+        return std::vector<BlockInfo>::rend();
+    }
 
-     BlockInfo get(size_t i) {
+    BlockInfo get(size_t i) {
         return std::vector<BlockInfo>::at(i);
-     }
- };
+    }
+};
 
 
 class InterpreterStack : public std::vector<AbstractValueWithSources> {
@@ -172,4 +171,4 @@ public:
         return std::vector<AbstractValueWithSources>::at(size() - n);
     }
 };
-#endif //PYJION_STACK_H
+#endif//PYJION_STACK_H

@@ -34,14 +34,13 @@ ExceptionHandler* ExceptionHandlerManager::SetRootHandler(Label handlerLabel) {
             EhfNone,
             nullptr);
     m_exceptionHandlers.push_back(
-        rootHandler
-    );
+            rootHandler);
     return m_exceptionHandlers[0];
 }
 
-ExceptionHandler * ExceptionHandlerManager::AddSetupFinallyHandler(Label handlerLabel, ValueStack stack,
-                                                                   ExceptionHandler *currentHandler,
-                                                                   py_opindex handlerIndex) {
+ExceptionHandler* ExceptionHandlerManager::AddSetupFinallyHandler(Label handlerLabel, ValueStack stack,
+                                                                  ExceptionHandler* currentHandler,
+                                                                  py_opindex handlerIndex) {
     auto newHandler = new ExceptionHandler(
             m_exceptionHandlers.size(),
             handlerLabel,
@@ -51,8 +50,7 @@ ExceptionHandler * ExceptionHandlerManager::AddSetupFinallyHandler(Label handler
     m_handlerIndexes[handlerIndex] = newHandler;
 
     m_exceptionHandlers.push_back(
-        newHandler
-    );
+            newHandler);
     return newHandler;
 }
 
@@ -76,11 +74,11 @@ vector<ExceptionHandler*> ExceptionHandlerManager::GetHandlers() {
     return m_exceptionHandlers;
 }
 
-ehFlags operator | (ehFlags lhs, ehFlags rhs) {
-    return (ehFlags)(static_cast<int>(lhs) | static_cast<int>(rhs));
+ehFlags operator|(ehFlags lhs, ehFlags rhs) {
+    return (ehFlags) (static_cast<int>(lhs) | static_cast<int>(rhs));
 }
 
-ehFlags operator |= (ehFlags& lhs, ehFlags rhs) {
-    lhs = (ehFlags)(static_cast<int>(lhs) | static_cast<int>(rhs));
+ehFlags operator|=(ehFlags& lhs, ehFlags rhs) {
+    lhs = (ehFlags) (static_cast<int>(lhs) | static_cast<int>(rhs));
     return lhs;
 }

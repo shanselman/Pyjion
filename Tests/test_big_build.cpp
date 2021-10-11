@@ -34,7 +34,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         string code;
         code.append("def f():\n");
         code.append(" d = {\n");
-        for (size_t i = 0 ; i < n_keys; i++){
+        for (size_t i = 0; i < n_keys; i++) {
             char snip[30];
             snprintf(snip, 30, " 'x%zu': 'test_%zu',", i, i);
             code.append(snip);
@@ -42,8 +42,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         code.append(" }\n");
         code.append(" return len(d)\n");
         auto t = EmissionTest(
-            code.c_str()
-        );
+                code.c_str());
         CHECK(stoi(t.returns()) == n_keys);
     }
 
@@ -52,7 +51,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         string code;
         code.append("def f():\n");
         code.append(" d = {\n");
-        for (size_t i = 0 ; i < n_keys; i++){
+        for (size_t i = 0; i < n_keys; i++) {
             char snip[30];
             snprintf(snip, 30, " 'x%zu': %zu,", i, i);
             code.append(snip);
@@ -60,8 +59,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         code.append(" }\n");
         code.append(" return len(d)\n");
         auto t = EmissionTest(
-                code.c_str()
-        );
+                code.c_str());
         CHECK(stoi(t.returns()) == n_keys);
     }
 
@@ -70,7 +68,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         string code;
         code.append("def f():\n");
         code.append(" d = (\n");
-        for (size_t i = 0 ; i < n_keys; i++){
+        for (size_t i = 0; i < n_keys; i++) {
             char snip[30];
             snprintf(snip, 30, " 'test_%zu',", i);
             code.append(snip);
@@ -78,8 +76,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         code.append(" )\n");
         code.append(" return len(d)\n");
         auto t = EmissionTest(
-                code.c_str()
-        );
+                code.c_str());
         CHECK(stoi(t.returns()) == n_keys);
     }
 
@@ -88,7 +85,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         string code;
         code.append("def f():\n");
         code.append(" d = [\n");
-        for (size_t i = 0 ; i < n_keys; i++){
+        for (size_t i = 0; i < n_keys; i++) {
             char snip[30];
             snprintf(snip, 30, " 'test_%zu',", i);
             code.append(snip);
@@ -96,8 +93,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         code.append(" ]\n");
         code.append(" return len(d)\n");
         auto t = EmissionTest(
-                code.c_str()
-        );
+                code.c_str());
         CHECK(stoi(t.returns()) == n_keys);
     }
 
@@ -106,7 +102,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         string code;
         code.append("def f():\n");
         code.append(" d = {\n");
-        for (size_t i = 0 ; i < n_keys; i++){
+        for (size_t i = 0; i < n_keys; i++) {
             char snip[30];
             snprintf(snip, 30, " 'test_%zu',", i);
             code.append(snip);
@@ -114,8 +110,7 @@ TEST_CASE("Test big const builds", "[slow]") {
         code.append(" }\n");
         code.append(" return len(d)\n");
         auto t = EmissionTest(
-                code.c_str()
-        );
+                code.c_str());
         CHECK(stoi(t.returns()) == n_keys);
     }
 }

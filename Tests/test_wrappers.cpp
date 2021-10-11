@@ -28,7 +28,7 @@
 #include "intrins.h"
 #include "testing_util.h"
 
-TEST_CASE("Test Add"){
+TEST_CASE("Test Add") {
     SECTION("Test add two numbers") {
         PyObject* left = PyLong_FromLong(200);
         PyObject* right = PyLong_FromLong(304);
@@ -38,7 +38,7 @@ TEST_CASE("Test Add"){
         CHECK(PyLong_AsDouble(res) == 504);
     }
 
-     SECTION("Test add two strings") {
+    SECTION("Test add two strings") {
         PyObject* left = PyUnicode_FromString("horse");
         PyObject* right = PyUnicode_FromString("staple");
 
@@ -48,7 +48,7 @@ TEST_CASE("Test Add"){
     }
 }
 
-TEST_CASE("Test Subscr"){
+TEST_CASE("Test Subscr") {
     SECTION("Test subscr list") {
         PyObject* left = PyList_New(0);
         PyList_Append(left, PyUnicode_FromString("horse"));
@@ -75,7 +75,7 @@ TEST_CASE("Test Subscr"){
 }
 
 
-TEST_CASE("Test RichCompare"){
+TEST_CASE("Test RichCompare") {
     SECTION("Test string does not equal") {
         PyObject* left = PyUnicode_FromString("horse");
         PyObject* right = PyUnicode_FromString("battery");
@@ -86,7 +86,7 @@ TEST_CASE("Test RichCompare"){
     }
 }
 
-TEST_CASE("Test Contains"){
+TEST_CASE("Test Contains") {
     SECTION("Test word contains letter") {
         PyObject* left = PyUnicode_FromString("o");
         PyObject* right = PyUnicode_FromString("horse");
@@ -106,7 +106,7 @@ TEST_CASE("Test Contains"){
     }
 }
 
-TEST_CASE("Test NotContains"){
+TEST_CASE("Test NotContains") {
     SECTION("Test word does not contain letter") {
         PyObject* left = PyUnicode_FromString("pig");
         PyObject* right = PyUnicode_FromString("horse");
@@ -126,7 +126,7 @@ TEST_CASE("Test NotContains"){
     }
 }
 
-TEST_CASE("Test BuildDictFromTuples"){
+TEST_CASE("Test BuildDictFromTuples") {
     SECTION("Test happy path") {
         PyObject* keysAndValues = PyTuple_New(3);
         PyObject* keys = PyTuple_New(2);
@@ -142,11 +142,11 @@ TEST_CASE("Test BuildDictFromTuples"){
     }
 }
 
-TEST_CASE("Test refcnt for Call methods"){
+TEST_CASE("Test refcnt for Call methods") {
     SECTION("Test Call0") {
-        PyObject * func = CompileFunction("def f(): return 1");
+        PyObject* func = CompileFunction("def f(): return 1");
         CHECK(PyFunction_Check(func));
-        Py_INCREF(func); // imitate the loading of the function
+        Py_INCREF(func);// imitate the loading of the function
         CHECK(func->ob_refcnt == 2);
         auto res = Call0(func, nullptr);
         CHECK_THAT(PyUnicode_AsUTF8(PyObject_Repr(res)), Catch::Equals("1"));
@@ -154,10 +154,10 @@ TEST_CASE("Test refcnt for Call methods"){
     }
 
     SECTION("Test Call1") {
-        PyObject * func = CompileFunction("def f(x): return 1");
+        PyObject* func = CompileFunction("def f(x): return 1");
         PyObject* arg1 = PyUnicode_FromString("hans shot first");
-        Py_INCREF(func); // imitate the loading of the function
-        Py_INCREF(arg1); // imitate the loading of the arg
+        Py_INCREF(func);// imitate the loading of the function
+        Py_INCREF(arg1);// imitate the loading of the arg
         CHECK(func->ob_refcnt == 2);
         CHECK(arg1->ob_refcnt == 2);
 
@@ -169,10 +169,10 @@ TEST_CASE("Test refcnt for Call methods"){
     }
 
     SECTION("Test CallN") {
-        PyObject * func = CompileFunction("def f(x): return 1");
+        PyObject* func = CompileFunction("def f(x): return 1");
         PyObject* arg1 = PyUnicode_FromString("hans shot first");
-        Py_INCREF(func); // imitate the loading of the function
-        Py_INCREF(arg1); // imitate the loading of the arg
+        Py_INCREF(func);// imitate the loading of the function
+        Py_INCREF(arg1);// imitate the loading of the arg
         CHECK(func->ob_refcnt == 2);
         CHECK(arg1->ob_refcnt == 2);
         auto args = PyTuple_New(1);

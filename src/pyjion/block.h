@@ -41,7 +41,7 @@ struct BlockInfo {
     int Kind;
     bool Root;
     ehFlags Flags;
-    ExceptionHandler* CurrentHandler;  // the current exception handler
+    ExceptionHandler* CurrentHandler;// the current exception handler
 
     BlockInfo(int kind, ExceptionHandler* currentHandler, ehFlags flags = EhfNone) {
         EndOffset = 0;
@@ -60,4 +60,4 @@ struct BlockInfo {
     }
 };
 
-#endif //PYJION_BLOCK_H
+#endif//PYJION_BLOCK_H

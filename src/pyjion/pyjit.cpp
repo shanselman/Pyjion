@@ -31,21 +31,21 @@
 #define BUFSIZE 65535
 #include <libloaderapi.h>
 #include <processenv.h>
-typedef ICorJitCompiler* (__cdecl* GETJIT)();
+typedef ICorJitCompiler*(__cdecl* GETJIT)();
 typedef void(__cdecl* JITSTARTUP)(ICorJitHost*);
 #endif
 
-#define MAX_UINT8_T 255
+#define MAX_UINT8_T  255
 #define MAX_UINT16_T 65535
 
 PyjionSettings g_pyjionSettings;
 extern BaseModule g_module;
-#define SET_OPT(opt, actualLevel, minLevel) \
-    if ((actualLevel) >= (minLevel)) { \
-        g_pyjionSettings.optimizations = g_pyjionSettings.optimizations | (opt) ;     \
+#define SET_OPT(opt, actualLevel, minLevel)                                      \
+    if ((actualLevel) >= (minLevel)) {                                           \
+        g_pyjionSettings.optimizations = g_pyjionSettings.optimizations | (opt); \
     }
 
-void setOptimizationLevel(unsigned short level){
+void setOptimizationLevel(unsigned short level) {
     g_pyjionSettings.optimizationLevel = level;
     g_pyjionSettings.optimizations = OptimizationFlags();
     SET_OPT(InlineIs, level, 1);
@@ -66,9 +66,10 @@ void setOptimizationLevel(unsigned short level){
     SET_OPT(IntegerUnboxingPower, level, 2);
 }
 
-PgcStatus nextPgcStatus(PgcStatus status){
-    switch(status){
-        case PgcStatus::Uncompiled: return PgcStatus::CompiledWithProbes;
+PgcStatus nextPgcStatus(PgcStatus status) {
+    switch (status) {
+        case PgcStatus::Uncompiled:
+            return PgcStatus::CompiledWithProbes;
         case PgcStatus::CompiledWithProbes:
         case PgcStatus::Optimized:
         default:
@@ -77,19 +78,19 @@ PgcStatus nextPgcStatus(PgcStatus status){
 }
 
 PyjionJittedCode::~PyjionJittedCode() {
-	delete j_profile;
+    delete j_profile;
 }
 
 PyjionCodeProfile::~PyjionCodeProfile() {
     // Don't decref types so that comparisons can be made to jumps
-//    for (auto &pos: this->stackTypes) {
-//        for(auto &observed: pos.second){
-//            Py_XDECREF(observed.second);
-//        }
-//    }
+    //    for (auto &pos: this->stackTypes) {
+    //        for(auto &observed: pos.second){
+    //            Py_XDECREF(observed.second);
+    //        }
+    //    }
 }
 
-void PyjionCodeProfile::record(size_t opcodePosition, size_t stackPosition, PyObject* value){
+void PyjionCodeProfile::record(size_t opcodePosition, size_t stackPosition, PyObject* value) {
     if (PyGen_CheckExact(value) || PyCoro_CheckExact(value))
         return;
     if (this->stackTypes[opcodePosition][stackPosition] == nullptr) {
@@ -103,19 +104,17 @@ PyTypeObject* PyjionCodeProfile::getType(size_t opcodePosition, size_t stackPosi
     return this->stackTypes[opcodePosition][stackPosition];
 }
 
-AbstractValueKind PyjionCodeProfile::getKind(size_t opcodePosition, size_t stackPosition){
+AbstractValueKind PyjionCodeProfile::getKind(size_t opcodePosition, size_t stackPosition) {
     return this->stackKinds[opcodePosition][stackPosition];
 }
 
-void capturePgcStackValue(PyjionCodeProfile* profile, PyObject* value, size_t opcodePosition, size_t stackPosition){
-    if (value != nullptr && profile != nullptr){
+void capturePgcStackValue(PyjionCodeProfile* profile, PyObject* value, size_t opcodePosition, size_t stackPosition) {
+    if (value != nullptr && profile != nullptr) {
         profile->record(opcodePosition, stackPosition, value);
     }
 }
 
-int
-Pyjit_CheckRecursiveCall(PyThreadState *tstate, const char *where)
-{
+int Pyjit_CheckRecursiveCall(PyThreadState* tstate, const char* where) {
     int recursion_limit = g_pyjionSettings.recursionLimit;
 
     if (tstate->recursion_headroom) {
@@ -123,8 +122,7 @@ Pyjit_CheckRecursiveCall(PyThreadState *tstate, const char *where)
             /* Overflowing while handling an overflow. Give up. */
             Py_FatalError("Cannot recover from stack overflow.");
         }
-    }
-    else {
+    } else {
         if (tstate->recursion_depth > recursion_limit) {
             tstate->recursion_headroom++;
             PyErr_Format(PyExc_RecursionError,
@@ -138,18 +136,17 @@ Pyjit_CheckRecursiveCall(PyThreadState *tstate, const char *where)
     return 0;
 }
 
-static inline int Pyjit_EnterRecursiveCall(const char *where) {
-    PyThreadState *tstate = PyThreadState_GET();
-    return ((++tstate->recursion_depth > g_pyjionSettings.recursionLimit)
-            && Pyjit_CheckRecursiveCall(tstate, where));
+static inline int Pyjit_EnterRecursiveCall(const char* where) {
+    PyThreadState* tstate = PyThreadState_GET();
+    return ((++tstate->recursion_depth > g_pyjionSettings.recursionLimit) && Pyjit_CheckRecursiveCall(tstate, where));
 }
 
 static inline void Pyjit_LeaveRecursiveCall() {
-    PyThreadState *tstate = PyThreadState_GET();
+    PyThreadState* tstate = PyThreadState_GET();
     tstate->recursion_depth--;
 }
 
-static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
+static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
     if (Pyjit_EnterRecursiveCall("")) {
         return nullptr;
     }
@@ -157,7 +154,7 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
     PyTraceInfo trace_info;
     /* Mark trace_info as uninitialized */
     trace_info.code = nullptr;
-    CFrame *prev_cframe = tstate->cframe;
+    CFrame* prev_cframe = tstate->cframe;
     trace_info.cframe.use_tracing = prev_cframe->use_tracing;
     trace_info.cframe.previous = prev_cframe;
     tstate->cframe = &trace_info.cframe;
@@ -171,7 +168,7 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
     frame->f_state = PY_FRAME_EXECUTING;
 
     try {
-        auto res = ((Py_EvalFunc)state)(nullptr, frame, tstate, profile, &trace_info);
+        auto res = ((Py_EvalFunc) state)(nullptr, frame, tstate, profile, &trace_info);
         tstate->cframe = trace_info.cframe.previous;
         tstate->cframe->use_tracing = trace_info.cframe.use_tracing;
         Pyjit_LeaveRecursiveCall();
@@ -183,7 +180,7 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject*fram
                frameStateAsString(frame->f_state));
 #endif
         return res;
-    } catch (const std::exception& e){
+    } catch (const std::exception& e) {
 #ifdef DEBUG_VERBOSE
         printf("Caught exception on execution of frame %s\n", e.what());
 #endif
@@ -201,37 +198,37 @@ HMODULE GetClrJit() {
 }
 #endif
 
-bool JitInit(const wchar_t * path) {
+bool JitInit(const wchar_t* path) {
     g_pyjionSettings = PyjionSettings();
     g_pyjionSettings.recursionLimit = Py_GetRecursionLimit();
     g_pyjionSettings.clrjitpath = path;
-	g_extraSlot = PyThread_tss_alloc();
-	PyThread_tss_create(g_extraSlot);
+    g_extraSlot = PyThread_tss_alloc();
+    PyThread_tss_create(g_extraSlot);
 #ifdef WINDOWS
     auto clrJitHandle = GetClrJit();
-	if (clrJitHandle == nullptr) {
-	    PyErr_SetString(PyExc_RuntimeError, "Failed to load .NET CLR JIT.");
+    if (clrJitHandle == nullptr) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to load .NET CLR JIT.");
         return false;
-	}
-    auto jitStartup = (JITSTARTUP)GetProcAddress(clrJitHandle, "jitStartup");
+    }
+    auto jitStartup = (JITSTARTUP) GetProcAddress(clrJitHandle, "jitStartup");
 
-	if (jitStartup != nullptr)
+    if (jitStartup != nullptr)
         jitStartup(&g_jitHost);
     else {
         PyErr_SetString(PyExc_RuntimeError, "Failed to load jitStartup().");
         return false;
     }
 
-	auto getJit = (GETJIT)GetProcAddress(clrJitHandle, "getJit");
-	if (getJit == nullptr) {
-		PyErr_SetString(PyExc_RuntimeError, "Failed to load clrjit.dll::getJit(), check that the correct version of .NET is installed.");
+    auto getJit = (GETJIT) GetProcAddress(clrJitHandle, "getJit");
+    if (getJit == nullptr) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to load clrjit.dll::getJit(), check that the correct version of .NET is installed.");
         return false;
-	}
+    }
 #else
     jitStartup(&g_jitHost);
 #endif
 
-	g_jit = getJit();
+    g_jit = getJit();
 
     if (PyType_Ready(&PyJitMethodLocation_Type) < 0)
         return false;
@@ -239,10 +236,10 @@ bool JitInit(const wchar_t * path) {
     return true;
 }
 
-PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
+PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
     // Compile and run the now compiled code...
-    PythonCompiler jitter((PyCodeObject*)state->j_code);
-    AbstractInterpreter interp((PyCodeObject*)state->j_code, &jitter);
+    PythonCompiler jitter((PyCodeObject*) state->j_code);
+    AbstractInterpreter interp((PyCodeObject*) state->j_code, &jitter);
     int argCount = frame->f_code->co_argcount + frame->f_code->co_kwonlyargcount;
 
     // provide the interpreter information about the specialized types
@@ -250,14 +247,14 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
         interp.setLocalType(i, frame->f_localsplus[i]);
     }
 
-    if (tstate->cframe->use_tracing && tstate->c_tracefunc){
+    if (tstate->cframe->use_tracing && tstate->c_tracefunc) {
         interp.enableTracing();
         state->j_tracingHooks = true;
     } else {
         interp.disableTracing();
         state->j_tracingHooks = false;
     }
-    if (tstate->cframe->use_tracing && tstate->c_profilefunc){
+    if (tstate->cframe->use_tracing && tstate->c_profilefunc) {
         interp.enableProfiling();
         state->j_profilingHooks = true;
     } else {
@@ -268,7 +265,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
     auto res = interp.compile(frame->f_builtins, frame->f_globals, profile, state->j_pgc_status);
     state->j_compile_result = res.result;
     state->j_optimizations = res.optimizations;
-    if (g_pyjionSettings.graph){
+    if (g_pyjionSettings.graph) {
         state->j_graph = res.instructionGraph;
     }
     if (res.compiledCode == nullptr || res.result != Success) {
@@ -277,7 +274,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
     }
 
     // Update the jitted information for this tree node
-    state->j_addr = (Py_EvalFunc)res.compiledCode->get_code_addr();
+    state->j_addr = (Py_EvalFunc) res.compiledCode->get_code_addr();
     assert(state->j_addr != nullptr);
     state->j_il = res.compiledCode->get_il();
     state->j_ilLen = res.compiledCode->get_il_len();
@@ -291,80 +288,77 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject *f
 
 #ifdef DUMP_SEQUENCE_POINTS
     printf("Method disassembly for %s\n", PyUnicode_AsUTF8(frame->f_code->co_name));
-    auto code = (_Py_CODEUNIT *)PyBytes_AS_STRING(frame->f_code->co_code);
-    for (size_t i = 0; i < state->j_sequencePointsLen; i ++){
+    auto code = (_Py_CODEUNIT*) PyBytes_AS_STRING(frame->f_code->co_code);
+    for (size_t i = 0; i < state->j_sequencePointsLen; i++) {
         printf(" %016llX (IL_%04X): %d %s %d\n",
-            ((uint64_t)state->j_addr + (uint64_t)state->j_sequencePoints[i].nativeOffset),
-            state->j_sequencePoints[i].ilOffset,
-            state->j_sequencePoints[i].pythonOpcodeIndex,
-            opcodeName(_Py_OPCODE(code[(state->j_sequencePoints[i].pythonOpcodeIndex)/sizeof(_Py_CODEUNIT)])),
-            _Py_OPARG(code[(state->j_sequencePoints[i].pythonOpcodeIndex)/sizeof(_Py_CODEUNIT)])
-        );
+               ((uint64_t) state->j_addr + (uint64_t) state->j_sequencePoints[i].nativeOffset),
+               state->j_sequencePoints[i].ilOffset,
+               state->j_sequencePoints[i].pythonOpcodeIndex,
+               opcodeName(_Py_OPCODE(code[(state->j_sequencePoints[i].pythonOpcodeIndex) / sizeof(_Py_CODEUNIT)])),
+               _Py_OPARG(code[(state->j_sequencePoints[i].pythonOpcodeIndex) / sizeof(_Py_CODEUNIT)]));
     }
 #endif
 
     // Execute it now.
-    return PyJit_ExecuteJittedFrame((void*)state->j_addr, frame, tstate, state->j_profile);
+    return PyJit_ExecuteJittedFrame((void*) state->j_addr, frame, tstate, state->j_profile);
 }
 
 PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject) {
-	auto index = (ssize_t)PyThread_tss_get(g_extraSlot);
-	if (index == 0) {
-		index = _PyEval_RequestCodeExtraIndex(PyjionJitFree);
-		if (index == -1) {
-			return nullptr;
-		}
+    auto index = (ssize_t) PyThread_tss_get(g_extraSlot);
+    if (index == 0) {
+        index = _PyEval_RequestCodeExtraIndex(PyjionJitFree);
+        if (index == -1) {
+            return nullptr;
+        }
 
-		PyThread_tss_set(g_extraSlot, (void*)((index << 1) | 0x01));
-	}
-	else {
-		index = index >> 1;
-	}
+        PyThread_tss_set(g_extraSlot, (void*) ((index << 1) | 0x01));
+    } else {
+        index = index >> 1;
+    }
 
-	PyjionJittedCode *jitted = nullptr;
-	if (_PyCode_GetExtra(codeObject, index, (void**)&jitted)) {
-		PyErr_Clear();
-		return nullptr;
-	}
+    PyjionJittedCode* jitted = nullptr;
+    if (_PyCode_GetExtra(codeObject, index, (void**) &jitted)) {
+        PyErr_Clear();
+        return nullptr;
+    }
 
-	if (jitted == nullptr) {
-	    jitted = new PyjionJittedCode(codeObject);
-		if (jitted != nullptr) {
-			if (_PyCode_SetExtra(codeObject, index, jitted)) {
-				PyErr_Clear();
+    if (jitted == nullptr) {
+        jitted = new PyjionJittedCode(codeObject);
+        if (jitted != nullptr) {
+            if (_PyCode_SetExtra(codeObject, index, jitted)) {
+                PyErr_Clear();
 
-				delete jitted;
-				return nullptr;
-			}
-		}
-	}
-	return jitted;
+                delete jitted;
+                return nullptr;
+            }
+        }
+    }
+    return jitted;
 }
 
 // This is our replacement evaluation function.  We lookup our corresponding jitted code
 // and dispatch to it if it's already compiled.  If it hasn't yet been compiled we'll
 // eventually compile it and invoke it.  If it's not time to compile it yet then we'll
 // invoke the default evaluation function.
-PyObject* PyJit_EvalFrame(PyThreadState *ts, PyFrameObject *f, int throwflag) {
-	auto jitted = PyJit_EnsureExtra((PyObject*)f->f_code);
-	if (jitted != nullptr && !throwflag) {
-		if (jitted->j_addr != nullptr && (!g_pyjionSettings.pgc || jitted->j_pgc_status == Optimized)) {
+PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
+    auto jitted = PyJit_EnsureExtra((PyObject*) f->f_code);
+    if (jitted != nullptr && !throwflag) {
+        if (jitted->j_addr != nullptr && (!g_pyjionSettings.pgc || jitted->j_pgc_status == Optimized)) {
             jitted->j_run_count++;
-			return PyJit_ExecuteJittedFrame((void*)jitted->j_addr, f, ts, jitted->j_profile);
-		}
-		else if (!jitted->j_failed && jitted->j_run_count++ >= jitted->j_specialization_threshold) {
-			auto result = PyJit_ExecuteAndCompileFrame(jitted, f, ts, jitted->j_profile);
+            return PyJit_ExecuteJittedFrame((void*) jitted->j_addr, f, ts, jitted->j_profile);
+        } else if (!jitted->j_failed && jitted->j_run_count++ >= jitted->j_specialization_threshold) {
+            auto result = PyJit_ExecuteAndCompileFrame(jitted, f, ts, jitted->j_profile);
             jitted->j_pgc_status = nextPgcStatus(jitted->j_pgc_status);
-			return result;
-		}
-	}
-	return _PyEval_EvalFrameDefault(ts, f, throwflag);
+            return result;
+        }
+    }
+    return _PyEval_EvalFrameDefault(ts, f, throwflag);
 }
 
 void PyjionJitFree(void* obj) {
     if (obj == nullptr)
         return;
-    auto* code_obj = static_cast<PyjionJittedCode *>(obj);
+    auto* code_obj = static_cast<PyjionJittedCode*>(obj);
     Py_XDECREF(code_obj->j_code);
     free(code_obj->j_il);
     code_obj->j_il = nullptr;
@@ -372,11 +366,11 @@ void PyjionJitFree(void* obj) {
     Py_XDECREF(code_obj->j_graph);
 }
 
-static PyInterpreterState* inter(){
+static PyInterpreterState* inter() {
     return PyInterpreterState_Main();
 }
 
-static PyObject *pyjion_enable(PyObject *self, PyObject* args) {
+static PyObject* pyjion_enable(PyObject* self, PyObject* args) {
     setOptimizationLevel(1);
     auto prev = _PyInterpreterState_GetEvalFrameFunc(inter());
     _PyInterpreterState_SetEvalFrameFunc(inter(), PyJit_EvalFrame);
@@ -386,8 +380,8 @@ static PyObject *pyjion_enable(PyObject *self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-static PyObject *pyjion_disable(PyObject *self, PyObject* args) {
-	auto prev = _PyInterpreterState_GetEvalFrameFunc(inter());
+static PyObject* pyjion_disable(PyObject* self, PyObject* args) {
+    auto prev = _PyInterpreterState_GetEvalFrameFunc(inter());
     _PyInterpreterState_SetEvalFrameFunc(inter(), _PyEval_EvalFrameDefault);
     if (prev == PyJit_EvalFrame) {
         Py_RETURN_TRUE;
@@ -395,73 +389,67 @@ static PyObject *pyjion_disable(PyObject *self, PyObject* args) {
     Py_RETURN_FALSE;
 }
 
-static PyObject *pyjion_info(PyObject *self, PyObject* func) {
-	PyObject* code;
-	if (PyFunction_Check(func)) {
-		code = ((PyFunctionObject*)func)->func_code;
-	}
-	else if (PyCode_Check(func)) {
-		code = func;
-	}
-	else {
-		PyErr_SetString(PyExc_TypeError, "Expected function or code");
-		return nullptr;
-	}
-	auto res = PyDict_New();
-	if (res == nullptr) {
-		return nullptr;
-	}
+static PyObject* pyjion_info(PyObject* self, PyObject* func) {
+    PyObject* code;
+    if (PyFunction_Check(func)) {
+        code = ((PyFunctionObject*) func)->func_code;
+    } else if (PyCode_Check(func)) {
+        code = func;
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Expected function or code");
+        return nullptr;
+    }
+    auto res = PyDict_New();
+    if (res == nullptr) {
+        return nullptr;
+    }
 
-	PyjionJittedCode* jitted = PyJit_EnsureExtra(code);
+    PyjionJittedCode* jitted = PyJit_EnsureExtra(code);
 
-	PyDict_SetItemString(res, "failed", jitted->j_failed ? Py_True : Py_False);
-	PyDict_SetItemString(res, "tracing", jitted->j_tracingHooks ? Py_True : Py_False);
-	PyDict_SetItemString(res, "profiling", jitted->j_profilingHooks ? Py_True : Py_False);
+    PyDict_SetItemString(res, "failed", jitted->j_failed ? Py_True : Py_False);
+    PyDict_SetItemString(res, "tracing", jitted->j_tracingHooks ? Py_True : Py_False);
+    PyDict_SetItemString(res, "profiling", jitted->j_profilingHooks ? Py_True : Py_False);
     PyDict_SetItemString(res, "compile_result", PyLong_FromLong(jitted->j_compile_result));
     PyDict_SetItemString(res, "compiled", jitted->j_addr != nullptr ? Py_True : Py_False);
     PyDict_SetItemString(res, "optimizations", PyLong_FromLong(jitted->j_optimizations));
     PyDict_SetItemString(res, "pgc", PyLong_FromLong(jitted->j_pgc_status));
 
     auto runCount = PyLong_FromUnsignedLongLong(jitted->j_run_count);
-	PyDict_SetItemString(res, "run_count", runCount);
-	Py_DECREF(runCount);
-	
-	return res;
+    PyDict_SetItemString(res, "run_count", runCount);
+    Py_DECREF(runCount);
+
+    return res;
 }
 
-static PyObject *pyjion_dump_il(PyObject *self, PyObject* func) {
+static PyObject* pyjion_dump_il(PyObject* self, PyObject* func) {
     PyObject* code;
     if (PyFunction_Check(func)) {
-        code = ((PyFunctionObject*)func)->func_code;
-    }
-    else if (PyCode_Check(func)) {
+        code = ((PyFunctionObject*) func)->func_code;
+    } else if (PyCode_Check(func)) {
         code = func;
-    }
-    else {
+    } else {
         PyErr_SetString(PyExc_TypeError, "Expected function or code");
         return nullptr;
     }
 
     PyjionJittedCode* jitted = PyJit_EnsureExtra(code);
     if (jitted->j_failed || jitted->j_addr == nullptr)
-         Py_RETURN_NONE;
+        Py_RETURN_NONE;
 
-    auto res = PyByteArray_FromStringAndSize(reinterpret_cast<const char *>(jitted->j_il), jitted->j_ilLen);
+    auto res = PyByteArray_FromStringAndSize(reinterpret_cast<const char*>(jitted->j_il), jitted->j_ilLen);
     if (res == nullptr) {
         return nullptr;
     }
     return res;
 }
 
-static PyObject* pyjion_dump_native(PyObject *self, PyObject* func) {
+static PyObject* pyjion_dump_native(PyObject* self, PyObject* func) {
     PyObject* code;
     if (PyFunction_Check(func)) {
-        code = ((PyFunctionObject*)func)->func_code;
-    }
-    else if (PyCode_Check(func)) {
+        code = ((PyFunctionObject*) func)->func_code;
+    } else if (PyCode_Check(func)) {
         code = func;
-    }
-    else {
+    } else {
         PyErr_SetString(PyExc_TypeError, "Expected function or code");
         return nullptr;
     }
@@ -474,7 +462,7 @@ static PyObject* pyjion_dump_native(PyObject *self, PyObject* func) {
     if (result_t == nullptr)
         return nullptr;
 
-    auto res = PyByteArray_FromStringAndSize(reinterpret_cast<const char *>(jitted->j_addr), jitted->j_nativeSize);
+    auto res = PyByteArray_FromStringAndSize(reinterpret_cast<const char*>(jitted->j_addr), jitted->j_nativeSize);
     if (res == nullptr)
         return nullptr;
 
@@ -496,15 +484,13 @@ static PyObject* pyjion_dump_native(PyObject *self, PyObject* func) {
     return result_t;
 }
 
-static PyObject* pyjion_get_offsets(PyObject* self, PyObject* func ){
+static PyObject* pyjion_get_offsets(PyObject* self, PyObject* func) {
     PyObject* code;
     if (PyFunction_Check(func)) {
-        code = ((PyFunctionObject*)func)->func_code;
-    }
-    else if (PyCode_Check(func)) {
+        code = ((PyFunctionObject*) func)->func_code;
+    } else if (PyCode_Check(func)) {
         code = func;
-    }
-    else {
+    } else {
         PyErr_SetString(PyExc_TypeError, "Expected function or code");
         return nullptr;
     }
@@ -517,7 +503,7 @@ static PyObject* pyjion_get_offsets(PyObject* self, PyObject* func ){
     if (offsets == nullptr)
         return nullptr;
     size_t idx = 0;
-    for (size_t i = 0; i < jitted->j_sequencePointsLen; i++, idx++){
+    for (size_t i = 0; i < jitted->j_sequencePointsLen; i++, idx++) {
         auto offset = PyTuple_New(4);
         PyTuple_SET_ITEM(offset, 0, PyLong_FromSize_t(jitted->j_sequencePoints[i].pythonOpcodeIndex));
         PyTuple_SET_ITEM(offset, 1, PyLong_FromSize_t(jitted->j_sequencePoints[i].ilOffset));
@@ -527,7 +513,7 @@ static PyObject* pyjion_get_offsets(PyObject* self, PyObject* func ){
         Py_INCREF(offset);
     }
 
-    for (size_t i = 0; i < jitted->j_callPointsLen; i++, idx++){
+    for (size_t i = 0; i < jitted->j_callPointsLen; i++, idx++) {
         auto offset = PyTuple_New(4);
         PyTuple_SET_ITEM(offset, 0, PyLong_FromLong(jitted->j_callPoints[i].tokenId));
         PyTuple_SET_ITEM(offset, 1, PyLong_FromSize_t(jitted->j_callPoints[i].ilOffset));
@@ -540,25 +526,23 @@ static PyObject* pyjion_get_offsets(PyObject* self, PyObject* func ){
     return offsets;
 }
 
-static PyObject *pyjion_get_graph(PyObject *self, PyObject* func) {
+static PyObject* pyjion_get_graph(PyObject* self, PyObject* func) {
     PyObject* code;
     if (PyFunction_Check(func)) {
-        code = ((PyFunctionObject*)func)->func_code;
-    }
-    else if (PyCode_Check(func)) {
+        code = ((PyFunctionObject*) func)->func_code;
+    } else if (PyCode_Check(func)) {
         code = func;
-    }
-    else {
+    } else {
         PyErr_SetString(PyExc_TypeError, "Expected function or code");
         return nullptr;
     }
 
     PyjionJittedCode* jitted = PyJit_EnsureExtra(code);
-    if (jitted->j_failed){
+    if (jitted->j_failed) {
         PyErr_SetString(PyExc_ValueError, "Function failed to compile so it has no graph.");
         return nullptr;
     }
-    if (jitted->j_graph == nullptr){
+    if (jitted->j_graph == nullptr) {
         PyErr_SetString(PyExc_ValueError, "Compiled function has no graph, graphing was not enabled when it was compiled");
         return nullptr;
     }
@@ -566,15 +550,13 @@ static PyObject *pyjion_get_graph(PyObject *self, PyObject* func) {
     return jitted->j_graph;
 }
 
-static PyObject *pyjion_symbols(PyObject *self, PyObject* func) {
+static PyObject* pyjion_symbols(PyObject* self, PyObject* func) {
     PyObject* code;
     if (PyFunction_Check(func)) {
-        code = ((PyFunctionObject*)func)->func_code;
-    }
-    else if (PyCode_Check(func)) {
+        code = ((PyFunctionObject*) func)->func_code;
+    } else if (PyCode_Check(func)) {
         code = func;
-    }
-    else {
+    } else {
         PyErr_SetString(PyExc_TypeError, "Expected function or code");
         return nullptr;
     }
@@ -584,13 +566,13 @@ static PyObject *pyjion_symbols(PyObject *self, PyObject* func) {
     auto table = PyDict_New();
     if (table == nullptr)
         return nullptr;
-    for(auto & entry: jitted->j_symbols) {
+    for (auto& entry : jitted->j_symbols) {
         PyDict_SetItem(table, PyLong_FromUnsignedLong(entry.first), PyUnicode_FromString(entry.second));
     }
     return table;
 }
 
-static PyObject* pyjion_init(PyObject *self, PyObject* args) {
+static PyObject* pyjion_init(PyObject* self, PyObject* args) {
     if (!PyUnicode_Check(args)) {
         PyErr_SetString(PyExc_TypeError, "Expected str for new clrjit");
         return nullptr;
@@ -599,21 +581,20 @@ static PyObject* pyjion_init(PyObject *self, PyObject* args) {
     auto path = PyUnicode_AsWideCharString(args, nullptr);
     if (JitInit(path)) {
         Py_RETURN_NONE;
-    } else{
+    } else {
         return nullptr;
     }
 }
 
-static PyObject *
-pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
-{
+static PyObject*
+pyjion_config(PyObject* self, PyObject* args, PyObject* kwargs) {
     Py_ssize_t nargs = PyTuple_GET_SIZE(args);
-    PyObject * pgc = nullptr, *level=nullptr, *debug= nullptr, *graph= nullptr, *threshold=nullptr;
+    PyObject *pgc = nullptr, *level = nullptr, *debug = nullptr, *graph = nullptr, *threshold = nullptr;
     if (nargs == 0 && kwargs == nullptr) {
         goto return_result;
     }
     pgc = PyDict_GetItemString(kwargs, "pgc");
-    if (pgc != nullptr){
+    if (pgc != nullptr) {
         // pgc
         if (!PyBool_Check(pgc)) {
             PyErr_SetString(PyExc_TypeError, "Expected bool for pgc flag");
@@ -622,7 +603,7 @@ pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
         g_pyjionSettings.pgc = pgc == Py_True ? true : false;
     }
     level = PyDict_GetItemString(kwargs, "level");
-    if (level != nullptr){
+    if (level != nullptr) {
         // optimization level
         if (!PyLong_Check(level)) {
             PyErr_SetString(PyExc_TypeError, "Expected int for optimization level");
@@ -637,7 +618,7 @@ pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
         setOptimizationLevel(newLevel);
     }
     debug = PyDict_GetItemString(kwargs, "debug");
-    if (debug != nullptr){
+    if (debug != nullptr) {
         // debug
         if (!PyBool_Check(debug)) {
             PyErr_SetString(PyExc_TypeError, "Expected bool for debug flag");
@@ -646,7 +627,7 @@ pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
         g_pyjionSettings.debug = debug == Py_True ? true : false;
     }
     graph = PyDict_GetItemString(kwargs, "graph");
-    if (graph){
+    if (graph) {
         // graph
         if (!PyBool_Check(graph)) {
             PyErr_SetString(PyExc_TypeError, "Expected bool for graph flag");
@@ -655,7 +636,7 @@ pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
         g_pyjionSettings.graph = graph == Py_True ? true : false;
     }
     threshold = PyDict_GetItemString(kwargs, "threshold");
-    if (threshold){
+    if (threshold) {
         // threshold
         if (!PyLong_Check(threshold)) {
             PyErr_SetString(PyExc_TypeError, "Expected int for threshold level");
@@ -670,7 +651,7 @@ pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
         g_pyjionSettings.threshold = newThreshold;
     }
 
-    return_result:
+return_result:
     auto res = PyDict_New();
     if (res == nullptr) {
         return nullptr;
@@ -687,88 +668,67 @@ pyjion_config(PyObject *self, PyObject* args, PyObject *kwargs)
 }
 
 static PyMethodDef PyjionMethods[] = {
-	{ 
-		"enable",  
-		pyjion_enable, 
-		METH_NOARGS, 
-		"Enable the JIT.  Returns True if the JIT was enabled, False if it was already enabled." 
-	},
-	{ 
-		"disable", 
-		pyjion_disable, 
-		METH_NOARGS, 
-		"Disable the JIT.  Returns True if the JIT was disabled, False if it was already disabled." 
-	},
-	{
-		"info",
-		pyjion_info,
-		METH_O,
-		"Returns a dictionary describing information about a function or code objects current JIT status."
-	},
-    {
-        "config",
-            reinterpret_cast<PyCFunction>(pyjion_config),
-        METH_VARARGS|METH_KEYWORDS,
-        "Configure Pyjion runtime settings."
-    },
-    {
-        "il",
-        pyjion_dump_il,
-        METH_O,
-        "Outputs the IL for the compiled code object."
-    },
-    {
-        "native",
-        pyjion_dump_native,
-        METH_O,
-        "Outputs the machine code for the compiled code object."
-    },
-    {
-        "offsets",
-        pyjion_get_offsets,
-        METH_O,
-        "Get the sequence of offsets for IL and machine code for given python bytecodes."
-    },
-    {
-        "graph",
-        pyjion_get_graph,
-        METH_O,
-        "Fetch instruction graph for code object."
-    },
-    {
-        "init",
-        pyjion_init,
-        METH_O,
-        "Initialize JIT."
-    },
-    {
-        "symbols",
-        pyjion_symbols,
-        METH_O,
-        "Return a list of global symbols."
+        {"enable",
+         pyjion_enable,
+         METH_NOARGS,
+         "Enable the JIT.  Returns True if the JIT was enabled, False if it was already enabled."},
+        {"disable",
+         pyjion_disable,
+         METH_NOARGS,
+         "Disable the JIT.  Returns True if the JIT was disabled, False if it was already disabled."},
+        {"info",
+         pyjion_info,
+         METH_O,
+         "Returns a dictionary describing information about a function or code objects current JIT status."},
+        {"config",
+         reinterpret_cast<PyCFunction>(pyjion_config),
+         METH_VARARGS | METH_KEYWORDS,
+         "Configure Pyjion runtime settings."},
+        {"il",
+         pyjion_dump_il,
+         METH_O,
+         "Outputs the IL for the compiled code object."},
+        {"native",
+         pyjion_dump_native,
+         METH_O,
+         "Outputs the machine code for the compiled code object."},
+        {"offsets",
+         pyjion_get_offsets,
+         METH_O,
+         "Get the sequence of offsets for IL and machine code for given python bytecodes."},
+        {"graph",
+         pyjion_get_graph,
+         METH_O,
+         "Fetch instruction graph for code object."},
+        {"init",
+         pyjion_init,
+         METH_O,
+         "Initialize JIT."},
+        {"symbols",
+         pyjion_symbols,
+         METH_O,
+         "Return a list of global symbols."
 
-    },
-	{nullptr, nullptr, 0, nullptr}        /* Sentinel */
+        },
+        {nullptr, nullptr, 0, nullptr} /* Sentinel */
 };
 
 static struct PyModuleDef pyjionmodule = {
-	PyModuleDef_HEAD_INIT,
-	"_pyjion",   /* name of module */
-	"Pyjion - A Just-in-Time Compiler for CPython", /* module documentation, may be NULL */
-	-1,       /* size of per-interpreter state of the module,
+        PyModuleDef_HEAD_INIT,
+        "_pyjion",                                      /* name of module */
+        "Pyjion - A Just-in-Time Compiler for CPython", /* module documentation, may be NULL */
+        -1,                                             /* size of per-interpreter state of the module,
 			  or -1 if the module keeps state in global variables. */
-	PyjionMethods
-}; 
+        PyjionMethods};
 PyObject* PyjionUnboxingError;
-PyMODINIT_FUNC PyInit__pyjion(void)
-{
-	// Install our frame evaluation function
-	auto mod = PyModule_Create(&pyjionmodule);
-	if (mod == nullptr)
-	    return nullptr;
-	PyjionUnboxingError = PyErr_NewException("pyjion.PyjionUnboxingError", PyExc_ValueError, nullptr);
-	int ret = PyModule_AddObject(mod, "PyjionUnboxingError", PyjionUnboxingError);
-	if (ret != 0)
-	    return nullptr;
-	return mod;
+PyMODINIT_FUNC PyInit__pyjion(void) {
+    // Install our frame evaluation function
+    auto mod = PyModule_Create(&pyjionmodule);
+    if (mod == nullptr)
+        return nullptr;
+    PyjionUnboxingError = PyErr_NewException("pyjion.PyjionUnboxingError", PyExc_ValueError, nullptr);
+    int ret = PyModule_AddObject(mod, "PyjionUnboxingError", PyjionUnboxingError);
+    if (ret != 0)
+        return nullptr;
+    return mod;
 }

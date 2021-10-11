@@ -26,8 +26,8 @@
 #include "pyjit.h"
 #include "unboxing.h"
 
-bool supportsUnboxing(py_opcode opcode){
-    switch (opcode){
+bool supportsUnboxing(py_opcode opcode) {
+    switch (opcode) {
         case POP_JUMP_IF_FALSE:
         case POP_JUMP_IF_TRUE:
         case COMPARE_OP:
@@ -55,14 +55,14 @@ bool supportsUnboxing(py_opcode opcode){
     }
 }
 
-bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn){
-    switch (opcode){
+bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
+    switch (opcode) {
         case BINARY_POWER:
         case INPLACE_POWER:
-            if (OPT_ENABLED(IntegerUnboxingPower)){
+            if (OPT_ENABLED(IntegerUnboxingPower)) {
                 return true;
             } else {
-                for (auto &t: edgesIn){
+                for (auto& t : edgesIn) {
                     if (t == AVK_Integer)
                         return false;
                 }
@@ -71,10 +71,10 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn){
 
         case INPLACE_MULTIPLY:
         case BINARY_MULTIPLY:
-            if (OPT_ENABLED(IntegerUnboxingMultiply)){
+            if (OPT_ENABLED(IntegerUnboxingMultiply)) {
                 return true;
             } else {
-                for (auto &t: edgesIn){
+                for (auto& t : edgesIn) {
                     if (t == AVK_Integer)
                         return false;
                 }
@@ -85,9 +85,9 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn){
     }
 }
 
-bool supportsEscaping(AbstractValueKind kind){
-    switch (kind){
-        case AVK_Float: // NOLINT(bugprone-branch-clone)
+bool supportsEscaping(AbstractValueKind kind) {
+    switch (kind) {
+        case AVK_Float:// NOLINT(bugprone-branch-clone)
             return true;
         case AVK_Integer:
             return true;

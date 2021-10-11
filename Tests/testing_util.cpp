@@ -48,7 +48,7 @@ PyCodeObject* CompileCode(const char* code) {
         return nullptr;
     }
     auto func = PyObject_ptr(PyObject_GetItem(locals.get(), PyUnicode_FromString("f")));
-    auto codeObj = (PyCodeObject*)PyObject_GetAttrString(func.get(), "__code__");
+    auto codeObj = (PyCodeObject*) PyObject_GetAttrString(func.get(), "__code__");
     return codeObj;
 }
 
@@ -67,8 +67,8 @@ PyObject* CompileFunction(const char* code) {
         return nullptr;
     }
     auto func = PyObject_ptr(PyObject_GetItem(locals.get(), PyUnicode_FromString("f")));
-    auto codeObj = (PyCodeObject*)PyObject_GetAttrString(func.get(), "__code__");
-    return PyFunction_New(reinterpret_cast<PyObject *>(codeObj), globals.get());
+    auto codeObj = (PyCodeObject*) PyObject_GetAttrString(func.get(), "__code__");
+    return PyFunction_New(reinterpret_cast<PyObject*>(codeObj), globals.get());
 }
 
 PyCodeObject* CompileCode(const char* code, vector<const char*> locals, vector<const char*> globals) {
@@ -76,11 +76,11 @@ PyCodeObject* CompileCode(const char* code, vector<const char*> locals, vector<c
 
     auto builtins = PyEval_GetBuiltins();
     PyDict_SetItemString(globals_dict.get(), "__builtins__", builtins);
-    for (auto & local: globals)
+    for (auto& local : globals)
         PyDict_SetItemString(globals_dict.get(), local, Py_None);
 
     auto locals_dict = PyObject_ptr(PyDict_New());
-    for (auto & local: locals)
+    for (auto& local : locals)
         PyDict_SetItemString(locals_dict.get(), local, Py_None);
 
     PyRun_String(code, Py_file_input, globals_dict.get(), locals_dict.get());
@@ -91,7 +91,7 @@ PyCodeObject* CompileCode(const char* code, vector<const char*> locals, vector<c
         return nullptr;
     }
     auto func = PyObject_ptr(PyObject_GetItem(locals_dict.get(), PyUnicode_FromString("f")));
-    auto codeObj = (PyCodeObject*)PyObject_GetAttrString(func.get(), "__code__");
+    auto codeObj = (PyCodeObject*) PyObject_GetAttrString(func.get(), "__code__");
 
     return codeObj;
 }

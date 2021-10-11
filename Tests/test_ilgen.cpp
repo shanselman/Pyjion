@@ -52,15 +52,14 @@ TEST_CASE("Test numerics") {
         auto test_module = new UserModule(g_module);
         auto gen = new ILGenerator(
                 test_module,
-                 CORINFO_TYPE_INT,
-                 std::vector < Parameter > {
-                 });
+                CORINFO_TYPE_INT,
+                std::vector<Parameter>{});
         gen->ld_i4(value);
         gen->ret();
         auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
-        int32_t result = ((Returns_int32)method.getAddr())();
+        int32_t result = ((Returns_int32) method.getAddr())();
         CHECK(result == value);
     }
 
@@ -70,14 +69,13 @@ TEST_CASE("Test numerics") {
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_INT,
-                std::vector < Parameter > {
-                });
+                std::vector<Parameter>{});
         gen->ld_u4(value);
         gen->ret();
         auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
-        uint32_t result = ((Returns_uint32)method.getAddr())();
+        uint32_t result = ((Returns_uint32) method.getAddr())();
         CHECK(result == value);
     }
 
@@ -87,14 +85,13 @@ TEST_CASE("Test numerics") {
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_LONG,
-                std::vector < Parameter > {
-                });
+                std::vector<Parameter>{});
         gen->ld_i8(value);
         gen->ret();
         auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
-        int64_t result = ((Returns_int64)method.getAddr())();
+        int64_t result = ((Returns_int64) method.getAddr())();
         CHECK(result == value);
     }
 
@@ -104,14 +101,13 @@ TEST_CASE("Test numerics") {
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_DOUBLE,
-                std::vector < Parameter > {
-                });
+                std::vector<Parameter>{});
         gen->ld_r8(value);
         gen->ret();
         auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
-        double result = ((Returns_double)method.getAddr())();
+        double result = ((Returns_double) method.getAddr())();
         CHECK(result == value);
     }
 }
@@ -124,28 +120,26 @@ TEST_CASE("Test locals") {
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_INT,
-                std::vector<Parameter>{
-                });
+                std::vector<Parameter>{});
         gen->ld_i4(value);
         auto l = gen->define_local(Parameter(CORINFO_TYPE_INT));
         gen->st_loc(l);
         gen->ld_loc(l);
         gen->ret();
-        auto *jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
         int32_t result = ((Returns_int32) method.getAddr())();
         CHECK(result == value);
     }
 }
-TEST_CASE("Test branch true of floats"){
+TEST_CASE("Test branch true of floats") {
     SECTION("test branch true emitter") {
         auto test_module = new UserModule(g_module);
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_INT,
-                std::vector<Parameter>{
-                });
+                std::vector<Parameter>{});
         Label isTrue = gen->define_label(), end = gen->define_label();
         gen->ld_r8(1.0);
         gen->branch(BranchTrue, isTrue);
@@ -155,7 +149,7 @@ TEST_CASE("Test branch true of floats"){
         gen->ld_i4(3);
         gen->mark_label(end);
         gen->ret();
-        auto *jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
         int32_t result = ((Returns_int32) method.getAddr())();
@@ -166,8 +160,7 @@ TEST_CASE("Test branch true of floats"){
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_INT,
-                std::vector<Parameter>{
-                });
+                std::vector<Parameter>{});
         Label isTrue = gen->define_label(), end = gen->define_label();
         gen->ld_r8(1.0);
         gen->branch(BranchFalse, isTrue);
@@ -177,7 +170,7 @@ TEST_CASE("Test branch true of floats"){
         gen->ld_i4(3);
         gen->mark_label(end);
         gen->ret();
-        auto *jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
         int32_t result = ((Returns_int32) method.getAddr())();
@@ -188,8 +181,7 @@ TEST_CASE("Test branch true of floats"){
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_INT,
-                std::vector<Parameter>{
-                });
+                std::vector<Parameter>{});
         Label isTrue = gen->define_label(), end = gen->define_label();
         gen->ld_r8(1.0);
         gen->ld_r8(1.0);
@@ -200,7 +192,7 @@ TEST_CASE("Test branch true of floats"){
         gen->ld_i4(3);
         gen->mark_label(end);
         gen->ret();
-        auto *jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
         int32_t result = ((Returns_int32) method.getAddr())();
@@ -214,13 +206,12 @@ TEST_CASE("Test call") {
         auto gen = new ILGenerator(
                 test_module,
                 CORINFO_TYPE_DOUBLE,
-                std::vector<Parameter>{
-                });
+                std::vector<Parameter>{});
         gen->ld_i8(10);
         gen->ld_i8(5);
         gen->emit_call(METHOD_INT_TRUE_DIVIDE);
         gen->ret();
-        auto *jitInfo = new CorJitInfo("test_module", "test_call", test_module, true);
+        auto* jitInfo = new CorJitInfo("test_module", "test_call", test_module, true);
         JITMethod method = gen->compile(jitInfo, g_jit, 100);
         REQUIRE(method.m_addr != nullptr);
         double result = ((Returns_double) method.getAddr())();

@@ -34,4 +34,4 @@ typedef int16_t py_opcode;
 typedef int16_t py_oparg;
 typedef uint32_t py_opindex;
 
-#endif //PYJION_TYPES_H
+#endif//PYJION_TYPES_H

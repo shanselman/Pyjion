@@ -75,13 +75,13 @@ class ILGenerator {
     unordered_map<CorInfoType, vector<Local>, CorInfoTypeHash> m_freedLocals;
     vector<pair<size_t, uint32_t>> m_sequencePoints;
     vector<pair<size_t, int32_t>> m_callPoints;
+
 public:
     vector<BYTE> m_il;
     uint16_t m_localCount;
     vector<LabelInfo> m_labels;
 
 public:
-
     ILGenerator(BaseModule* module, CorInfoType returnType, std::vector<Parameter> params) {
         m_module = module;
         m_retType = returnType;
@@ -111,12 +111,11 @@ public:
         if (existing == m_freedLocals.end()) {
             m_freedLocals[param.m_type] = vector<Local>();
             localList = &(m_freedLocals.find(param.m_type)->second);
-        }
-        else {
+        } else {
             localList = &(existing->second);
         }
 #ifdef DEBUG
-        for (auto & i : *localList) {
+        for (auto& i : *localList) {
             if (i.m_index == local.m_index) {
                 // locals shouldn't be double freed...
                 assert(FALSE);
@@ -128,15 +127,15 @@ public:
 
     Label define_label() {
         m_labels.emplace_back();
-        return Label((ssize_t)m_labels.size() - 1);
+        return Label((ssize_t) m_labels.size() - 1);
     }
 
     void mark_label(Label label) {
         auto info = &m_labels[label.m_index];
-        info->m_location = (ssize_t)m_il.size();
+        info->m_location = (ssize_t) m_il.size();
         for (size_t i = 0; i < info->m_branchOffsets.size(); i++) {
             auto from = info->m_branchOffsets[i];
-            auto offset = info->m_location - (from + 4);		// relative to the end of the instruction
+            auto offset = info->m_location - (from + 4);// relative to the end of the instruction
             m_il[from] = offset & 0xFF;
             m_il[from + 1] = (offset >> 8) & 0xFF;
             m_il[from + 2] = (offset >> 16) & 0xFF;
@@ -144,18 +143,18 @@ public:
         }
     }
 
-    void brk(){
+    void brk() {
         // emit a breakpoint in the IL
         push_back(CEE_BREAK);
     }
 
     void ret() {
-        push_back(CEE_RET); // VarPop (size)
+        push_back(CEE_RET);// VarPop (size)
     }
 
     void ld_r8(double i) {
-        push_back(CEE_LDC_R8); // Pop0 + PushR8
-        auto* value = (unsigned char*)(&i);
+        push_back(CEE_LDC_R8);// Pop0 + PushR8
+        auto* value = (unsigned char*) (&i);
         for (size_t j = 0; j < 8; j++) {
             push_back(value[j]);
         }
@@ -163,22 +162,41 @@ public:
 
     void ld_i4(int32_t i) {
         switch (i) {
-            case -1:push_back(CEE_LDC_I4_M1); break;
-            case 0: push_back(CEE_LDC_I4_0); break;
-            case 1: push_back(CEE_LDC_I4_1); break;
-            case 2: push_back(CEE_LDC_I4_2); break;
-            case 3: push_back(CEE_LDC_I4_3); break;
-            case 4: push_back(CEE_LDC_I4_4); break;
-            case 5: push_back(CEE_LDC_I4_5); break;
-            case 6: push_back(CEE_LDC_I4_6); break;
-            case 7: push_back(CEE_LDC_I4_7); break;
-            case 8: push_back(CEE_LDC_I4_8); break;
+            case -1:
+                push_back(CEE_LDC_I4_M1);
+                break;
+            case 0:
+                push_back(CEE_LDC_I4_0);
+                break;
+            case 1:
+                push_back(CEE_LDC_I4_1);
+                break;
+            case 2:
+                push_back(CEE_LDC_I4_2);
+                break;
+            case 3:
+                push_back(CEE_LDC_I4_3);
+                break;
+            case 4:
+                push_back(CEE_LDC_I4_4);
+                break;
+            case 5:
+                push_back(CEE_LDC_I4_5);
+                break;
+            case 6:
+                push_back(CEE_LDC_I4_6);
+                break;
+            case 7:
+                push_back(CEE_LDC_I4_7);
+                break;
+            case 8:
+                push_back(CEE_LDC_I4_8);
+                break;
             default:
                 if (i > -128 && i < 128) {
                     push_back(CEE_LDC_I4_S);
-                    push_back((BYTE)i);
-                }
-                else {
+                    push_back((BYTE) i);
+                } else {
                     push_back(CEE_LDC_I4);
                     emit_int(i);
                 }
@@ -191,8 +209,8 @@ public:
     }
 
     void ld_i8(int64_t i) {
-        push_back(CEE_LDC_I8); // Pop0 + PushI8
-        auto* value = (unsigned char*)(&i);
+        push_back(CEE_LDC_I8);// Pop0 + PushI8
+        auto* value = (unsigned char*) (&i);
         for (int j = 0; j < 8; j++) {
             push_back(value[j]);
         }
@@ -200,50 +218,49 @@ public:
 
     void load_null() {
         ld_i4(0);
-        m_il.push_back(CEE_CONV_I); // Pop1 + PushI
+        m_il.push_back(CEE_CONV_I);// Pop1 + PushI
     }
 
     void load_one() {
         ld_i4(1);
-        m_il.push_back(CEE_CONV_I); // Pop1 + PushI
+        m_il.push_back(CEE_CONV_I);// Pop1 + PushI
     }
 
     void st_ind_i() {
-        push_back(CEE_STIND_I); // PopI + PopI / Push0
+        push_back(CEE_STIND_I);// PopI + PopI / Push0
     }
 
     void ld_ind_i() {
-        push_back(CEE_LDIND_I); // PopI / PushI
+        push_back(CEE_LDIND_I);// PopI / PushI
     }
 
     void st_ind_i4() {
-        push_back(CEE_STIND_I4); // PopI + PopI / Push0
+        push_back(CEE_STIND_I4);// PopI + PopI / Push0
     }
 
     void st_ind_i8() {
-        push_back(CEE_STIND_I8); // PopI + PopI / Push0
+        push_back(CEE_STIND_I8);// PopI + PopI / Push0
     }
 
     void ld_ind_i4() {
-        push_back(CEE_LDIND_I4); // PopI  / PushI
+        push_back(CEE_LDIND_I4);// PopI  / PushI
     }
 
     void ld_ind_i8() {
-        push_back(CEE_LDIND_I8); // PopI  / PushI
+        push_back(CEE_LDIND_I8);// PopI  / PushI
     }
 
     void ld_ind_r8() {
-        push_back(CEE_LDIND_R8); // PopI + PopI / Push0
+        push_back(CEE_LDIND_R8);// PopI + PopI / Push0
     }
 
     void branch(BranchType branchType, Label label) {
         auto info = &m_labels[label.m_index];
         if (info->m_location == -1) {
-            info->m_branchOffsets.push_back((int)m_il.size() + 1);
+            info->m_branchOffsets.push_back((int) m_il.size() + 1);
             branch(branchType, 0xFFFF);
-        }
-        else {
-            branch(branchType, (int)(info->m_location - m_il.size()));
+        } else {
+            branch(branchType, (int) (info->m_location - m_il.size()));
         }
     }
 
@@ -252,97 +269,96 @@ public:
             For jump offsets that can fit into a single byte, there is a "_S"
             suffix to the CIL opcode to notate that the jump address is a single byte.
             The default is 4 bytes. 
-        */ 
+        */
         if ((offset - 2) <= 128 && (offset - 2) >= -127) {
             switch (branchType) {
                 case BranchAlways:
-                    m_il.push_back(CEE_BR_S);  // Pop0 + Push0
+                    m_il.push_back(CEE_BR_S);// Pop0 + Push0
                     break;
                 case BranchTrue:
-                    m_il.push_back(CEE_BRTRUE_S); // PopI + Push0
+                    m_il.push_back(CEE_BRTRUE_S);// PopI + Push0
                     break;
                 case BranchFalse:
-                    m_il.push_back(CEE_BRFALSE_S);  // PopI, Push0
+                    m_il.push_back(CEE_BRFALSE_S);// PopI, Push0
                     break;
                 case BranchEqual:
-                    m_il.push_back(CEE_BEQ_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BEQ_S);// Pop1+Pop1, Push0
                     break;
                 case BranchNotEqual:
-                    m_il.push_back(CEE_BNE_UN_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BNE_UN_S);// Pop1+Pop1, Push0
                     break;
                 case BranchLeave:
-                    m_il.push_back(CEE_LEAVE_S); // Pop0 + Push0
+                    m_il.push_back(CEE_LEAVE_S);// Pop0 + Push0
                     break;
                 case BranchLessThanEqual:
-                    m_il.push_back(CEE_BLE_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLE_S);// Pop1+Pop1, Push0
                     break;
                 case BranchLessThanEqualUnsigned:
-                    m_il.push_back(CEE_BLE_UN_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLE_UN_S);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThan:
-                    m_il.push_back(CEE_BGT_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGT_S);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThanUnsigned:
-                    m_il.push_back(CEE_BGT_UN_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGT_UN_S);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThanEqual:
-                    m_il.push_back(CEE_BGE_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGE_S);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThanEqualUnsigned:
-                    m_il.push_back(CEE_BGE_UN_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGE_UN_S);// Pop1+Pop1, Push0
                     break;
                 case BranchLessThan:
-                    m_il.push_back(CEE_BLT_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLT_S);// Pop1+Pop1, Push0
                     break;
                 case BranchLessThanUnsigned:
-                    m_il.push_back(CEE_BLT_UN_S); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLT_UN_S);// Pop1+Pop1, Push0
                     break;
             }
-            m_il.push_back((BYTE)offset - 2);
-        }
-        else {
+            m_il.push_back((BYTE) offset - 2);
+        } else {
             switch (branchType) {
                 case BranchAlways:
-                    m_il.push_back(CEE_BR);  // Pop0 + Push0
+                    m_il.push_back(CEE_BR);// Pop0 + Push0
                     break;
                 case BranchTrue:
-                    m_il.push_back(CEE_BRTRUE); // PopI + Push0
+                    m_il.push_back(CEE_BRTRUE);// PopI + Push0
                     break;
                 case BranchFalse:
-                    m_il.push_back(CEE_BRFALSE);  // PopI, Push0
+                    m_il.push_back(CEE_BRFALSE);// PopI, Push0
                     break;
                 case BranchEqual:
-                    m_il.push_back(CEE_BEQ); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BEQ);// Pop1+Pop1, Push0
                     break;
                 case BranchNotEqual:
-                    m_il.push_back(CEE_BNE_UN); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BNE_UN);// Pop1+Pop1, Push0
                     break;
                 case BranchLeave:
-                    m_il.push_back(CEE_LEAVE); // Pop0 + Push0
+                    m_il.push_back(CEE_LEAVE);// Pop0 + Push0
                     break;
                 case BranchLessThanEqual:
-                    m_il.push_back(CEE_BLE); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLE);// Pop1+Pop1, Push0
                     break;
                 case BranchLessThanEqualUnsigned:
-                    m_il.push_back(CEE_BLE_UN); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLE_UN);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThan:
-                    m_il.push_back(CEE_BGT); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGT);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThanUnsigned:
-                    m_il.push_back(CEE_BGT_UN); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGT_UN);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThanEqual:
-                    m_il.push_back(CEE_BGE); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGE);// Pop1+Pop1, Push0
                     break;
                 case BranchGreaterThanEqualUnsigned:
-                    m_il.push_back(CEE_BGE_UN); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BGE_UN);// Pop1+Pop1, Push0
                     break;
                 case BranchLessThan:
-                    m_il.push_back(CEE_BLT); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLT);// Pop1+Pop1, Push0
                     break;
                 case BranchLessThanUnsigned:
-                    m_il.push_back(CEE_BLT_UN); // Pop1+Pop1, Push0
+                    m_il.push_back(CEE_BLT_UN);// Pop1+Pop1, Push0
                     break;
             }
             emit_int(offset - 5);
@@ -350,24 +366,24 @@ public:
     }
 
     void neg() {
-        m_il.push_back(CEE_NEG); //  Pop1, Push1
+        m_il.push_back(CEE_NEG);//  Pop1, Push1
     }
 
     void dup() {
-        m_il.push_back(CEE_DUP); //  Pop1, Push1+Push1
+        m_il.push_back(CEE_DUP);//  Pop1, Push1+Push1
     }
 
     void bitwise_and() {
-        m_il.push_back(CEE_AND); //  Pop1+Pop1, Push1
+        m_il.push_back(CEE_AND);//  Pop1+Pop1, Push1
     }
 
     void pop() {
-        m_il.push_back(CEE_POP); //  Pop1, Push0
+        m_il.push_back(CEE_POP);//  Pop1, Push0
     }
 
     void compare_eq() {
-        m_il.push_back(CEE_PREFIX1); // NIL SE
-        m_il.push_back((BYTE)CEE_CEQ); //  Pop1+Pop1, PushI
+        m_il.push_back(CEE_PREFIX1);   // NIL SE
+        m_il.push_back((BYTE) CEE_CEQ);//  Pop1+Pop1, PushI
     }
 
     void compare_ne() {
@@ -377,61 +393,60 @@ public:
     }
 
     void compare_gt() {
-        m_il.push_back(CEE_PREFIX1);  // NIL SE
-        m_il.push_back((BYTE)CEE_CGT); //  Pop1+Pop1, PushI
+        m_il.push_back(CEE_PREFIX1);   // NIL SE
+        m_il.push_back((BYTE) CEE_CGT);//  Pop1+Pop1, PushI
     }
 
     void compare_lt() {
-        m_il.push_back(CEE_PREFIX1); // NIL
-        m_il.push_back((BYTE)CEE_CLT); //  Pop1+Pop1, PushI
+        m_il.push_back(CEE_PREFIX1);   // NIL
+        m_il.push_back((BYTE) CEE_CLT);//  Pop1+Pop1, PushI
     }
 
     void compare_ge() {
-        m_il.push_back(CEE_PREFIX1); // NIL
-        m_il.push_back((BYTE)CEE_CLT); //  Pop1+Pop1, PushI
+        m_il.push_back(CEE_PREFIX1);   // NIL
+        m_il.push_back((BYTE) CEE_CLT);//  Pop1+Pop1, PushI
         ld_i4(0);
         compare_eq();
     }
 
     void compare_le() {
-        m_il.push_back(CEE_PREFIX1); // NIL
-        m_il.push_back((BYTE)CEE_CGT); //  Pop1+Pop1, PushI
+        m_il.push_back(CEE_PREFIX1);   // NIL
+        m_il.push_back((BYTE) CEE_CGT);//  Pop1+Pop1, PushI
         ld_i4(0);
         compare_eq();
     }
 
     void compare_ge_float() {
-        m_il.push_back(CEE_PREFIX1); // NIL
-        m_il.push_back((BYTE)CEE_CLT_UN); //  Pop1+Pop1, PushI
+        m_il.push_back(CEE_PREFIX1);      // NIL
+        m_il.push_back((BYTE) CEE_CLT_UN);//  Pop1+Pop1, PushI
         ld_i4(0);
         compare_eq();
     }
 
     void compare_le_float() {
-        m_il.push_back(CEE_PREFIX1); // NIL
-        m_il.push_back((BYTE)CEE_CGT_UN); //  Pop1+Pop1, PushI
+        m_il.push_back(CEE_PREFIX1);      // NIL
+        m_il.push_back((BYTE) CEE_CGT_UN);//  Pop1+Pop1, PushI
         ld_i4(0);
         compare_eq();
     }
 
-    void conv_r8(){
+    void conv_r8() {
         m_il.push_back(CEE_CONV_R8);
     }
 
     void ld_i(int32_t i) {
         m_il.push_back(CEE_LDC_I4);
         emit_int(i);
-        m_il.push_back(CEE_CONV_I); // Pop1, PushI
+        m_il.push_back(CEE_CONV_I);// Pop1, PushI
     }
 
     void ld_i(void* ptr) {
-        auto value = (size_t)ptr;
+        auto value = (size_t) ptr;
 #ifdef HOST_64BIT
         if ((value & 0xFFFFFFFF) == value) {
-            ld_i((int)value);
-        }
-        else {
-            m_il.push_back(CEE_LDC_I8); // Pop0, PushI8
+            ld_i((int) value);
+        } else {
+            m_il.push_back(CEE_LDC_I8);// Pop0, PushI8
             m_il.push_back(value & 0xff);
             m_il.push_back((value >> 8) & 0xff);
             m_il.push_back((value >> 16) & 0xff);
@@ -440,7 +455,7 @@ public:
             m_il.push_back((value >> 40) & 0xff);
             m_il.push_back((value >> 48) & 0xff);
             m_il.push_back((value >> 56) & 0xff);
-            m_il.push_back(CEE_CONV_I); // Pop1, PushI
+            m_il.push_back(CEE_CONV_I);// Pop1, PushI
         }
 #else
         ld_i(value);
@@ -451,7 +466,7 @@ public:
     void emit_call(int32_t token) {
         m_callPoints.emplace_back(make_pair(m_il.size(), token));
 
-        m_il.push_back(CEE_CALL); // VarPop, VarPush
+        m_il.push_back(CEE_CALL);// VarPop, VarPush
         emit_int(token);
     }
 
@@ -472,18 +487,25 @@ public:
 
     void st_loc(uint16_t index) {
         switch (index) {
-            case 0: m_il.push_back(CEE_STLOC_0); break;
-            case 1: m_il.push_back(CEE_STLOC_1); break;
-            case 2: m_il.push_back(CEE_STLOC_2); break;
-            case 3: m_il.push_back(CEE_STLOC_3); break;
+            case 0:
+                m_il.push_back(CEE_STLOC_0);
+                break;
+            case 1:
+                m_il.push_back(CEE_STLOC_1);
+                break;
+            case 2:
+                m_il.push_back(CEE_STLOC_2);
+                break;
+            case 3:
+                m_il.push_back(CEE_STLOC_3);
+                break;
             default:
                 if (index < 256) {
-                    m_il.push_back(CEE_STLOC_S); 
+                    m_il.push_back(CEE_STLOC_S);
                     m_il.push_back(index);
-                }
-                else {
-                    m_il.push_back(CEE_PREFIX1); // NIL
-                    m_il.push_back((BYTE)CEE_STLOC); 
+                } else {
+                    m_il.push_back(CEE_PREFIX1);// NIL
+                    m_il.push_back((BYTE) CEE_STLOC);
                     m_il.push_back(index & 0xff);
                     m_il.push_back((index >> 8) & 0xff);
                 }
@@ -492,18 +514,25 @@ public:
 
     void ld_loc(uint16_t index) {
         switch (index) {
-            case 0: m_il.push_back(CEE_LDLOC_0); break;
-            case 1: m_il.push_back(CEE_LDLOC_1); break;
-            case 2: m_il.push_back(CEE_LDLOC_2); break;
-            case 3: m_il.push_back(CEE_LDLOC_3); break;
+            case 0:
+                m_il.push_back(CEE_LDLOC_0);
+                break;
+            case 1:
+                m_il.push_back(CEE_LDLOC_1);
+                break;
+            case 2:
+                m_il.push_back(CEE_LDLOC_2);
+                break;
+            case 3:
+                m_il.push_back(CEE_LDLOC_3);
+                break;
             default:
                 if (index < 256) {
-                    m_il.push_back(CEE_LDLOC_S); 
-                    m_il.push_back((BYTE)index);
-                }
-                else {
-                    m_il.push_back(CEE_PREFIX1); // NIL
-                    m_il.push_back((BYTE)CEE_LDLOC); 
+                    m_il.push_back(CEE_LDLOC_S);
+                    m_il.push_back((BYTE) index);
+                } else {
+                    m_il.push_back(CEE_PREFIX1);// NIL
+                    m_il.push_back((BYTE) CEE_LDLOC);
                     m_il.push_back(index & 0xff);
                     m_il.push_back((index >> 8) & 0xff);
                 }
@@ -512,62 +541,61 @@ public:
 
     void ld_loca(uint16_t index) {
         if (index < 256) {
-            m_il.push_back(CEE_LDLOCA_S); // Pop0, PushI
+            m_il.push_back(CEE_LDLOCA_S);// Pop0, PushI
             m_il.push_back(index);
-        }
-        else {
-            m_il.push_back(CEE_PREFIX1); // NIL
-            m_il.push_back((BYTE)CEE_LDLOCA); // Pop0, PushI
+        } else {
+            m_il.push_back(CEE_PREFIX1);      // NIL
+            m_il.push_back((BYTE) CEE_LDLOCA);// Pop0, PushI
             m_il.push_back(index & 0xff);
             m_il.push_back((index >> 8) & 0xff);
         }
     }
 
     void add() {
-        push_back(CEE_ADD);   // Pop1+Pop1, Push1
+        push_back(CEE_ADD);// Pop1+Pop1, Push1
     }
 
     void sub() {
-        push_back(CEE_SUB);   // Pop1+Pop1, Push1
+        push_back(CEE_SUB);// Pop1+Pop1, Push1
     }
 
     void sub_with_overflow() {
-        push_back(CEE_SUB_OVF);   // Pop1+Pop1, Push1
+        push_back(CEE_SUB_OVF);// Pop1+Pop1, Push1
     }
 
     void div() {
-        push_back(CEE_DIV);   // Pop1+Pop1, Push1
+        push_back(CEE_DIV);// Pop1+Pop1, Push1
     }
 
     void mod() {
-        push_back(CEE_REM);   // Pop1+Pop1, Push1
+        push_back(CEE_REM);// Pop1+Pop1, Push1
     }
 
     void mul() {
-        push_back(CEE_MUL);   // Pop1+Pop1, Push1
+        push_back(CEE_MUL);// Pop1+Pop1, Push1
     }
 
     void ld_arg(uint16_t index) {
         switch (index) {
             case 0:
-                push_back(CEE_LDARG_0);  // Pop0, Push1
+                push_back(CEE_LDARG_0);// Pop0, Push1
                 break;
             case 1:
-                push_back(CEE_LDARG_1);  // Pop0, Push1
+                push_back(CEE_LDARG_1);// Pop0, Push1
                 break;
             case 2:
-                push_back(CEE_LDARG_2);  // Pop0, Push1
+                push_back(CEE_LDARG_2);// Pop0, Push1
                 break;
             case 3:
-                push_back(CEE_LDARG_3);  // Pop0, Push1
+                push_back(CEE_LDARG_3);// Pop0, Push1
                 break;
             default:
                 if (index < 256) {
-                    push_back(CEE_LDARG_S);  // Pop0, Push1
+                    push_back(CEE_LDARG_S);// Pop0, Push1
                     m_il.push_back(index);
                 } else {
-                    m_il.push_back(CEE_PREFIX1); // NIL
-                    m_il.push_back((BYTE) CEE_LDARG);  // Pop0, Push1
+                    m_il.push_back(CEE_PREFIX1);     // NIL
+                    m_il.push_back((BYTE) CEE_LDARG);// Pop0, Push1
                     m_il.push_back(index & 0xff);
                     m_il.push_back((index >> 8) & 0xff);
                 }
@@ -585,21 +613,21 @@ public:
 
     CORINFO_METHOD_INFO to_method(JITMethod* addr, size_t stackSize) {
         CORINFO_METHOD_INFO methodInfo{};
-        methodInfo.ftn = (CORINFO_METHOD_HANDLE)addr;
-        methodInfo.scope = (CORINFO_MODULE_HANDLE)m_module;
+        methodInfo.ftn = (CORINFO_METHOD_HANDLE) addr;
+        methodInfo.scope = (CORINFO_MODULE_HANDLE) m_module;
         methodInfo.ILCode = &m_il[0];
-        methodInfo.ILCodeSize = (unsigned int)m_il.size();
+        methodInfo.ILCodeSize = (unsigned int) m_il.size();
         methodInfo.maxStack = stackSize;
         methodInfo.EHcount = 0;
         methodInfo.options = CORINFO_OPT_INIT_LOCALS;
         methodInfo.regionKind = CORINFO_REGION_JIT;
-        methodInfo.args = CORINFO_SIG_INFO{ CORINFO_CALLCONV_DEFAULT };
-        methodInfo.args.args = (CORINFO_ARG_LIST_HANDLE)(m_params.empty() ? nullptr : &m_params[0]);
+        methodInfo.args = CORINFO_SIG_INFO{CORINFO_CALLCONV_DEFAULT};
+        methodInfo.args.args = (CORINFO_ARG_LIST_HANDLE) (m_params.empty() ? nullptr : &m_params[0]);
         methodInfo.args.numArgs = m_params.size();
         methodInfo.args.retType = m_retType;
         methodInfo.args.retTypeClass = nullptr;
-        methodInfo.locals = CORINFO_SIG_INFO{ CORINFO_CALLCONV_DEFAULT };
-        methodInfo.locals.args = (CORINFO_ARG_LIST_HANDLE)(m_locals.empty() ? nullptr : &m_locals[0]);
+        methodInfo.locals = CORINFO_SIG_INFO{CORINFO_CALLCONV_DEFAULT};
+        methodInfo.locals.args = (CORINFO_ARG_LIST_HANDLE) (m_locals.empty() ? nullptr : &m_locals[0]);
         methodInfo.locals.numArgs = m_locals.size();
         return methodInfo;
     }
@@ -618,13 +646,12 @@ public:
                 &methodInfo,
                 CORJIT_FLAGS::CORJIT_FLAG_CALL_GETJITFLAGS,
                 &nativeEntry,
-                &nativeSizeOfCode
-        );
+                &nativeSizeOfCode);
 #if (defined(HOST_OSX) && defined(HOST_ARM64))
         pthread_jit_write_protect_np(1);
 #endif
         jitInfo->setNativeSize(nativeSizeOfCode);
-        switch (result){
+        switch (result) {
             case CORJIT_OK:
                 res.m_addr = nativeEntry;
                 break;
@@ -662,7 +689,6 @@ public:
         }
         return res;
     }
-
 
 
 private:

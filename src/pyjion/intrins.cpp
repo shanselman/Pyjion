@@ -44,23 +44,23 @@ PyObject* g_emptyTuple;
 
 #define UNBOUNDLOCAL_ERROR_MSG \
     "local variable '%.200s' referenced before assignment"
-#define UNBOUNDFREE_ERROR_MSG \
+#define UNBOUNDFREE_ERROR_MSG                             \
     "free variable '%.200s' referenced before assignment" \
     " in enclosing scope"
 
-#define ASSERT_ARG(arg) \
-   if ((arg) == nullptr) { \
-        PyErr_SetString(PyExc_ValueError, \
-        "Argument null in internal function"); \
-        return nullptr; \
-    } \
+#define ASSERT_ARG(arg)                                        \
+    if ((arg) == nullptr) {                                    \
+        PyErr_SetString(PyExc_ValueError,                      \
+                        "Argument null in internal function"); \
+        return nullptr;                                        \
+    }
 
-#define ASSERT_ARG_INT(arg) \
-   if ((arg) == nullptr) { \
-        PyErr_SetString(PyExc_ValueError, \
-        "Argument null in internal function"); \
-        return -1; \
-    } \
+#define ASSERT_ARG_INT(arg)                                    \
+    if ((arg) == nullptr) {                                    \
+        PyErr_SetString(PyExc_ValueError,                      \
+                        "Argument null in internal function"); \
+        return -1;                                             \
+    }
 
 template<typename T>
 void decref(T v) {
@@ -69,12 +69,13 @@ void decref(T v) {
 
 template<typename T, typename... Args>
 void decref(T v, Args... args) {
-    Py_DECREF(v) ; decref(args...);
+    Py_DECREF(v);
+    decref(args...);
 }
 
 static void
-format_exc_check_arg(PyObject *exc, const char *format_str, PyObject *obj) {
-    const char *obj_str;
+format_exc_check_arg(PyObject* exc, const char* format_str, PyObject* obj) {
+    const char* obj_str;
 
     if (!obj)
         return;
@@ -87,34 +88,32 @@ format_exc_check_arg(PyObject *exc, const char *format_str, PyObject *obj) {
 }
 
 static void
-format_exc_unbound(PyCodeObject *co, int oparg) {
-    PyObject *name;
+format_exc_unbound(PyCodeObject* co, int oparg) {
+    PyObject* name;
     /* Don't stomp existing exception */
     if (PyErr_Occurred())
         return;
     if (oparg < PyTuple_GET_SIZE(co->co_cellvars)) {
         name = PyTuple_GET_ITEM(co->co_cellvars,
-            oparg);
+                                oparg);
         format_exc_check_arg(
-            PyExc_UnboundLocalError,
-            UNBOUNDLOCAL_ERROR_MSG,
-            name);
-    }
-    else {
+                PyExc_UnboundLocalError,
+                UNBOUNDLOCAL_ERROR_MSG,
+                name);
+    } else {
         name = PyTuple_GET_ITEM(co->co_freevars, oparg -
-            PyTuple_GET_SIZE(co->co_cellvars));
+                                                         PyTuple_GET_SIZE(co->co_cellvars));
         format_exc_check_arg(PyExc_NameError,
-            UNBOUNDFREE_ERROR_MSG, name);
+                             UNBOUNDFREE_ERROR_MSG, name);
     }
 }
 
-PyObject* PyJit_Add(PyObject *left, PyObject *right) {
-    PyObject *sum;
+PyObject* PyJit_Add(PyObject* left, PyObject* right) {
+    PyObject* sum;
     if (PyUnicode_CheckExact(left) && PyUnicode_CheckExact(right)) {
         PyUnicode_Append(&left, right);
         sum = left;
-    }
-    else {
+    } else {
         sum = PyNumber_Add(left, right);
         Py_DECREF(left);
     }
@@ -122,17 +121,16 @@ PyObject* PyJit_Add(PyObject *left, PyObject *right) {
     return sum;
 }
 
-PyObject* PyJit_Subscr(PyObject *left, PyObject *right) {
+PyObject* PyJit_Subscr(PyObject* left, PyObject* right) {
     auto res = PyObject_GetItem(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_SubscrIndex(PyObject *o, PyObject *key, Py_ssize_t index)
-{
-    PyMappingMethods *m;
-    PySequenceMethods *ms;
+PyObject* PyJit_SubscrIndex(PyObject* o, PyObject* key, Py_ssize_t index) {
+    PyMappingMethods* m;
+    PySequenceMethods* ms;
     PyObject* res;
 
     if (o == nullptr || key == nullptr) {
@@ -153,15 +151,14 @@ PyObject* PyJit_SubscrIndex(PyObject *o, PyObject *key, Py_ssize_t index)
     return res;
 }
 
-PyObject* PyJit_SubscrIndexHash(PyObject *o, PyObject *key, Py_ssize_t index, Py_hash_t hash)
-{
+PyObject* PyJit_SubscrIndexHash(PyObject* o, PyObject* key, Py_ssize_t index, Py_hash_t hash) {
     if (PyDict_CheckExact(o))
         return PyJit_SubscrDictHash(o, key, hash);
     else
         return PyJit_SubscrIndex(o, key, index);
 }
 
-PyObject* PyJit_SubscrDict(PyObject *o, PyObject *key){
+PyObject* PyJit_SubscrDict(PyObject* o, PyObject* key) {
     if (!PyDict_CheckExact(o))
         return PyJit_Subscr(o, key);
 
@@ -174,7 +171,7 @@ PyObject* PyJit_SubscrDict(PyObject *o, PyObject *key){
     return value;
 }
 
-PyObject* PyJit_SubscrDictHash(PyObject *o, PyObject *key, Py_hash_t hash){
+PyObject* PyJit_SubscrDictHash(PyObject* o, PyObject* key, Py_hash_t hash) {
     if (!PyDict_CheckExact(o))
         return PyJit_Subscr(o, key);
     PyObject* value = _PyDict_GetItem_KnownHash(o, key, hash);
@@ -186,7 +183,7 @@ PyObject* PyJit_SubscrDictHash(PyObject *o, PyObject *key, Py_hash_t hash){
     return value;
 }
 
-PyObject* PyJit_SubscrList(PyObject *o, PyObject *key){
+PyObject* PyJit_SubscrList(PyObject* o, PyObject* key) {
     if (!PyList_CheckExact(o))
         return PyJit_Subscr(o, key);
     PyObject* res;
@@ -196,15 +193,14 @@ PyObject* PyJit_SubscrList(PyObject *o, PyObject *key){
         key_value = PyNumber_AsSsize_t(key, PyExc_IndexError);
         if (key_value == -1 && PyErr_Occurred()) {
             res = nullptr;
-        } else if (key_value < 0){
+        } else if (key_value < 0) {
             // Supports negative indexes without converting back to PyLong..
             res = PySequence_GetItem(o, key_value);
         } else {
             res = PyList_GetItem(o, key_value);
             Py_XINCREF(res);
         }
-    }
-    else {
+    } else {
         return PyJit_Subscr(o, key);
     }
     Py_DECREF(o);
@@ -212,7 +208,7 @@ PyObject* PyJit_SubscrList(PyObject *o, PyObject *key){
     return res;
 }
 
-PyObject* PyJit_SubscrListIndex(PyObject *o, PyObject *key, Py_ssize_t index){
+PyObject* PyJit_SubscrListIndex(PyObject* o, PyObject* key, Py_ssize_t index) {
     if (!PyList_CheckExact(o))
         return PyJit_Subscr(o, key);
     PyObject* res = PyList_GetItem(o, index);
@@ -222,14 +218,14 @@ PyObject* PyJit_SubscrListIndex(PyObject *o, PyObject *key, Py_ssize_t index){
     return res;
 }
 
-PyObject* PyJit_SubscrListSliceStepped(PyObject *o,  Py_ssize_t start,  Py_ssize_t stop,  Py_ssize_t step){
+PyObject* PyJit_SubscrListSliceStepped(PyObject* o, Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step) {
     Py_ssize_t slicelength, i;
     size_t cur;
     PyObject* result = nullptr;
-    PyListObject* self = (PyListObject*)o;
+    PyListObject* self = (PyListObject*) o;
     PyObject* it;
     PyObject **src, **dest;
-    if (!PyList_CheckExact(o) ) {
+    if (!PyList_CheckExact(o)) {
         PyErr_SetString(PyExc_TypeError, "Invalid type for const slice");
         goto error;
     }
@@ -242,83 +238,81 @@ PyObject* PyJit_SubscrListSliceStepped(PyObject *o,  Py_ssize_t start,  Py_ssize
 
     if (slicelength <= 0 && step > 0) {
         result = PyList_New(0);
-    }
-    else if (step == 1) {
+    } else if (step == 1) {
         result = PyList_GetSlice(o, start, stop);
-    }
-    else {
+    } else {
         result = PyList_New(0);
-        ((PyListObject*)result)->ob_item = PyMem_New(PyObject *, slicelength);
-        if (((PyListObject*)result)->ob_item == nullptr) {
+        ((PyListObject*) result)->ob_item = PyMem_New(PyObject*, slicelength);
+        if (((PyListObject*) result)->ob_item == nullptr) {
             goto error;
         }
-        ((PyListObject*)result)->allocated = slicelength;
+        ((PyListObject*) result)->allocated = slicelength;
         src = self->ob_item;
-        dest = ((PyListObject *)result)->ob_item;
+        dest = ((PyListObject*) result)->ob_item;
         for (cur = start, i = 0; i < slicelength;
-             cur += (size_t)step, i++) {
+             cur += (size_t) step, i++) {
             it = src[cur];
             Py_INCREF(it);
             dest[i] = it;
         }
         Py_SET_SIZE(result, slicelength);
     }
-    error:
+error:
     Py_DECREF(o);
     return result;
 }
 
 
-PyObject* PyJit_SubscrListSlice(PyObject *o,  Py_ssize_t start,  Py_ssize_t stop){
+PyObject* PyJit_SubscrListSlice(PyObject* o, Py_ssize_t start, Py_ssize_t stop) {
     Py_ssize_t slicelength;
     PyObject* result = nullptr;
-    if (!PyList_CheckExact(o) ) {
+    if (!PyList_CheckExact(o)) {
         PyErr_SetString(PyExc_TypeError, "Invalid type for const slice");
         goto error;
     }
-    slicelength = PySlice_AdjustIndices(Py_SIZE(o), &start, &stop,1);
+    slicelength = PySlice_AdjustIndices(Py_SIZE(o), &start, &stop, 1);
 
     if (slicelength <= 0 && start > 0 && stop > 0) {
         result = PyList_New(0);
     } else {
         result = PyList_GetSlice(o, start, stop);
     }
-    error:
+error:
     Py_DECREF(o);
     return result;
 }
 
 // TODO: Rewrite this function more efficiently.
-PyObject* PyJit_SubscrListReversed(PyObject *o){
+PyObject* PyJit_SubscrListReversed(PyObject* o) {
     Py_ssize_t slicelength = Py_SIZE(o), i;
     size_t cur;
     PyObject* result = nullptr;
     PyObject* it;
     PyObject **src, **dest;
-    if (!PyList_CheckExact(o) ) {
+    if (!PyList_CheckExact(o)) {
         PyErr_SetString(PyExc_TypeError, "Invalid type for const slice");
         goto error;
     }
     result = PyList_New(0);
-    ((PyListObject*)result)->ob_item = PyMem_New(PyObject *, slicelength);
-    if (((PyListObject*)result)->ob_item == nullptr) {
+    ((PyListObject*) result)->ob_item = PyMem_New(PyObject*, slicelength);
+    if (((PyListObject*) result)->ob_item == nullptr) {
         goto error;
     }
-    ((PyListObject*)result)->allocated = slicelength;
-    src = ((PyListObject*)o)->ob_item;
-    dest = ((PyListObject *)result)->ob_item;
+    ((PyListObject*) result)->allocated = slicelength;
+    src = ((PyListObject*) o)->ob_item;
+    dest = ((PyListObject*) result)->ob_item;
     for (cur = slicelength - 1, i = 0; i < slicelength; cur--, i++) {
         it = src[cur];
         Py_INCREF(it);
         dest[i] = it;
     }
     Py_SET_SIZE(result, slicelength);
-    error:
+error:
     Py_DECREF(o);
     return result;
 }
 
-PyObject* PyJit_SubscrTuple(PyObject *o, PyObject *key){
+PyObject* PyJit_SubscrTuple(PyObject* o, PyObject* key) {
     if (!PyTuple_CheckExact(o))
         return PyJit_Subscr(o, key);
     PyObject* res;
@@ -328,15 +322,14 @@ PyObject* PyJit_SubscrTuple(PyObject *o, PyObject *key){
         key_value = PyNumber_AsSsize_t(key, PyExc_IndexError);
         if (key_value == -1 && PyErr_Occurred()) {
             res = nullptr;
-        } else if (key_value < 0){
+        } else if (key_value < 0) {
             // Supports negative indexes without converting back to PyLong..
             res = PySequence_GetItem(o, key_value);
         } else {
             res = PyTuple_GetItem(o, key_value);
             Py_XINCREF(res);
         }
-    }
-    else {
+    } else {
         return PyJit_Subscr(o, key);
     }
     Py_DECREF(key);
@@ -344,7 +337,7 @@ PyObject* PyJit_SubscrTuple(PyObject *o, PyObject *key){
     return res;
 }
 
-PyObject* PyJit_SubscrTupleIndex(PyObject *o, PyObject *key, Py_ssize_t index){
+PyObject* PyJit_SubscrTupleIndex(PyObject* o, PyObject* key, Py_ssize_t index) {
     if (!PyTuple_CheckExact(o))
         return PyJit_Subscr(o, key);
     PyObject* res = PyTuple_GetItem(o, index);
@@ -354,14 +347,14 @@ PyObject* PyJit_SubscrTupleIndex(PyObject *o, PyObject *key, Py_ssize_t index){
     return res;
 }
 
-PyObject* PyJit_RichCompare(PyObject *left, PyObject *right, size_t op) {
+PyObject* PyJit_RichCompare(PyObject* left, PyObject* right, size_t op) {
     auto res = PyObject_RichCompare(left, right, op);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_Contains(PyObject *left, PyObject *right) {
+PyObject* PyJit_Contains(PyObject* left, PyObject* right) {
     auto res = PySequence_Contains(right, left);
     Py_DECREF(left);
     Py_DECREF(right);
@@ -373,7 +366,7 @@ PyObject* PyJit_Contains(PyObject *left, PyObject *right) {
     return ret;
 }
 
-PyObject* PyJit_NotContains(PyObject *left, PyObject *right) {
+PyObject* PyJit_NotContains(PyObject* left, PyObject* right) {
     auto res = PySequence_Contains(right, left);
     Py_DECREF(left);
     Py_DECREF(right);
@@ -394,12 +387,11 @@ PyObject* PyJit_NewFunction(PyObject* code, PyObject* qualname, PyFrameObject* f
 
 PyObject* PyJit_LoadClosure(PyFrameObject* frame, int32_t index) {
     PyObject** cells = frame->f_localsplus + frame->f_code->co_nlocals;
-    PyObject *value = cells[index];
+    PyObject* value = cells[index];
 
     if (value == nullptr) {
-        format_exc_unbound(frame->f_code, (int)index);
-    }
-    else {
+        format_exc_unbound(frame->f_code, (int) index);
+    } else {
         Py_INCREF(value);
     }
     return value;
@@ -440,8 +432,7 @@ PyObject* PyJit_UnaryNot(PyObject* value) {
     if (err == 0) {
         Py_INCREF(Py_True);
         return Py_True;
-    }
-    else if (err > 0) {
+    } else if (err > 0) {
         Py_INCREF(Py_False);
         return Py_False;
     }
@@ -455,14 +446,14 @@ PyObject* PyJit_UnaryInvert(PyObject* value) {
     return res;
 }
 
-PyObject* PyJit_NewList(int32_t size){
+PyObject* PyJit_NewList(int32_t size) {
     auto list = PyList_New(size);
     return list;
 }
 
 PyObject* PyJit_ListAppend(PyObject* list, PyObject* value) {
     ASSERT_ARG(list);
-    if (!PyList_CheckExact(list)){
+    if (!PyList_CheckExact(list)) {
         PyErr_SetString(PyExc_TypeError, "Expected list to internal call");
         Py_DECREF(list);
         return nullptr;
@@ -477,7 +468,7 @@ PyObject* PyJit_ListAppend(PyObject* list, PyObject* value) {
 
 PyObject* PyJit_SetAdd(PyObject* set, PyObject* value) {
     ASSERT_ARG(set);
-    int err ;
+    int err;
     err = PySet_Add(set, value);
     Py_DECREF(value);
     if (err != 0) {
@@ -499,7 +490,7 @@ error:
     return nullptr;
 }
 
-PyObject* PyJit_MapAdd(PyObject*map, PyObject*key, PyObject* value) {
+PyObject* PyJit_MapAdd(PyObject* map, PyObject* key, PyObject* value) {
     ASSERT_ARG(map);
     if (!PyDict_Check(map)) {
         PyErr_SetString(PyExc_TypeError,
@@ -507,7 +498,7 @@ PyObject* PyJit_MapAdd(PyObject*map, PyObject*key, PyObject* value) {
         Py_DECREF(map);
         return nullptr;
     }
-    int err = PyDict_SetItem(map, key, value);  /* v[w] = u */
+    int err = PyDict_SetItem(map, key, value); /* v[w] = u */
     Py_DECREF(value);
     Py_DECREF(key);
     if (err) {
@@ -516,143 +507,139 @@ PyObject* PyJit_MapAdd(PyObject*map, PyObject*key, PyObject* value) {
     return map;
 }
 
-PyObject* PyJit_Multiply(PyObject *left, PyObject *right) {
+PyObject* PyJit_Multiply(PyObject* left, PyObject* right) {
     auto res = PyNumber_Multiply(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_TrueDivide(PyObject *left, PyObject *right) {
+PyObject* PyJit_TrueDivide(PyObject* left, PyObject* right) {
     auto res = PyNumber_TrueDivide(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_FloorDivide(PyObject *left, PyObject *right) {
+PyObject* PyJit_FloorDivide(PyObject* left, PyObject* right) {
     auto res = PyNumber_FloorDivide(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_Power(PyObject *left, PyObject *right) {
+PyObject* PyJit_Power(PyObject* left, PyObject* right) {
     auto res = PyNumber_Power(left, right, Py_None);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_Modulo(PyObject *left, PyObject *right) {
-    auto res = (PyUnicode_CheckExact(left) && (
-		!PyUnicode_Check(right) || PyUnicode_CheckExact(right))) ?
-        PyUnicode_Format(left, right) :
-        PyNumber_Remainder(left, right);
+PyObject* PyJit_Modulo(PyObject* left, PyObject* right) {
+    auto res = (PyUnicode_CheckExact(left) && (!PyUnicode_Check(right) || PyUnicode_CheckExact(right))) ? PyUnicode_Format(left, right) : PyNumber_Remainder(left, right);
 
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_Subtract(PyObject *left, PyObject *right) {
+PyObject* PyJit_Subtract(PyObject* left, PyObject* right) {
     auto res = PyNumber_Subtract(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_MatrixMultiply(PyObject *left, PyObject *right) {
+PyObject* PyJit_MatrixMultiply(PyObject* left, PyObject* right) {
     auto res = PyNumber_MatrixMultiply(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_BinaryLShift(PyObject *left, PyObject *right) {
+PyObject* PyJit_BinaryLShift(PyObject* left, PyObject* right) {
     auto res = PyNumber_Lshift(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_BinaryRShift(PyObject *left, PyObject *right) {
+PyObject* PyJit_BinaryRShift(PyObject* left, PyObject* right) {
     auto res = PyNumber_Rshift(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_BinaryAnd(PyObject *left, PyObject *right) {
+PyObject* PyJit_BinaryAnd(PyObject* left, PyObject* right) {
     auto res = PyNumber_And(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_BinaryXor(PyObject *left, PyObject *right) {
+PyObject* PyJit_BinaryXor(PyObject* left, PyObject* right) {
     auto res = PyNumber_Xor(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_BinaryOr(PyObject *left, PyObject *right) {
+PyObject* PyJit_BinaryOr(PyObject* left, PyObject* right) {
     auto res = PyNumber_Or(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplacePower(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplacePower(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlacePower(left, right, Py_None);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceMultiply(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceMultiply(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceMultiply(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceMatrixMultiply(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceMatrixMultiply(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceMatrixMultiply(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceTrueDivide(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceTrueDivide(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceTrueDivide(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceFloorDivide(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceFloorDivide(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceFloorDivide(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceModulo(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceModulo(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceRemainder(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceAdd(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceAdd(PyObject* left, PyObject* right) {
     PyObject* res;
     if (PyUnicode_CheckExact(left) && PyUnicode_CheckExact(right)) {
         PyUnicode_Append(&left, right);
         res = left;
-    }
-    else {
+    } else {
         res = PyNumber_InPlaceAdd(left, right);
         Py_DECREF(left);
     }
@@ -660,55 +647,55 @@ PyObject* PyJit_InplaceAdd(PyObject *left, PyObject *right) {
     return res;
 }
 
-PyObject* PyJit_InplaceSubtract(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceSubtract(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceSubtract(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceLShift(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceLShift(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceLshift(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceRShift(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceRShift(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceRshift(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceAnd(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceAnd(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceAnd(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceXor(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceXor(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceXor(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-PyObject* PyJit_InplaceOr(PyObject *left, PyObject *right) {
+PyObject* PyJit_InplaceOr(PyObject* left, PyObject* right) {
     auto res = PyNumber_InPlaceOr(left, right);
     Py_DECREF(left);
     Py_DECREF(right);
     return res;
 }
 
-int PyJit_PrintExpr(PyObject *value) {
+int PyJit_PrintExpr(PyObject* value) {
     _Py_IDENTIFIER(displayhook);
-    PyObject *hook = _PySys_GetObjectId(&PyId_displayhook);
-    PyObject *res;
+    PyObject* hook = _PySys_GetObjectId(&PyId_displayhook);
+    PyObject* res;
     if (hook == nullptr) {
         PyErr_SetString(PyExc_RuntimeError,
-            "lost sys.displayhook");
+                        "lost sys.displayhook");
         Py_DECREF(value);
         return 1;
     }
@@ -721,15 +708,14 @@ int PyJit_PrintExpr(PyObject *value) {
     return 0;
 }
 
-void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObject** oldexc, PyObject**oldval, PyObject** oldtb) {
+void PyJit_HandleException(PyObject** exc, PyObject** val, PyObject** tb, PyObject** oldexc, PyObject** oldval, PyObject** oldtb) {
     auto tstate = PyThreadState_GET();
 
-    _PyErr_StackItem *exc_info = tstate->exc_info;
+    _PyErr_StackItem* exc_info = tstate->exc_info;
     // we take ownership of these into locals...
     if (tstate->curexc_type != nullptr) {
         *oldexc = exc_info->exc_type;
-    }
-    else {
+    } else {
         *oldexc = Py_None;
         Py_INCREF(Py_None);
     }
@@ -757,10 +743,10 @@ void PyJit_HandleException(PyObject** exc, PyObject**val, PyObject** tb, PyObjec
     Py_INCREF(*tb);
 }
 
-void PyJit_UnwindEh(PyObject*exc, PyObject*val, PyObject*tb) {
+void PyJit_UnwindEh(PyObject* exc, PyObject* val, PyObject* tb) {
     auto tstate = PyThreadState_GET();
-    if (val != nullptr && !PyExceptionInstance_Check(val)){
-        PyErr_SetString(PyExc_RuntimeError,  "Error unwinding exception data");
+    if (val != nullptr && !PyExceptionInstance_Check(val)) {
+        PyErr_SetString(PyExc_RuntimeError, "Error unwinding exception data");
         return;
     }
     auto exc_info = tstate->exc_info;
@@ -775,28 +761,27 @@ void PyJit_UnwindEh(PyObject*exc, PyObject*val, PyObject*tb) {
     Py_XDECREF(oldtraceback);
 }
 
-#define CANNOT_CATCH_MSG "catching classes that do not inherit from "\
+#define CANNOT_CATCH_MSG "catching classes that do not inherit from " \
                          "BaseException is not allowed"
 
-PyObject* PyJit_CompareExceptions(PyObject*v, PyObject* w) {
+PyObject* PyJit_CompareExceptions(PyObject* v, PyObject* w) {
     if (PyTuple_Check(w)) {
         Py_ssize_t i, length;
         length = PyTuple_Size(w);
         for (i = 0; i < length; i += 1) {
-            PyObject *exc = PyTuple_GET_ITEM(w, i);
+            PyObject* exc = PyTuple_GET_ITEM(w, i);
             if (!PyExceptionClass_Check(exc)) {
                 PyErr_SetString(PyExc_TypeError,
-                    CANNOT_CATCH_MSG);
+                                CANNOT_CATCH_MSG);
                 Py_DECREF(v);
                 Py_DECREF(w);
                 return nullptr;
             }
         }
-    }
-    else {
+    } else {
         if (!PyExceptionClass_Check(w)) {
             PyErr_SetString(PyExc_TypeError,
-                CANNOT_CATCH_MSG);
+                            CANNOT_CATCH_MSG);
             Py_DECREF(v);
             Py_DECREF(w);
             return nullptr;
@@ -812,10 +797,9 @@ PyObject* PyJit_CompareExceptions(PyObject*v, PyObject* w) {
 
 void PyJit_UnboundLocal(PyObject* name) {
     format_exc_check_arg(
-        PyExc_UnboundLocalError,
-        UNBOUNDLOCAL_ERROR_MSG,
-        name
-        );
+            PyExc_UnboundLocalError,
+            UNBOUNDLOCAL_ERROR_MSG,
+            name);
 }
 
 void PyJit_DebugTrace(char* msg) {
@@ -824,7 +808,7 @@ void PyJit_DebugTrace(char* msg) {
 
 void PyJit_DebugFault(char* msg, char* context, int32_t index, PyFrameObject* frame) {
     printf("%s %s at %s, %s line %d\n", msg, context, PyUnicode_AsUTF8(frame->f_code->co_filename), PyUnicode_AsUTF8(frame->f_code->co_name), PyCode_Addr2Line(frame->f_code, index));
-    if(!PyErr_Occurred()){
+    if (!PyErr_Occurred()) {
         printf("Instruction failed but no exception set.");
     }
 }
@@ -842,23 +826,23 @@ void PyJit_DebugPyObject(PyObject* obj) {
     printf("%s\n", PyUnicode_AsUTF8(PyObject_Repr(obj)));
 }
 
-void PyJit_PyErrRestore(PyObject*tb, PyObject*value, PyObject*exception) {
+void PyJit_PyErrRestore(PyObject* tb, PyObject* value, PyObject* exception) {
     if (exception == Py_None) {
         exception = nullptr;
     }
     PyErr_Restore(exception, value, tb);
 }
 
-PyObject* PyJit_ImportName(PyObject*level, PyObject*from, PyObject* name, PyFrameObject* f) {
+PyObject* PyJit_ImportName(PyObject* level, PyObject* from, PyObject* name, PyFrameObject* f) {
     _Py_IDENTIFIER(__import__);
-    PyThreadState *tstate = PyThreadState_GET();
-    PyObject *imp_func = _PyDict_GetItemIdWithError(f->f_builtins, &PyId___import__);
+    PyThreadState* tstate = PyThreadState_GET();
+    PyObject* imp_func = _PyDict_GetItemIdWithError(f->f_builtins, &PyId___import__);
     PyObject *args, *res;
     PyObject* stack[5];
 
     if (imp_func == nullptr) {
         PyErr_SetString(PyExc_ImportError,
-            "__import__ not found");
+                        "__import__ not found");
         return nullptr;
     }
 
@@ -882,10 +866,10 @@ PyObject* PyJit_ImportName(PyObject*level, PyObject*from, PyObject* name, PyFram
     return res;
 }
 
-PyObject* PyJit_ImportFrom(PyObject*v, PyObject* name) {
-    PyThreadState *tstate = PyThreadState_GET();
+PyObject* PyJit_ImportFrom(PyObject* v, PyObject* name) {
+    PyThreadState* tstate = PyThreadState_GET();
     _Py_IDENTIFIER(__name__);
-    PyObject *x;
+    PyObject* x;
     PyObject *fullmodname, *pkgname, *pkgpath, *pkgname_or_unknown, *errmsg;
 
     if (_PyObject_LookupAttr(v, name, &x) != 0) {
@@ -930,19 +914,16 @@ error:
         PyErr_Clear();
         errmsg = PyUnicode_FromFormat(
                 "cannot import name %R from %R (unknown location)",
-                name, pkgname_or_unknown
-        );
+                name, pkgname_or_unknown);
         /* NULL checks for errmsg and pkgname done by PyErr_SetImportError. */
         PyErr_SetImportError(errmsg, pkgname, nullptr);
-    }
-    else {
+    } else {
         _Py_IDENTIFIER(__spec__);
-        PyObject *spec = _PyObject_GetAttrId(v, &PyId___spec__);
-        const char *fmt =
-                _PyModuleSpec_IsInitializing(spec) ?
-                "cannot import name %R from partially initialized module %R "
-                "(most likely due to a circular import) (%S)" :
-                "cannot import name %R from %R (%S)";
+        PyObject* spec = _PyObject_GetAttrId(v, &PyId___spec__);
+        const char* fmt =
+                _PyModuleSpec_IsInitializing(spec) ? "cannot import name %R from partially initialized module %R "
+                                                     "(most likely due to a circular import) (%S)"
+                                                   : "cannot import name %R from %R (%S)";
         Py_XDECREF(spec);
 
         errmsg = PyUnicode_FromFormat(fmt, name, pkgname_or_unknown, pkgpath);
@@ -957,10 +938,10 @@ error:
 }
 
 static int
-import_all_from(PyObject *locals, PyObject *v) {
+import_all_from(PyObject* locals, PyObject* v) {
     _Py_IDENTIFIER(__all__);
     _Py_IDENTIFIER(__dict__);
-    PyObject *all = _PyObject_GetAttrId(v, &PyId___all__);
+    PyObject* all = _PyObject_GetAttrId(v, &PyId___all__);
     PyObject *dict, *name, *value;
     int skip_leading_underscores = 0;
     int pos, err;
@@ -974,7 +955,7 @@ import_all_from(PyObject *locals, PyObject *v) {
             if (!PyErr_ExceptionMatches(PyExc_AttributeError))
                 return -1;
             PyErr_SetString(PyExc_ImportError,
-                "from-import-* object has no __dict__ and no __all__");
+                            "from-import-* object has no __dict__ and no __all__");
             return -1;
         }
         all = PyMapping_Keys(dict);
@@ -1017,8 +998,8 @@ import_all_from(PyObject *locals, PyObject *v) {
     return err;
 }
 
-int PyJit_ImportStar(PyObject*from, PyFrameObject* f) {
-    PyObject *locals;
+int PyJit_ImportStar(PyObject* from, PyFrameObject* f) {
+    PyObject* locals;
     int err;
     if (PyFrame_FastToLocalsWithError(f) < 0)
         return 1;
@@ -1026,7 +1007,7 @@ int PyJit_ImportStar(PyObject*from, PyFrameObject* f) {
     locals = f->f_locals;
     if (locals == nullptr) {
         PyErr_SetString(PyExc_SystemError,
-            "no locals found during 'import *'");
+                        "no locals found during 'import *'");
         return 1;
     }
     err = import_all_from(locals, from);
@@ -1035,102 +1016,102 @@ int PyJit_ImportStar(PyObject*from, PyFrameObject* f) {
     return err;
 }
 
-PyObject* PyJit_CallKwArgs(PyObject* func, PyObject*callargs, PyObject*kwargs) {
-	PyObject* result = nullptr;
-	if (!PyDict_CheckExact(kwargs)) {
-		PyObject *d = PyDict_New();
+PyObject* PyJit_CallKwArgs(PyObject* func, PyObject* callargs, PyObject* kwargs) {
+    PyObject* result = nullptr;
+    if (!PyDict_CheckExact(kwargs)) {
+        PyObject* d = PyDict_New();
         if (d == nullptr) {
             goto error;
         }
-		if (PyDict_Update(d, kwargs) != 0) {
-			Py_DECREF(d);
-			/* PyDict_Update raises attribute
+        if (PyDict_Update(d, kwargs) != 0) {
+            Py_DECREF(d);
+            /* PyDict_Update raises attribute
 			* error (percolated from an attempt
 			* to get 'keys' attribute) instead of
 			* a type error if its second argument
 			* is not a mapping.
 			*/
-			if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-				PyErr_Format(PyExc_TypeError,
-					"%.200s%.200s argument after ** "
-					"must be a mapping, not %.200s",
-					PyEval_GetFuncName(func),
-					PyEval_GetFuncDesc(func),
-					kwargs->ob_type->tp_name);
-			}
-			goto error;
-		}
-		Py_DECREF(kwargs);
-		kwargs = d;
-	}
+            if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+                PyErr_Format(PyExc_TypeError,
+                             "%.200s%.200s argument after ** "
+                             "must be a mapping, not %.200s",
+                             PyEval_GetFuncName(func),
+                             PyEval_GetFuncDesc(func),
+                             kwargs->ob_type->tp_name);
+            }
+            goto error;
+        }
+        Py_DECREF(kwargs);
+        kwargs = d;
+    }
 
-	if (!PyTuple_CheckExact(callargs)) {
-		if (Py_TYPE(callargs)->tp_iter == nullptr &&
-			!PySequence_Check(callargs)) {
-			PyErr_Format(PyExc_TypeError,
-				"%.200s%.200s argument after * "
-				"must be an iterable, not %.200s",
-				PyEval_GetFuncName(func),
-				PyEval_GetFuncDesc(func),
-				callargs->ob_type->tp_name);
-			goto error;
-		}
+    if (!PyTuple_CheckExact(callargs)) {
+        if (Py_TYPE(callargs)->tp_iter == nullptr &&
+            !PySequence_Check(callargs)) {
+            PyErr_Format(PyExc_TypeError,
+                         "%.200s%.200s argument after * "
+                         "must be an iterable, not %.200s",
+                         PyEval_GetFuncName(func),
+                         PyEval_GetFuncDesc(func),
+                         callargs->ob_type->tp_name);
+            goto error;
+        }
 
-		auto tmp = PySequence_Tuple(callargs);
-		if (tmp == nullptr) {
-			goto error;
-		}
-		Py_DECREF(callargs);
-		callargs = tmp;
-	}
+        auto tmp = PySequence_Tuple(callargs);
+        if (tmp == nullptr) {
+            goto error;
+        }
+        Py_DECREF(callargs);
+        callargs = tmp;
+    }
 #ifdef GIL
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 #endif
-	result = PyObject_Call(func, callargs, kwargs);
+    result = PyObject_Call(func, callargs, kwargs);
 #ifdef GIL
-	PyGILState_Release(gstate);
+    PyGILState_Release(gstate);
 #endif
 error:
-	Py_DECREF(func);
-	Py_DECREF(callargs);
-	Py_DECREF(kwargs);
-	return result;
+    Py_DECREF(func);
+    Py_DECREF(callargs);
+    Py_DECREF(kwargs);
+    return result;
 }
 
-PyObject* PyJit_CallArgs(PyObject* func, PyObject*callargs) {
-	PyObject* result = nullptr;
-	if (!PyTuple_CheckExact(callargs)) {
-		if (Py_TYPE(callargs)->tp_iter == nullptr &&
-			!PySequence_Check(callargs)) {
-			PyErr_Format(PyExc_TypeError,
-				"%.200s%.200s argument after * "
-				"must be an iterable, not %.200s",
-				PyEval_GetFuncName(func),
-				PyEval_GetFuncDesc(func),
-				callargs->ob_type->tp_name);
-			goto error;
-		}
-		auto tmp = PySequence_Tuple(callargs);
-		if (tmp == nullptr) {
-			goto error;
-			return nullptr;
-		}
-		Py_DECREF(callargs);
-		callargs = tmp;
-	}
+PyObject* PyJit_CallArgs(PyObject* func, PyObject* callargs) {
+    PyObject* result = nullptr;
+    if (!PyTuple_CheckExact(callargs)) {
+        if (Py_TYPE(callargs)->tp_iter == nullptr &&
+            !PySequence_Check(callargs)) {
+            PyErr_Format(PyExc_TypeError,
+                         "%.200s%.200s argument after * "
+                         "must be an iterable, not %.200s",
+                         PyEval_GetFuncName(func),
+                         PyEval_GetFuncDesc(func),
+                         callargs->ob_type->tp_name);
+            goto error;
+        }
+        auto tmp = PySequence_Tuple(callargs);
+        if (tmp == nullptr) {
+            goto error;
+            return nullptr;
+        }
+        Py_DECREF(callargs);
+        callargs = tmp;
+    }
 #ifdef GIL
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 #endif
-	result = PyObject_Call(func, callargs, nullptr);
+    result = PyObject_Call(func, callargs, nullptr);
 #ifdef GIL
-	PyGILState_Release(gstate);
+    PyGILState_Release(gstate);
 #endif
 error:
-	Py_DECREF(func);
-	Py_DECREF(callargs);
-	return result;
+    Py_DECREF(func);
+    Py_DECREF(callargs);
+    return result;
 }
 
 void PyJit_PushFrame(PyFrameObject* frame) {
@@ -1141,24 +1122,24 @@ void PyJit_PopFrame(PyFrameObject* frame) {
     PyThreadState_GET()->frame = frame->f_back;
 }
 
-void PyJit_EhTrace(PyFrameObject *f) {
+void PyJit_EhTrace(PyFrameObject* f) {
     PyTraceBack_Here(f);
 }
 
-bool PyJit_Raise(PyObject *exc, PyObject *cause) {
+bool PyJit_Raise(PyObject* exc, PyObject* cause) {
     PyObject *type = nullptr, *value = nullptr;
 
     if (exc == nullptr) {
         /* Reraise */
-        PyThreadState *tstate = PyThreadState_GET();
+        PyThreadState* tstate = PyThreadState_GET();
         auto exc_info = _PyErr_GetTopmostException(tstate);
-        PyObject *tb;
+        PyObject* tb;
         type = exc_info->exc_type;
         value = exc_info->exc_value;
         tb = exc_info->exc_traceback;
         if (type == Py_None || type == nullptr) {
             PyErr_SetString(PyExc_RuntimeError,
-                "No active exception to reraise");
+                            "No active exception to reraise");
             return false;
         }
         Py_XINCREF(type);
@@ -1180,45 +1161,40 @@ bool PyJit_Raise(PyObject *exc, PyObject *cause) {
             goto raise_error;
         if (!PyExceptionInstance_Check(value)) {
             PyErr_Format(PyExc_TypeError,
-                "calling %R should have returned an instance of "
-                "BaseException, not %R",
-                type, Py_TYPE(value));
+                         "calling %R should have returned an instance of "
+                         "BaseException, not %R",
+                         type, Py_TYPE(value));
             goto raise_error;
         }
-    }
-    else if (PyExceptionInstance_Check(exc)) {
+    } else if (PyExceptionInstance_Check(exc)) {
         value = exc;
         type = PyExceptionInstance_Class(exc);
         Py_INCREF(type);
-    }
-    else {
+    } else {
         /* Not something you can raise.  You get an exception
         anyway, just not what you specified :-) */
         Py_DECREF(exc);
         PyErr_SetString(PyExc_TypeError,
-            "exceptions must derive from BaseException");
+                        "exceptions must derive from BaseException");
         goto raise_error;
     }
 
     if (cause) {
-        PyObject *fixed_cause;
+        PyObject* fixed_cause;
         if (PyExceptionClass_Check(cause)) {
             fixed_cause = _PyObject_CallNoArg(cause);
             if (fixed_cause == nullptr)
                 goto raise_error;
             Py_DECREF(cause);
-        }
-        else if (PyExceptionInstance_Check(cause)) {
+        } else if (PyExceptionInstance_Check(cause)) {
             fixed_cause = cause;
-        }
-        else if (cause == Py_None) {
+        } else if (cause == Py_None) {
             Py_DECREF(cause);
             fixed_cause = nullptr;
-        }
-        else {
+        } else {
             PyErr_SetString(PyExc_TypeError,
-                "exception causes must derive from "
-                "BaseException");
+                            "exception causes must derive from "
+                            "BaseException");
             goto raise_error;
         }
         PyException_SetCause(value, fixed_cause);
@@ -1237,15 +1213,15 @@ raise_error:
     return false;
 }
 
-void PyJit_PopExcept(PyObject* exc_traceback, PyObject* exc_value, PyObject* exc_type, PyFrameObject* frame){
+void PyJit_PopExcept(PyObject* exc_traceback, PyObject* exc_value, PyObject* exc_type, PyFrameObject* frame) {
     PyObject *type, *value, *traceback;
-    _PyErr_StackItem *exc_info;
+    _PyErr_StackItem* exc_info;
     auto tstate = PyThreadState_GET();
-    PyTryBlock *b = PyFrame_BlockPop(frame);
+    PyTryBlock* b = PyFrame_BlockPop(frame);
     if (b->b_type != EXCEPT_HANDLER) {
         PyErr_SetString(PyExc_SystemError,
-                         "popped block is not an except handler");
-        return; // TODO : Throw this back up to the frame block
+                        "popped block is not an except handler");
+        return;// TODO : Throw this back up to the frame block
     }
     exc_info = tstate->exc_info;
     type = exc_info->exc_type;
@@ -1263,8 +1239,8 @@ PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {
     PyObject* value;
     PyCodeObject* co = frame->f_code;
     size_t idx = oparg - PyTuple_GET_SIZE(co->co_cellvars);
-    if (idx >= ((size_t)PyTuple_GET_SIZE(co->co_freevars))) {
-        PyErr_SetString(PyExc_RuntimeError,  "Invalid cellref index");
+    if (idx >= ((size_t) PyTuple_GET_SIZE(co->co_freevars))) {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid cellref index");
         return nullptr;
     }
     auto name = PyTuple_GET_ITEM(co->co_freevars, idx);
@@ -1272,8 +1248,7 @@ PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {
     if (PyDict_CheckExact(locals)) {
         value = PyDict_GetItem(locals, name);
         Py_XINCREF(value);
-    }
-    else {
+    } else {
         value = PyObject_GetItem(locals, name);
         if (value == nullptr && PyErr_Occurred()) {
             if (!PyErr_ExceptionMatches(PyExc_KeyError)) {
@@ -1284,10 +1259,10 @@ PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {
     }
     if (!value) {
         auto freevars = frame->f_localsplus + co->co_nlocals;
-        PyObject *cell = freevars[oparg];
+        PyObject* cell = freevars[oparg];
         value = PyCell_GET(cell);
         if (value == nullptr) {
-            format_exc_unbound(co, (int)oparg);
+            format_exc_unbound(co, (int) oparg);
             return nullptr;
         }
         Py_INCREF(value);
@@ -1296,16 +1271,15 @@ PyObject* PyJit_LoadClassDeref(PyFrameObject* frame, int32_t oparg) {
     return value;
 }
 
-PyObject* PyJit_ExtendList(PyObject *iterable, PyObject *list) {
+PyObject* PyJit_ExtendList(PyObject* iterable, PyObject* list) {
     ASSERT_ARG(list);
-    if (!PyList_CheckExact(list)){
+    if (!PyList_CheckExact(list)) {
         PyErr_SetString(PyExc_TypeError, "Expected list to internal function PyJit_ExtendList");
         return nullptr;
     }
-    PyObject *none_val = _PyList_Extend((PyListObject *)list, iterable);
+    PyObject* none_val = _PyList_Extend((PyListObject*) list, iterable);
     if (none_val == nullptr) {
-        if (Py_TYPE(iterable)->tp_iter == nullptr && !PySequence_Check(iterable))
-        {
+        if (Py_TYPE(iterable)->tp_iter == nullptr && !PySequence_Check(iterable)) {
             PyErr_Format(PyExc_TypeError,
                          "argument must be an iterable, not %.200s",
                          iterable->ob_type->tp_name);
@@ -1321,14 +1295,14 @@ error:
     return nullptr;
 }
 
-PyObject* PyJit_ListToTuple(PyObject *list) {
+PyObject* PyJit_ListToTuple(PyObject* list) {
     PyObject* res = PyList_AsTuple(list);
     Py_DECREF(list);
     return res;
 }
 
-int PyJit_StoreMap(PyObject *key, PyObject *value, PyObject* map) {
-    if(!PyDict_CheckExact(map)){
+int PyJit_StoreMap(PyObject* key, PyObject* value, PyObject* map) {
+    if (!PyDict_CheckExact(map)) {
         PyErr_SetString(PyExc_TypeError, "Expected dict to internal function PyJit_StoreMap");
         return -1;
     }
@@ -1339,27 +1313,27 @@ int PyJit_StoreMap(PyObject *key, PyObject *value, PyObject* map) {
     return res;
 }
 
-int PyJit_StoreMapNoDecRef(PyObject *key, PyObject *value, PyObject* map) {
+int PyJit_StoreMapNoDecRef(PyObject* key, PyObject* value, PyObject* map) {
     ASSERT_ARG_INT(map);
     ASSERT_ARG_INT(value);
-    if(!PyDict_CheckExact(map)){
+    if (!PyDict_CheckExact(map)) {
         PyErr_SetString(PyExc_TypeError, "Expected dict to internal function PyJit_StoreMapNoDecRef");
         return -1;
     }
-	auto res = PyDict_SetItem(map, key, value);
-	return res;
+    auto res = PyDict_SetItem(map, key, value);
+    return res;
 }
 
-PyObject * PyJit_BuildDictFromTuples(PyObject *keys_and_values) {
+PyObject* PyJit_BuildDictFromTuples(PyObject* keys_and_values) {
     ASSERT_ARG(keys_and_values);
     auto len = PyTuple_GET_SIZE(keys_and_values) - 1;
     PyObject* keys = PyTuple_GET_ITEM(keys_and_values, len);
-    if (keys == nullptr){
+    if (keys == nullptr) {
         if (!PyErr_Occurred())
             PyErr_Format(PyExc_TypeError, "Cannot build dict, keys are null.");
         return nullptr;
     }
-    if (!PyTuple_Check(keys)){
+    if (!PyTuple_Check(keys)) {
         if (!PyErr_Occurred())
             PyErr_Format(PyExc_TypeError, "Cannot build dict, keys are %s,not tuple type.", keys->ob_type->tp_name);
         return nullptr;
@@ -1370,8 +1344,8 @@ PyObject * PyJit_BuildDictFromTuples(PyObject *keys_and_values) {
     }
     for (auto i = 0; i < len; i++) {
         int err;
-        PyObject *key = PyTuple_GET_ITEM(keys, i);
-        PyObject *value = PyTuple_GET_ITEM(keys_and_values, i);
+        PyObject* key = PyTuple_GET_ITEM(keys, i);
+        PyObject* value = PyTuple_GET_ITEM(keys_and_values, i);
         err = PyDict_SetItem(map, key, value);
         if (err != 0) {
             Py_DECREF(map);
@@ -1379,37 +1353,19 @@ PyObject * PyJit_BuildDictFromTuples(PyObject *keys_and_values) {
         }
     }
 error:
-    Py_DECREF(keys_and_values); // will decref 'keys' tuple as part of its dealloc routine
+    Py_DECREF(keys_and_values);// will decref 'keys' tuple as part of its dealloc routine
     return map;
 }
 
 PyObject* PyJit_LoadAssertionError() {
-    PyObject *value = PyExc_AssertionError;
+    PyObject* value = PyExc_AssertionError;
     Py_INCREF(value);
     return value;
 }
 
 PyObject* PyJit_DictUpdate(PyObject* other, PyObject* dict) {
     ASSERT_ARG(dict);
-    if (PyDict_Update(dict, other) < 0){
-        if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-            PyErr_Format(PyExc_TypeError,
-                          "'%.200s' object is not a mapping",
-                          Py_TYPE(other)->tp_name);
-        }
-        goto error;
-    }
-
-    Py_DECREF(other);
-    return dict;
-error:
-    Py_DECREF(other);
-    return nullptr;
-}
-
-PyObject* PyJit_DictMerge(PyObject* dict, PyObject* other) {
-    ASSERT_ARG(dict);
-    if (_PyDict_MergeEx(dict, other, 2) < 0){
+    if (PyDict_Update(dict, other) < 0) {
         if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
             PyErr_Format(PyExc_TypeError,
                          "'%.200s' object is not a mapping",
@@ -1425,7 +1381,25 @@ error:
     return nullptr;
 }
 
-int PyJit_StoreSubscr(PyObject* value, PyObject *container, PyObject *index) {
+PyObject* PyJit_DictMerge(PyObject* dict, PyObject* other) {
+    ASSERT_ARG(dict);
+    if (_PyDict_MergeEx(dict, other, 2) < 0) {
+        if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            PyErr_Format(PyExc_TypeError,
+                         "'%.200s' object is not a mapping",
+                         Py_TYPE(other)->tp_name);
+        }
+        goto error;
+    }
+
+    Py_DECREF(other);
+    return dict;
+error:
+    Py_DECREF(other);
+    return nullptr;
+}
+
+int PyJit_StoreSubscr(PyObject* value, PyObject* container, PyObject* index) {
     auto res = PyObject_SetItem(container, index, value);
     Py_DECREF(index);
     Py_DECREF(value);
@@ -1433,8 +1407,8 @@ int PyJit_StoreSubscr(PyObject* value, PyObject *container, PyObject *index) {
     return res;
 }
 
-int PyJit_StoreSubscrIndex(PyObject* value, PyObject *container, PyObject *objIndex, Py_ssize_t index) {
-    PyMappingMethods *m;
+int PyJit_StoreSubscrIndex(PyObject* value, PyObject* container, PyObject* objIndex, Py_ssize_t index) {
+    PyMappingMethods* m;
     int res;
 
     if (container == nullptr || objIndex == nullptr || value == nullptr) {
@@ -1458,16 +1432,15 @@ int PyJit_StoreSubscrIndex(PyObject* value, PyObject *container, PyObject *objIn
     return res;
 }
 
-int PyJit_StoreSubscrIndexHash(PyObject* value, PyObject *container, PyObject *objIndex, Py_ssize_t index, Py_hash_t hash)
-{
+int PyJit_StoreSubscrIndexHash(PyObject* value, PyObject* container, PyObject* objIndex, Py_ssize_t index, Py_hash_t hash) {
     if (PyDict_CheckExact(container))
         return PyJit_StoreSubscrDictHash(value, container, objIndex, hash);
     else
         return PyJit_StoreSubscrIndex(value, container, objIndex, index);
 }
 
-int PyJit_StoreSubscrDict(PyObject* value, PyObject *container, PyObject *index) {
-    if(!PyDict_CheckExact(container)) // just incase we got the type wrong.
+int PyJit_StoreSubscrDict(PyObject* value, PyObject* container, PyObject* index) {
+    if (!PyDict_CheckExact(container))// just incase we got the type wrong.
         return PyJit_StoreSubscr(value, container, index);
     auto res = PyDict_SetItem(container, index, value);
     Py_DECREF(index);
@@ -1476,8 +1449,8 @@ int PyJit_StoreSubscrDict(PyObject* value, PyObject *container, PyObject *index)
     return res;
 }
 
-int PyJit_StoreSubscrDictHash(PyObject* value, PyObject *container, PyObject *index, Py_hash_t hash) {
-    if(!PyDict_CheckExact(container)) // just incase we got the type wrong.
+int PyJit_StoreSubscrDictHash(PyObject* value, PyObject* container, PyObject* index, Py_hash_t hash) {
+    if (!PyDict_CheckExact(container))// just incase we got the type wrong.
         return PyJit_StoreSubscr(value, container, index);
     auto res = _PyDict_SetItem_KnownHash(container, index, value, hash);
     Py_DECREF(index);
@@ -1486,24 +1459,23 @@ int PyJit_StoreSubscrDictHash(PyObject* value, PyObject *container, PyObject *in
     return res;
 }
 
-int PyJit_StoreSubscrList(PyObject* value, PyObject *container, PyObject *index) {
-    int res ;
-    if(!PyList_CheckExact(container)) // just incase we got the type wrong.
+int PyJit_StoreSubscrList(PyObject* value, PyObject* container, PyObject* index) {
+    int res;
+    if (!PyList_CheckExact(container))// just incase we got the type wrong.
         return PyJit_StoreSubscr(value, container, index);
     if (PyIndex_Check(index)) {
         Py_ssize_t key_value;
         key_value = PyNumber_AsSsize_t(index, PyExc_IndexError);
         if (key_value == -1 && PyErr_Occurred()) {
             res = -1;
-        } else if (key_value < 0){
+        } else if (key_value < 0) {
             // Supports negative indexes without converting back to PyLong..
             res = PySequence_SetItem(container, key_value, value);
         } else {
             res = PyList_SetItem(container, key_value, value);
             Py_INCREF(value);
         }
-    }
-    else {
+    } else {
         return PyJit_StoreSubscr(value, container, index);
     }
     Py_DECREF(index);
@@ -1512,9 +1484,9 @@ int PyJit_StoreSubscrList(PyObject* value, PyObject *container, PyObject *index)
     return res;
 }
 
-int PyJit_StoreSubscrListIndex(PyObject* value, PyObject *container, PyObject * objIndex, Py_ssize_t index) {
-    int res ;
-    if(!PyList_CheckExact(container)) // just incase we got the type wrong.
+int PyJit_StoreSubscrListIndex(PyObject* value, PyObject* container, PyObject* objIndex, Py_ssize_t index) {
+    int res;
+    if (!PyList_CheckExact(container))// just incase we got the type wrong.
         return PyJit_StoreSubscr(value, container, objIndex);
     res = PyList_SetItem(container, index, value);
     Py_INCREF(value);
@@ -1524,17 +1496,17 @@ int PyJit_StoreSubscrListIndex(PyObject* value, PyObject *container, PyObject * 
     return res;
 }
 
-int PyJit_DeleteSubscr(PyObject *container, PyObject *index) {
+int PyJit_DeleteSubscr(PyObject* container, PyObject* index) {
     auto res = PyObject_DelItem(container, index);
     Py_DECREF(index);
     Py_DECREF(container);
     return res;
 }
 
-PyObject* PyJit_CallN(PyObject *target, PyObject* args, PyTraceInfo* trace_info) {
+PyObject* PyJit_CallN(PyObject* target, PyObject* args, PyTraceInfo* trace_info) {
     PyObject* res;
     auto tstate = PyThreadState_GET();
-    if(!PyTuple_Check(args)) {
+    if (!PyTuple_Check(args)) {
         PyErr_Format(PyExc_TypeError,
                      "invalid arguments for function call");
         Py_DECREF(args);
@@ -1558,7 +1530,7 @@ PyObject* PyJit_CallN(PyObject *target, PyObject* args, PyTraceInfo* trace_info)
             // Call the function with profiling hooks
             int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
 
-            if (trace_res != 0){
+            if (trace_res != 0) {
                 PyGILState_Release(gstate);
                 return nullptr;
             }
@@ -1603,32 +1575,30 @@ int PyJit_DeleteGlobal(PyFrameObject* f, PyObject* name) {
     return PyDict_DelItem(f->f_globals, name);
 }
 
-PyObject *
-PyJit_PyDict_LoadGlobal(PyDictObject *globals, PyDictObject *builtins, PyObject *key) {
-	auto res = PyDict_GetItem((PyObject*)globals, key);
-	if (res != nullptr) {
-		return res;
-	}
+PyObject*
+PyJit_PyDict_LoadGlobal(PyDictObject* globals, PyDictObject* builtins, PyObject* key) {
+    auto res = PyDict_GetItem((PyObject*) globals, key);
+    if (res != nullptr) {
+        return res;
+    }
 
-	return PyDict_GetItem((PyObject*)builtins, key);
+    return PyDict_GetItem((PyObject*) builtins, key);
 }
 
 
 PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
     PyObject* v;
-    if (PyDict_CheckExact(f->f_globals)
-        && PyDict_CheckExact(f->f_builtins)) {
-        v = PyJit_PyDict_LoadGlobal((PyDictObject *)f->f_globals,
-            (PyDictObject *)f->f_builtins,
-            name);
+    if (PyDict_CheckExact(f->f_globals) && PyDict_CheckExact(f->f_builtins)) {
+        v = PyJit_PyDict_LoadGlobal((PyDictObject*) f->f_globals,
+                                    (PyDictObject*) f->f_builtins,
+                                    name);
         if (v == nullptr) {
             if (!PyErr_Occurred())
                 format_exc_check_arg(PyExc_NameError, NAME_ERROR_MSG, name);
             return nullptr;
         }
         Py_INCREF(v);
-    }
-    else {
+    } else {
         /* Slow-path if globals or builtins is not a dict */
         v = PyObject_GetItem(f->f_globals, name);
         if (v == nullptr) {
@@ -1636,11 +1606,10 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
             if (v == nullptr) {
                 if (PyErr_ExceptionMatches(PyExc_KeyError))
                     format_exc_check_arg(
-                        PyExc_NameError,
-                        NAME_ERROR_MSG, name);
+                            PyExc_NameError,
+                            NAME_ERROR_MSG, name);
                 return nullptr;
-            }
-            else {
+            } else {
                 PyErr_Clear();
             }
         }
@@ -1650,20 +1619,19 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
 
 PyObject* PyJit_LoadGlobalHash(PyObject* ob, PyObject* name, Py_hash_t name_hash) {
     PyObject* v;
-    if (!PyFrame_Check(ob)){
+    if (!PyFrame_Check(ob)) {
         printf("Hit critical error on load global hash. This is not a frame.");
         abort();
         return nullptr;
     }
-    PyFrameObject* f = (PyFrameObject*)ob;
-    if (PyDict_CheckExact(f->f_globals)
-        && PyDict_CheckExact(f->f_builtins)) {
-        v = _PyDict_GetItem_KnownHash((PyObject*)f->f_globals, name, name_hash);
+    PyFrameObject* f = (PyFrameObject*) ob;
+    if (PyDict_CheckExact(f->f_globals) && PyDict_CheckExact(f->f_builtins)) {
+        v = _PyDict_GetItem_KnownHash((PyObject*) f->f_globals, name, name_hash);
         if (v == nullptr) {
-            v = _PyDict_GetItem_KnownHash((PyObject*)f->f_builtins, name, name_hash);
+            v = _PyDict_GetItem_KnownHash((PyObject*) f->f_builtins, name, name_hash);
         }
-        if (v != nullptr){
-            Py_INCREF(v);   
+        if (v != nullptr) {
+            Py_INCREF(v);
             return v;
         }
     }
@@ -1677,8 +1645,7 @@ PyObject* PyJit_LoadGlobalHash(PyObject* ob, PyObject* name, Py_hash_t name_hash
                         PyExc_NameError,
                         NAME_ERROR_MSG, name);
             return nullptr;
-        }
-        else {
+        } else {
             PyErr_Clear();
         }
     }
@@ -1695,11 +1662,11 @@ PyObject* PyJit_GetIter(PyObject* iterable) {
 PyObject* PyJit_IterNext(PyObject* iter) {
     if (iter == nullptr) {
         if (PyErr_Occurred())
-            return nullptr; // this shouldn't happen.
+            return nullptr;// this shouldn't happen.
         PyErr_Format(PyExc_TypeError,
                      "Unable to iterate, iterator is null.");
         return nullptr;
-    } else if (!PyIter_Check(iter)){
+    } else if (!PyIter_Check(iter)) {
         PyErr_Format(PyExc_TypeError,
                      "Unable to iterate, %s is not iterable.",
                      PyObject_Repr(iter));
@@ -1720,9 +1687,9 @@ PyObject* PyJit_IterNext(PyObject* iter) {
                 return nullptr;
             }
             PyErr_Clear();
-            return (PyObject*)(0xff);
+            return (PyObject*) (0xff);
         } else {
-            return (PyObject*)(0xff);
+            return (PyObject*) (0xff);
         }
     }
     return res;
@@ -1730,12 +1697,11 @@ PyObject* PyJit_IterNext(PyObject* iter) {
 
 PyObject* PyJit_CellGet(PyFrameObject* frame, int32_t index) {
     PyObject** cells = frame->f_localsplus + frame->f_code->co_nlocals;
-    PyObject *value = PyCell_GET(cells[index]);
+    PyObject* value = PyCell_GET(cells[index]);
 
     if (value == nullptr) {
-        format_exc_unbound(frame->f_code, (int)index);
-    }
-    else {
+        format_exc_unbound(frame->f_code, (int) index);
+    } else {
         Py_INCREF(value);
     }
     return value;
@@ -1744,7 +1710,7 @@ PyObject* PyJit_CellGet(PyFrameObject* frame, int32_t index) {
 void PyJit_CellSet(PyObject* value, PyFrameObject* frame, int32_t index) {
     PyObject** cells = frame->f_localsplus + frame->f_code->co_nlocals;
     auto cell = cells[index];
-    if (cell == nullptr){
+    if (cell == nullptr) {
         cells[index] = PyCell_New(value);
     } else {
         auto oldobj = PyCell_Get(cell);
@@ -1753,21 +1719,20 @@ void PyJit_CellSet(PyObject* value, PyFrameObject* frame, int32_t index) {
     }
 }
 
-PyObject* PyJit_BuildClass(PyFrameObject *f) {
+PyObject* PyJit_BuildClass(PyFrameObject* f) {
     _Py_IDENTIFIER(__build_class__);
 
-    PyObject *bc;
+    PyObject* bc;
     if (PyDict_CheckExact(f->f_builtins)) {
         bc = _PyDict_GetItemIdWithError(f->f_builtins, &PyId___build_class__);
         if (bc == nullptr) {
             PyErr_SetString(PyExc_NameError,
-                "__build_class__ not found");
+                            "__build_class__ not found");
             return nullptr;
         }
         Py_INCREF(bc);
-    }
-    else {
-        PyObject *build_class_str = _PyUnicode_FromId(&PyId___build_class__);
+    } else {
+        PyObject* build_class_str = _PyUnicode_FromId(&PyId___build_class__);
         if (build_class_str == nullptr) {
             return nullptr;
         }
@@ -1783,14 +1748,14 @@ PyObject* PyJit_BuildClass(PyFrameObject *f) {
 }
 
 PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name) {
-    PyObject *res = PyObject_GetAttr(owner, name);
+    PyObject* res = PyObject_GetAttr(owner, name);
     Py_DECREF(owner);
     return res;
 }
 
-PyObject* PyJit_LoadAttrHash(PyObject* owner, PyObject* key, Py_hash_t name_hash){
+PyObject* PyJit_LoadAttrHash(PyObject* owner, PyObject* key, Py_hash_t name_hash) {
     auto obj_dict = _PyObject_GetDictPtr(owner);
-    if (obj_dict == nullptr || *obj_dict == nullptr){
+    if (obj_dict == nullptr || *obj_dict == nullptr) {
         return _PyObject_GenericGetAttrWithDict(owner, key, nullptr, 0);
     }
     PyObject* value = _PyDict_GetItem_KnownHash(*obj_dict, key, name_hash);
@@ -1817,10 +1782,10 @@ int PyJit_DeleteAttr(PyObject* owner, PyObject* name) {
 int PyJit_SetupAnnotations(PyFrameObject* frame) {
     _Py_IDENTIFIER(__annotations__);
     int err;
-    PyObject *ann_dict;
+    PyObject* ann_dict;
     if (frame->f_locals == nullptr) {
         PyErr_Format(PyExc_SystemError,
-                      "no locals found when setting up annotations");
+                     "no locals found when setting up annotations");
         return -1;
     }
     /* check if __annotations__ in locals()... */
@@ -1843,10 +1808,9 @@ int PyJit_SetupAnnotations(PyFrameObject* frame) {
                 return -1;
             }
         }
-    }
-    else {
+    } else {
         /* do the same if locals() is not a dict */
-        PyObject *ann_str = _PyUnicode_FromId(&PyId___annotations__);
+        PyObject* ann_str = _PyUnicode_FromId(&PyId___annotations__);
         if (ann_str == nullptr) {
             return -1;
         }
@@ -1865,8 +1829,7 @@ int PyJit_SetupAnnotations(PyFrameObject* frame) {
             if (err != 0) {
                 return -1;
             }
-        }
-        else {
+        } else {
             Py_DECREF(ann_dict);
         }
     }
@@ -1874,8 +1837,8 @@ int PyJit_SetupAnnotations(PyFrameObject* frame) {
 }
 
 PyObject* PyJit_LoadName(PyFrameObject* f, PyObject* name) {
-    PyObject *locals = f->f_locals;
-    PyObject *v;
+    PyObject* locals = f->f_locals;
+    PyObject* v;
     if (locals == nullptr) {
         PyErr_Format(PyExc_SystemError,
                      "no locals when loading %R", name);
@@ -1884,8 +1847,7 @@ PyObject* PyJit_LoadName(PyFrameObject* f, PyObject* name) {
     if (PyDict_CheckExact(locals)) {
         v = PyDict_GetItem(locals, name);
         Py_XINCREF(v);
-    }
-    else {
+    } else {
         v = PyObject_GetItem(locals, name);
         if (v == nullptr && PyErr_Occurred()) {
             if (!PyErr_ExceptionMatches(PyExc_KeyError))
@@ -1906,8 +1868,7 @@ PyObject* PyJit_LoadName(PyFrameObject* f, PyObject* name) {
                     return nullptr;
                 }
                 Py_INCREF(v);
-            }
-            else {
+            } else {
                 v = PyObject_GetItem(f->f_builtins, name);
                 if (v == nullptr) {
                     if (PyErr_ExceptionMatches(PyExc_KeyError))
@@ -1923,18 +1884,17 @@ PyObject* PyJit_LoadName(PyFrameObject* f, PyObject* name) {
 }
 
 PyObject* PyJit_LoadNameHash(PyFrameObject* f, PyObject* name, Py_hash_t name_hash) {
-    PyObject *locals = f->f_locals;
-    PyObject *v;
+    PyObject* locals = f->f_locals;
+    PyObject* v;
     if (locals == nullptr) {
         PyErr_Format(PyExc_SystemError,
-            "no locals when loading %R", name);
+                     "no locals when loading %R", name);
         return nullptr;
     }
     if (PyDict_CheckExact(locals)) {
         v = _PyDict_GetItem_KnownHash(locals, name, name_hash);
         Py_XINCREF(v);
-    }
-    else {
+    } else {
         v = PyObject_GetItem(locals, name);
         if (v == nullptr && PyErr_Occurred()) {
             if (!PyErr_ExceptionMatches(PyExc_KeyError))
@@ -1950,19 +1910,18 @@ PyObject* PyJit_LoadNameHash(PyFrameObject* f, PyObject* name, Py_hash_t name_ha
                 v = _PyDict_GetItem_KnownHash(f->f_builtins, name, name_hash);
                 if (v == nullptr) {
                     format_exc_check_arg(
-                        PyExc_NameError,
-                        NAME_ERROR_MSG, name);
+                            PyExc_NameError,
+                            NAME_ERROR_MSG, name);
                     return nullptr;
                 }
                 Py_INCREF(v);
-            }
-            else {
+            } else {
                 v = PyObject_GetItem(f->f_builtins, name);
                 if (v == nullptr) {
                     if (PyErr_ExceptionMatches(PyExc_KeyError))
                         format_exc_check_arg(
-                            PyExc_NameError,
-                            NAME_ERROR_MSG, name);
+                                PyExc_NameError,
+                                NAME_ERROR_MSG, name);
                     return nullptr;
                 }
             }
@@ -1972,11 +1931,11 @@ PyObject* PyJit_LoadNameHash(PyFrameObject* f, PyObject* name, Py_hash_t name_ha
 }
 
 int PyJit_StoreName(PyObject* v, PyFrameObject* f, PyObject* name) {
-    PyObject *ns = f->f_locals;
+    PyObject* ns = f->f_locals;
     int err;
     if (ns == nullptr) {
         PyErr_Format(PyExc_SystemError,
-            "no locals found when storing %R", name);
+                     "no locals found when storing %R", name);
         Py_DECREF(v);
         return 1;
     }
@@ -1989,18 +1948,18 @@ int PyJit_StoreName(PyObject* v, PyFrameObject* f, PyObject* name) {
 }
 
 int PyJit_DeleteName(PyFrameObject* f, PyObject* name) {
-    PyObject *ns = f->f_locals;
+    PyObject* ns = f->f_locals;
     int err;
     if (ns == nullptr) {
         PyErr_Format(PyExc_SystemError,
-            "no locals when deleting %R", name);
+                     "no locals when deleting %R", name);
         return 1;
     }
     err = PyObject_DelItem(ns, name);
     if (err != 0) {
         format_exc_check_arg(PyExc_NameError,
-            NAME_ERROR_MSG,
-            name);
+                             NAME_ERROR_MSG,
+                             name);
     }
     return err;
 }
@@ -2010,8 +1969,8 @@ inline PyObject* Call(PyObject* target, PyTraceInfo* trace_info) {
     return Call0(target, trace_info);
 }
 
-template<typename T, typename ... Args>
-inline PyObject* VectorCall(PyObject* target, PyTraceInfo* trace_info, Args...args){
+template<typename T, typename... Args>
+inline PyObject* VectorCall(PyObject* target, PyTraceInfo* trace_info, Args... args) {
     auto tstate = PyThreadState_GET();
     PyObject* res = nullptr;
     PyObject* _args[sizeof...(args)] = {args...};
@@ -2023,7 +1982,7 @@ inline PyObject* VectorCall(PyObject* target, PyTraceInfo* trace_info, Args...ar
         // Call the function with profiling hooks
         int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
 
-        if (trace_res != 0){
+        if (trace_res != 0) {
             PyGILState_Release(gstate);
             return nullptr;
         }
@@ -2044,7 +2003,7 @@ inline PyObject* VectorCall(PyObject* target, PyTraceInfo* trace_info, Args...ar
     return res;
 }
 
-inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info){
+inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info) {
     auto tstate = PyThreadState_GET();
     PyObject* res = nullptr;
 #ifdef GIL
@@ -2055,7 +2014,7 @@ inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info){
         // Call the function with profiling hooks
         int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
 
-        if (trace_res != 0){
+        if (trace_res != 0) {
             PyGILState_Release(gstate);
             return nullptr;
         }
@@ -2075,8 +2034,8 @@ inline PyObject* VectorCall0(PyObject* target, PyTraceInfo* trace_info){
     return res;
 }
 
-template<typename T, typename ... Args>
-inline PyObject* MethCall(PyObject *target, PyTraceInfo * trace_info, Args...args) {
+template<typename T, typename... Args>
+inline PyObject* MethCall(PyObject* target, PyTraceInfo* trace_info, Args... args) {
     if (target == nullptr) {
         if (!PyErr_Occurred())
             PyErr_Format(PyExc_TypeError,
@@ -2086,14 +2045,14 @@ inline PyObject* MethCall(PyObject *target, PyTraceInfo * trace_info, Args...arg
     PyObject* res = VectorCall<PyObject*>(target, trace_info, args...);
 
     Py_DECREF(target);
-    for (auto &i: {args...})
+    for (auto& i : {args...})
         Py_DECREF(i);
 
     return res;
 }
 
-template<typename T, typename ... Args>
-inline PyObject* Call(PyObject *target, PyTraceInfo* trace_info, Args...args) {
+template<typename T, typename... Args>
+inline PyObject* Call(PyObject* target, PyTraceInfo* trace_info, Args... args) {
     auto tstate = PyThreadState_GET();
     PyObject* res = nullptr;
     if (target == nullptr) {
@@ -2111,7 +2070,7 @@ inline PyObject* Call(PyObject *target, PyTraceInfo* trace_info, Args...args) {
             goto error;
         }
         PyObject* _args[sizeof...(args)] = {args...};
-        for (int i = 0; i < sizeof...(args) ; i ++) {
+        for (int i = 0; i < sizeof...(args); i++) {
             ASSERT_ARG(_args[i]);
             PyTuple_SetItem(t_args, i, _args[i]);
             Py_INCREF(_args[i]);
@@ -2126,19 +2085,19 @@ inline PyObject* Call(PyObject *target, PyTraceInfo* trace_info, Args...args) {
 #endif
         Py_DECREF(t_args);
     }
-    error:
+error:
     Py_DECREF(target);
-    for (auto &i: {args...})
+    for (auto& i : {args...})
         Py_DECREF(i);
 
     return res;
 }
 
-PyObject* Call0(PyObject *target, PyTraceInfo* trace_info) {
+PyObject* Call0(PyObject* target, PyTraceInfo* trace_info) {
     PyObject* res = nullptr;
     if (PyErr_Occurred())
         return nullptr;
-    if (target == nullptr){
+    if (target == nullptr) {
         if (!PyErr_Occurred())
             PyErr_Format(PyExc_TypeError,
                          "missing target in call");
@@ -2150,8 +2109,7 @@ PyObject* Call0(PyObject *target, PyTraceInfo* trace_info) {
 #endif
     if (PyCFunction_Check(target)) {
         res = VectorCall0(target, trace_info);
-    }
-    else {
+    } else {
         res = PyObject_CallNoArgs(target);
     }
 #ifdef GIL
@@ -2161,43 +2119,43 @@ PyObject* Call0(PyObject *target, PyTraceInfo* trace_info) {
     return res;
 }
 
-PyObject* Call1(PyObject *target, PyObject* arg0, PyTraceInfo* trace_info) {
-    return Call<PyObject *>(target, trace_info, arg0);
+PyObject* Call1(PyObject* target, PyObject* arg0, PyTraceInfo* trace_info) {
+    return Call<PyObject*>(target, trace_info, arg0);
 }
 
-PyObject* Call2(PyObject *target, PyObject* arg0, PyObject* arg1, PyTraceInfo* trace_info) {
+PyObject* Call2(PyObject* target, PyObject* arg0, PyObject* arg1, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1);
 }
 
-PyObject* Call3(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyTraceInfo* trace_info) {
+PyObject* Call3(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2);
 }
 
-PyObject* Call4(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyTraceInfo* trace_info) {
+PyObject* Call4(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3);
 }
 
-PyObject* Call5(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyTraceInfo* trace_info){
+PyObject* Call5(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4);
 }
 
-PyObject* Call6(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyTraceInfo* trace_info){
+PyObject* Call6(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5);
 }
 
-PyObject* Call7(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyTraceInfo* trace_info){
+PyObject* Call7(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
-PyObject* Call8(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyTraceInfo* trace_info){
+PyObject* Call8(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
-PyObject* Call9(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyTraceInfo* trace_info){
+PyObject* Call9(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 }
 
-PyObject* Call10(PyObject *target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyTraceInfo* trace_info){
+PyObject* Call10(PyObject* target, PyObject* arg0, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyTraceInfo* trace_info) {
     return Call<PyObject*>(target, trace_info, arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 }
 
@@ -2252,7 +2210,7 @@ PyObject* MethCall4(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
     return res;
 }
 
-PyObject* MethCall5(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyTraceInfo* trace_info){
+PyObject* MethCall5(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
         res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5);
@@ -2262,7 +2220,7 @@ PyObject* MethCall5(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
     return res;
 }
 
-PyObject* MethCall6(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyTraceInfo* trace_info){
+PyObject* MethCall6(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
         res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6);
@@ -2272,7 +2230,7 @@ PyObject* MethCall6(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
     return res;
 }
 
-PyObject* MethCall7(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyTraceInfo* trace_info){
+PyObject* MethCall7(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
         res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
@@ -2282,7 +2240,7 @@ PyObject* MethCall7(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
     return res;
 }
 
-PyObject* MethCall8(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyTraceInfo* trace_info){
+PyObject* MethCall8(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
         res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
@@ -2292,7 +2250,7 @@ PyObject* MethCall8(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
     return res;
 }
 
-PyObject* MethCall9(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyTraceInfo* trace_info){
+PyObject* MethCall9(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
         res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
@@ -2302,7 +2260,7 @@ PyObject* MethCall9(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
     return res;
 }
 
-PyObject* MethCall10(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyObject* arg10, PyTraceInfo* trace_info){
+PyObject* MethCall10(PyObject* self, PyJitMethodLocation* method_info, PyObject* arg1, PyObject* arg2, PyObject* arg3, PyObject* arg4, PyObject* arg5, PyObject* arg6, PyObject* arg7, PyObject* arg8, PyObject* arg9, PyObject* arg10, PyTraceInfo* trace_info) {
     PyObject* res;
     if (method_info->object != nullptr)
         res = MethCall<PyObject*>(method_info->method, trace_info, method_info->object, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
@@ -2315,25 +2273,23 @@ PyObject* MethCall10(PyObject* self, PyJitMethodLocation* method_info, PyObject*
 PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* args, PyTraceInfo* trace_info) {
     PyObject* res;
     auto tstate = PyThreadState_GET();
-    if(!PyTuple_Check(args)) {
+    if (!PyTuple_Check(args)) {
         PyErr_Format(PyExc_TypeError,
                      "invalid arguments for method call");
         Py_DECREF(args);
         Py_DECREF(method_info);
         return nullptr;
     }
-    if (method_info->object != nullptr)
-    {
+    if (method_info->object != nullptr) {
         auto target = method_info->method;
-        if (target == nullptr)
-        {
+        if (target == nullptr) {
             PyErr_Format(PyExc_ValueError,
                          "cannot resolve method call");
             Py_DECREF(args);
             Py_DECREF(method_info);
             return nullptr;
         }
-        auto obj =  method_info->object;
+        auto obj = method_info->object;
         // We allocate an additional two slots. One is for the `self` argument since we're
         // executing a method. The other is to leave space at the beginning of the vector so we
         // can use the `PY_VECTORCALL_ARGUMENTS_OFFSET` flag and avoid an allocation in the callee.
@@ -2355,7 +2311,7 @@ PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
             // Call the function with profiling hooks
             int trace_res = trace(tstate, tstate->frame, PyTrace_C_CALL, target, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
 
-            if (trace_res != 0){
+            if (trace_res != 0) {
                 PyGILState_Release(gstate);
                 return nullptr;
             }
@@ -2380,8 +2336,7 @@ PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
         Py_DECREF(obj);
         Py_DECREF(method_info);
         return res;
-    }
-    else {
+    } else {
         auto target = method_info->method;
 #ifdef GIL
         PyGILState_STATE gstate;
@@ -2398,52 +2353,51 @@ PyObject* MethCallN(PyObject* self, PyJitMethodLocation* method_info, PyObject* 
     }
 }
 
-PyObject* PyJit_KwCallN(PyObject *target, PyObject* args, PyObject* names) {
-	PyObject* result = nullptr, *kwArgs = nullptr;
+PyObject* PyJit_KwCallN(PyObject* target, PyObject* args, PyObject* names) {
+    PyObject *result = nullptr, *kwArgs = nullptr;
 
-	auto argCount = PyTuple_Size(args) - PyTuple_Size(names);
-	PyObject* posArgs;
-	posArgs = PyTuple_New(argCount);
-	if (posArgs == nullptr) {
-		goto error;
-	}
-	for (auto i = 0; i < argCount; i++) {
-		auto item = PyTuple_GetItem(args, i);
-		Py_INCREF(item);
-		if (PyTuple_SetItem(posArgs, i, item) == -1){
-		    goto error;
-		}
-	}
-	kwArgs = PyDict_New();
-	if (kwArgs == nullptr) {
-		goto error;
-	}
+    auto argCount = PyTuple_Size(args) - PyTuple_Size(names);
+    PyObject* posArgs;
+    posArgs = PyTuple_New(argCount);
+    if (posArgs == nullptr) {
+        goto error;
+    }
+    for (auto i = 0; i < argCount; i++) {
+        auto item = PyTuple_GetItem(args, i);
+        Py_INCREF(item);
+        if (PyTuple_SetItem(posArgs, i, item) == -1) {
+            goto error;
+        }
+    }
+    kwArgs = PyDict_New();
+    if (kwArgs == nullptr) {
+        goto error;
+    }
 
-	for (auto i = 0; i < PyTuple_GET_SIZE(names); i++) {
-		PyDict_SetItem(
-			kwArgs,
-			PyTuple_GET_ITEM(names, i),
-			PyTuple_GET_ITEM(args, i + argCount)
-		);
-	}
+    for (auto i = 0; i < PyTuple_GET_SIZE(names); i++) {
+        PyDict_SetItem(
+                kwArgs,
+                PyTuple_GET_ITEM(names, i),
+                PyTuple_GET_ITEM(args, i + argCount));
+    }
 #ifdef GIL
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 #endif
-	result = PyObject_Call(target, posArgs, kwArgs);
+    result = PyObject_Call(target, posArgs, kwArgs);
 #ifdef GIL
-	PyGILState_Release(gstate);
+    PyGILState_Release(gstate);
 #endif
 error:
-	Py_XDECREF(kwArgs);
-	Py_XDECREF(posArgs);
-	Py_DECREF(target);
-	Py_DECREF(args);
-	Py_DECREF(names);
-	return result;
+    Py_XDECREF(kwArgs);
+    Py_XDECREF(posArgs);
+    Py_DECREF(target);
+    Py_DECREF(args);
+    Py_DECREF(names);
+    return result;
 }
 
-PyObject* PyJit_PyTuple_New(int32_t len){
+PyObject* PyJit_PyTuple_New(int32_t len) {
     return PyTuple_New(len);
 }
 
@@ -2476,26 +2430,26 @@ int PyJit_IsNot_Bool(PyObject* lhs, PyObject* rhs) {
 }
 
 void PyJit_DecRef(PyObject* value) {
-	Py_XDECREF(value);
+    Py_XDECREF(value);
 }
 
 PyObject* PyJit_UnicodeJoinArray(PyObject* items, ssize_t count) {
-	auto empty = PyUnicode_New(0, 0);
-	auto items_vec = std::vector<PyObject*>(count) ;
-	for (size_t i = 0 ; i < count ; i++){
-	    items_vec[i] = PyTuple_GET_ITEM(items, i);
-	}
-	auto res = _PyUnicode_JoinArray(empty, items_vec.data(), count);
-	Py_DECREF(items);
-	Py_DECREF(empty);
-	return res;
+    auto empty = PyUnicode_New(0, 0);
+    auto items_vec = std::vector<PyObject*>(count);
+    for (size_t i = 0; i < count; i++) {
+        items_vec[i] = PyTuple_GET_ITEM(items, i);
+    }
+    auto res = _PyUnicode_JoinArray(empty, items_vec.data(), count);
+    Py_DECREF(items);
+    Py_DECREF(empty);
+    return res;
 }
 
-PyObject* PyJit_FormatObject(PyObject* item, PyObject*fmtSpec) {
-	auto res = PyObject_Format(item, fmtSpec);
-	Py_DECREF(item);
-	Py_DECREF(fmtSpec);
-	return res;
+PyObject* PyJit_FormatObject(PyObject* item, PyObject* fmtSpec) {
+    auto res = PyObject_Format(item, fmtSpec);
+    Py_DECREF(item);
+    Py_DECREF(fmtSpec);
+    return res;
 }
 
 PyJitMethodLocation* PyJit_LoadMethod(PyObject* object, PyObject* name, PyJitMethodLocation* method_info) {
@@ -2508,7 +2462,7 @@ PyJitMethodLocation* PyJit_LoadMethod(PyObject* object, PyObject* name, PyJitMet
         return nullptr;
     }
 
-    if (method_info->method != nullptr && method_info->object != nullptr && method_info->object == object){
+    if (method_info->method != nullptr && method_info->object != nullptr && method_info->object == object) {
         if (method == method_info->method) {
             goto end;
         }
@@ -2521,22 +2475,22 @@ PyJitMethodLocation* PyJit_LoadMethod(PyObject* object, PyObject* name, PyJitMet
     } else {
         method_info->object = object;
     }
-    end:
+end:
     Py_INCREF(method_info);
     return method_info;
 }
 
 PyObject* PyJit_FormatValue(PyObject* item) {
-	if (PyUnicode_CheckExact(item)) {
-		return item;
-	}
+    if (PyUnicode_CheckExact(item)) {
+        return item;
+    }
 
-	auto res = PyObject_Format(item, nullptr);
-	Py_DECREF(item);
-	return res;
+    auto res = PyObject_Format(item, nullptr);
+    Py_DECREF(item);
+    return res;
 }
 
-inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info) {
+inline int trace(PyThreadState* tstate, PyFrameObject* f, int ty, PyObject* args, Py_tracefunc func, PyObject* tracearg, PyTraceInfo* trace_info) {
     if (func == nullptr)
         return -1;
     if (tstate->tracing)
@@ -2545,10 +2499,9 @@ inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args
     tstate->cframe->use_tracing = 0;
     if (f->f_lasti < 0) {
         f->f_lineno = f->f_code->co_firstlineno;
-    }
-    else {
+    } else {
         initialize_trace_info(trace_info, f);
-        f->f_lineno = _PyCode_CheckLineNumber(f->f_lasti*2, &trace_info->bounds);
+        f->f_lineno = _PyCode_CheckLineNumber(f->f_lasti * 2, &trace_info->bounds);
     }
     int result = func(tracearg, f, ty, args);
     tstate->cframe->use_tracing = ((tstate->c_tracefunc != nullptr) || (tstate->c_profilefunc != nullptr));
@@ -2556,10 +2509,10 @@ inline int trace(PyThreadState *tstate, PyFrameObject *f, int ty, PyObject *args
     return result;
 }
 
-inline void initialize_trace_info(PyTraceInfo* trace_info, PyFrameObject* frame){
+inline void initialize_trace_info(PyTraceInfo* trace_info, PyFrameObject* frame) {
     if (trace_info->code != frame->f_code) {
         trace_info->code = frame->f_code;
-        const char *linetable = PyBytes_AS_STRING(trace_info->code->co_linetable);
+        const char* linetable = PyBytes_AS_STRING(trace_info->code->co_linetable);
         Py_ssize_t length = PyBytes_GET_SIZE(trace_info->code->co_linetable);
         trace_info->bounds.opaque.lo_next = linetable;
         trace_info->bounds.opaque.limit = trace_info->bounds.opaque.lo_next + length;
@@ -2570,7 +2523,7 @@ inline void initialize_trace_info(PyTraceInfo* trace_info, PyFrameObject* frame)
     }
 }
 
-void PyJit_TraceLine(PyFrameObject* f, int instr_prev, PyTraceInfo* trace_info){
+void PyJit_TraceLine(PyFrameObject* f, int instr_prev, PyTraceInfo* trace_info) {
     int result = 0;
     auto tstate = PyThreadState_GET();
     /* If the last instruction falls at the start of a line or if it
@@ -2579,7 +2532,7 @@ void PyJit_TraceLine(PyFrameObject* f, int instr_prev, PyTraceInfo* trace_info){
     */
     initialize_trace_info(trace_info, f);
     int lastline = _PyCode_CheckLineNumber(instr_prev * 2, &trace_info->bounds);
-    int line = _PyCode_CheckLineNumber(f->f_lasti*2, &trace_info->bounds);
+    int line = _PyCode_CheckLineNumber(f->f_lasti * 2, &trace_info->bounds);
     if (line != -1 && f->f_trace_lines) {
         /* Trace backward edges or if line number has changed */
         if (f->f_lasti < instr_prev || line != lastline) {
@@ -2598,7 +2551,7 @@ inline int protected_trace(
         PyThreadState* tstate, PyFrameObject* f,
         int ty, PyObject* arg,
         Py_tracefunc func, PyObject* tracearg,
-        PyTraceInfo* trace_info){
+        PyTraceInfo* trace_info) {
     int result = 0;
     PyObject *type, *value, *traceback;
     PyErr_Fetch(&type, &value, &traceback);
@@ -2618,35 +2571,35 @@ inline int protected_trace(
     }
 }
 
-void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
+void PyJit_TraceFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info) {
     auto tstate = PyThreadState_GET();
     if (trace_info->cframe.use_tracing && tstate->c_tracefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
-void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info, PyObject* returnValue){
+void PyJit_TraceFrameExit(PyFrameObject* f, PyTraceInfo* trace_info, PyObject* returnValue) {
     auto tstate = PyThreadState_GET();
     if (trace_info->cframe.use_tracing && tstate->c_tracefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, returnValue, tstate->c_tracefunc, tstate->c_traceobj, trace_info);
     }
 }
 
-void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info){
+void PyJit_ProfileFrameEntry(PyFrameObject* f, PyTraceInfo* trace_info) {
     auto tstate = PyThreadState_GET();
     if (trace_info->cframe.use_tracing && tstate->c_profilefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_CALL, Py_None, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }
 
-void PyJit_ProfileFrameExit(PyFrameObject* f, PyTraceInfo* trace_info, PyObject* returnValue){
+void PyJit_ProfileFrameExit(PyFrameObject* f, PyTraceInfo* trace_info, PyObject* returnValue) {
     auto tstate = PyThreadState_GET();
     if (trace_info->cframe.use_tracing && tstate->c_profilefunc != nullptr) {
         protected_trace(tstate, f, PyTrace_RETURN, returnValue, tstate->c_profilefunc, tstate->c_profileobj, trace_info);
     }
 }
 
-void PyJit_TraceFrameException(PyFrameObject* f, PyTraceInfo* trace_info){
+void PyJit_TraceFrameException(PyFrameObject* f, PyTraceInfo* trace_info) {
     auto tstate = PyThreadState_GET();
     if (trace_info->cframe.use_tracing && tstate->c_tracefunc != nullptr) {
         PyObject *type, *value, *traceback, *orig_traceback, *arg;
@@ -2672,8 +2625,7 @@ void PyJit_TraceFrameException(PyFrameObject* f, PyTraceInfo* trace_info){
         Py_DECREF(arg);
         if (result == 0) {
             PyErr_Restore(type, value, orig_traceback);
-        }
-        else {
+        } else {
             Py_XDECREF(type);
             Py_XDECREF(value);
             Py_XDECREF(orig_traceback);
@@ -2681,49 +2633,48 @@ void PyJit_TraceFrameException(PyFrameObject* f, PyTraceInfo* trace_info){
     }
 }
 
-PyObject* PyJit_GetListItemReversed(PyObject* list, size_t index){
+PyObject* PyJit_GetListItemReversed(PyObject* list, size_t index) {
     return PyList_GET_ITEM(list, PyList_GET_SIZE(list) - index - 1);
 }
 
-double PyJit_LongTrueDivide(long long x, long long y){
-    if (y == 0){
+double PyJit_LongTrueDivide(long long x, long long y) {
+    if (y == 0) {
         PyErr_SetString(PyExc_ZeroDivisionError, "Divide by zero");
         return INFINITY;
     }
-    return (double)x / (double)y;
+    return (double) x / (double) y;
 }
 
 long long PyJit_LongFloorDivide(long long x, long long y) {
-    if (y == 0){
+    if (y == 0) {
         PyErr_SetString(PyExc_ZeroDivisionError, "Divide by zero");
         return MAXLONG;
     }
     // C++ handles -ve divisors weirdly, use normal long division for +ve
-    if (0 < (x^y)){
+    if (0 < (x ^ y)) {
         return x / y;
     } else {
-        lldiv_t res = lldiv(x,y);
-        return (res.rem)? res.quot-1 : res.quot;
+        lldiv_t res = lldiv(x, y);
+        return (res.rem) ? res.quot - 1 : res.quot;
     }
 }
 
 long long PyJit_LongMod(long long x, long long y) {
-    if (y == 0){
+    if (y == 0) {
         PyErr_SetString(PyExc_ZeroDivisionError, "Divide by zero");
         return MAXLONG;
     }
     // C++ handles -ve divisors weirdly, use normal long division for +ve
-    if (0 < (x^y)){
+    if (0 < (x ^ y)) {
         return x % y;
     } else {
-        return (y + (x%y)) % y;
+        return (y + (x % y)) % y;
     }
 }
 
 long long PyJit_LongPow(long long base, long long exp) {
     long long result = 1;
-    for (;;)
-    {
+    for (;;) {
         if (exp & 1) result *= base;
         exp >>= 1;
         if (!exp) break;
@@ -2740,18 +2691,17 @@ long long PyJit_LongPow(long long base, long long exp) {
  * An unboxed copy of float_pow() from the CPython code base, with the
  * exception of complex number support.
  */
-double PyJit_DoublePow(double iv, double iw)
-{
+double PyJit_DoublePow(double iv, double iw) {
     int negate_result = 0;
 
     /* Sort out special cases here instead of relying on pow() */
-    if (iw == 0) {              /* v**0 is 1, even 0**0 */
+    if (iw == 0) { /* v**0 is 1, even 0**0 */
         return 1.0;
     }
-    if (Py_IS_NAN(iv)) {        /* nan**w = nan, unless w == 0 */
+    if (Py_IS_NAN(iv)) { /* nan**w = nan, unless w == 0 */
         return iv;
     }
-    if (Py_IS_NAN(iw)) {        /* v**nan = nan, unless v == 1; 1**nan = 1 */
+    if (Py_IS_NAN(iw)) { /* v**nan = nan, unless v == 1; 1**nan = 1 */
         return iv == 1.0 ? 1.0 : iw;
     }
     if (Py_IS_INFINITY(iw)) {
@@ -2780,7 +2730,7 @@ double PyJit_DoublePow(double iv, double iw)
         else
             return iw_is_odd ? copysign(0.0, iv) : 0.0;
     }
-    if (iv == 0.0) {  /* 0**w is: 0 for w positive, 1 for w zero
+    if (iv == 0.0) { /* 0**w is: 0 for w positive, 1 for w zero
                          (already dealt with above), and an error
                          if w is negative. */
         int iw_is_odd = DOUBLE_IS_ODD_INTEGER(iw);
@@ -2843,21 +2793,20 @@ double PyJit_DoublePow(double iv, double iw)
         /* We don't expect any errno value other than ERANGE, but
          * the range of libm bugs appears unbounded.
          */
-        PyErr_SetFromErrno(errno == ERANGE ? PyExc_OverflowError :
-                           PyExc_ValueError);
+        PyErr_SetFromErrno(errno == ERANGE ? PyExc_OverflowError : PyExc_ValueError);
         return INFINITY;
     }
     return ix;
 }
 
-long long PyJit_LongAsLongLong(PyObject* vv){
+long long PyJit_LongAsLongLong(PyObject* vv) {
     if (vv == nullptr) {
         PyErr_SetString(PyExc_ValueError,
-                     "Pyjion failed to unbox the integer because it is not initialized.");
+                        "Pyjion failed to unbox the integer because it is not initialized.");
         return MAXLONG;
     }
     long long result = PyLong_AsLongLong(vv);
-    if (result == -1 && PyErr_Occurred()){
+    if (result == -1 && PyErr_Occurred()) {
         PyErr_Clear();
         PyErr_Format(PyExc_OverflowError,
                      "Pyjion failed to unbox the integer %s because it is too large.",
@@ -2877,7 +2826,7 @@ void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
                  obj->ob_type->tp_name);
 }
 
-PyObject* PyJit_BlockPop(PyFrameObject* frame){
+PyObject* PyJit_BlockPop(PyFrameObject* frame) {
     if (frame->f_iblock <= 0) {
 #ifdef DEBUG
         printf("Warning: block underflow at %d %s %s line %d\n", frame->f_lasti, PyUnicode_AsUTF8(frame->f_code->co_filename),
@@ -2885,5 +2834,5 @@ PyObject* PyJit_BlockPop(PyFrameObject* frame){
 #endif
         return nullptr;
     }
-    return reinterpret_cast<PyObject *>(PyFrame_BlockPop(frame));
+    return reinterpret_cast<PyObject*>(PyFrame_BlockPop(frame));
 }

@@ -33,12 +33,12 @@
 TEST_CASE("Test yield/generators with YIELD_VALUE") {
     SECTION("common case") {
         auto t = EmissionTest("def f():\n"
-            "  def cr():\n"
-            "     yield 1\n"
-            "     yield 2\n"
-            "     yield 3\n"
-            "  gen = cr()\n"
-            "  return next(gen), next(gen), next(gen)\n");
+                              "  def cr():\n"
+                              "     yield 1\n"
+                              "     yield 2\n"
+                              "     yield 3\n"
+                              "  gen = cr()\n"
+                              "  return next(gen), next(gen), next(gen)\n");
         CHECK(t.returns() == "(1, 2, 3)");
     }
 
@@ -198,7 +198,7 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
                               "  return [x for x in cr()]\n");
         CHECK(t.returns() == "[('0!', 0), ('1!', 1), ('2!', 2), ('3!', 3), ('4!', 4), ('5!', 5), ('6!', 6), ('7!', 7), ('8!', 8), ('9!', 9)]");
     }
-    SECTION("test generator being closed and recreated on exhaustion"){
+    SECTION("test generator being closed and recreated on exhaustion") {
         auto t = EmissionTest("def f():\n"
                               "    def inner():\n"
                               "        names = ['__add__', '__alloc__',]\n"
@@ -209,7 +209,7 @@ TEST_CASE("Test yield/generators with YIELD_VALUE") {
                               "    return list(inner())");
         CHECK(t.returns() == "['!__add__', '!__alloc__', '@__add__', '@__alloc__']");
     }
-    SECTION("test nested generator being closed and recreated on exhaustion"){
+    SECTION("test nested generator being closed and recreated on exhaustion") {
         auto t = EmissionTest("def f():\n"
                               "    def inner():\n"
                               "        names = ['__add__', '__alloc__',]\n"

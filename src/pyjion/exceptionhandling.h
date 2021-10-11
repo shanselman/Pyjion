@@ -37,15 +37,15 @@
 using namespace std;
 
 
-ehFlags operator | (ehFlags lhs, ehFlags rhs);
-ehFlags operator |= (ehFlags& lhs, ehFlags rhs);
+ehFlags operator|(ehFlags lhs, ehFlags rhs);
+ehFlags operator|=(ehFlags& lhs, ehFlags rhs);
 
 
 // Exception Handling information
 struct ExceptionHandler {
     size_t RaiseAndFreeId;
     ehFlags Flags;
-    Label ErrorTarget;    // The place to branch to for handling errors
+    Label ErrorTarget;// The place to branch to for handling errors
     ValueStack EntryStack;
     ExceptionHandler* BackHandler;
 
@@ -53,7 +53,7 @@ struct ExceptionHandler {
                      Label errorTarget,
                      ValueStack entryStack,
                      ehFlags flags = EhfNone,
-                     ExceptionHandler *backHandler = nullptr) {
+                     ExceptionHandler* backHandler = nullptr) {
         RaiseAndFreeId = raiseAndFreeId;
         Flags = flags;
         EntryStack = entryStack;
@@ -66,10 +66,10 @@ struct ExceptionHandler {
     }
 
     bool IsTryFinally() {
-        return Flags & EhfTryFinally ;
+        return Flags & EhfTryFinally;
     }
 
-    ExceptionHandler* GetRootOf(){
+    ExceptionHandler* GetRootOf() {
         auto cur = this;
         while (cur->BackHandler != nullptr) {
             cur = cur->BackHandler;
@@ -77,7 +77,7 @@ struct ExceptionHandler {
         return cur;
     }
 
-    bool IsRootHandler() const{
+    bool IsRootHandler() const {
         return BackHandler == nullptr;
     }
 
@@ -89,11 +89,12 @@ struct ExceptionHandler {
 class ExceptionHandlerManager {
     vector<ExceptionHandler*> m_exceptionHandlers;
     unordered_map<py_opindex, ExceptionHandler*> m_handlerIndexes;
+
 public:
     ExceptionHandlerManager() = default;
 
-    ~ExceptionHandlerManager(){
-        for (auto &handler: m_exceptionHandlers){
+    ~ExceptionHandlerManager() {
+        for (auto& handler : m_exceptionHandlers) {
             delete handler;
         }
     }
@@ -101,8 +102,8 @@ public:
     bool Empty();
     ExceptionHandler* SetRootHandler(Label handlerLabel);
     ExceptionHandler* GetRootHandler();
-    ExceptionHandler *AddSetupFinallyHandler(Label handlerLabel, ValueStack stack,
-                                             ExceptionHandler *currentHandler, py_opindex handlerIndex);
+    ExceptionHandler* AddSetupFinallyHandler(Label handlerLabel, ValueStack stack,
+                                             ExceptionHandler* currentHandler, py_opindex handlerIndex);
 
     vector<ExceptionHandler*> GetHandlers();
 
@@ -110,4 +111,4 @@ public:
     ExceptionHandler* HandlerAtOffset(py_opindex offset);
 };
 
-#endif //PYJION_EXCEPTIONHANDLING_H
+#endif//PYJION_EXCEPTIONHANDLING_H
