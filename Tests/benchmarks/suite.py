@@ -2,6 +2,8 @@
 A benchmark suite for Pyjion
 """
 import timeit
+import warnings
+
 import pyjion
 import pathlib
 from statistics import fmean
@@ -24,16 +26,31 @@ if __name__ == "__main__":
     table.add_column("Mean (+)", style="blue")
     table.add_column("Delta", justify="right", style="green")
 
+    graphs_out = pathlib.Path(__file__).parent / 'graphs'
+    if not graphs_out.exists():
+        graphs_out.mkdir()
+
     for f in pathlib.Path(__file__).parent.glob("bench_*.py"):
-        i = __import__(f.stem, globals(), locals(), ["__benchmarks__"])
+        i = __import__(f.stem, globals(), locals(), )
         if hasattr(i, "__benchmarks__"):
             for benchmark in i.__benchmarks__:
                 func, desc, settings = benchmark
                 without_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
                 pyjion.enable()
-                pyjion.config(**settings)
+                pyjion.config(**settings, graph=True)
                 with_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
                 pyjion.disable()
+                with open(graphs_out / f'{f.stem}.dot', 'w') as dot:
+                    for k, attrib in i.__dict__.items():
+                        if hasattr(attrib, "__code__"):
+                            if pyjion.info(attrib.__code__).failed:
+                                warnings.warn(f"Failed to compile {attrib.__code__}")
+                            else:
+                                g = pyjion.graph(attrib.__code__)
+                                if g:
+                                    dot.write(g)
+                                    dot.write('')
+
                 delta = (abs(fmean(with_result) - fmean(without_result)) / fmean(without_result)) * 100.0
                 if fmean(with_result) < fmean(without_result):
                     delta_repr = Text(f"{delta:.2f}%", style="green")
