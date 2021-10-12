@@ -44,7 +44,7 @@ if __name__ == "__main__":
                     for k, attrib in i.__dict__.items():
                         if hasattr(attrib, "__code__"):
                             if pyjion.info(attrib.__code__).failed:
-                                warnings.warn(f"Failed to compile {attrib.__code__}")
+                                warnings.warn(f"Failed to compile {attrib.__code__} with result {pyjion.info(attrib.__code__).compile_result}")
                             else:
                                 g = pyjion.graph(attrib.__code__)
                                 if g:
