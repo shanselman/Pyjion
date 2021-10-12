@@ -1906,7 +1906,15 @@ public:
         } catch (const std::exception& e) {
             return false;
         }
-    };
+    }
+
+    bool doesFieldBelongToClass(
+            CORINFO_FIELD_HANDLE fldHnd, /* IN: the field that we are checking */
+            CORINFO_CLASS_HANDLE cls     /* IN: the class that we are checking */
+            ) override {
+        // Not used
+        return false;
+    }
 };
 
 #endif

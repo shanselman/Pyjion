@@ -13,9 +13,9 @@ name: "CodeQL"
 
 on:
   push:
-    branches: [ develop/main, develop/3.9, develop/3.10 ]
+    branches: [ develop/main, develop/3.10 ]
   pull_request:
-    branches: [ develop/main, develop/3.9, develop/3.10 ]
+    branches: [ develop/main, develop/3.10 ]
   schedule:
     - cron: '34 9 * * 2'
 
@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'cpp' ]
-        dot-net-version: [ 6.0.100-rc.1.21463.6 ]
+        dot-net-version: [ 6.0.100-rc.2.21505.57 ]
 
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
         # Learn more:
