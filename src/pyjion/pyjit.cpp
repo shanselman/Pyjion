@@ -546,7 +546,7 @@ static PyObject*
 pyjion_config(PyObject* self, PyObject* args, PyObject* kwargs) {
     Py_ssize_t nargs = PyTuple_GET_SIZE(args);
     PyObject *pgc = nullptr, *level = nullptr, *debug = nullptr, *graph = nullptr, *threshold = nullptr;
-    if (nargs == 0 && kwargs == nullptr) {
+    if (kwargs == nullptr) {
         goto return_result;
     }
     pgc = PyDict_GetItemString(kwargs, "pgc");
