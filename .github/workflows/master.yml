@@ -129,10 +129,10 @@ jobs:
             --rm \
             -v "$(pwd):/github/workspace" pyjion_arm64
 
-      - uses: actions/upload-artifact@v1
+      - uses: actions/upload-artifact@v2
         with:
           name: dist
-          path: dist
+          path: dist/*manylinux2014*.whl
           
       - name: Run full test suite
         shell: bash
