@@ -1,6 +1,7 @@
 # Release notes
 
 * Fix a bug on `pyjion.config()` crashing when called with invalid arguments (#401)
+* Update to .NET 6 RC2
 
 ## 1.0.0 (rc4)
 
