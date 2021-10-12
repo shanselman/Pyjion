@@ -5,10 +5,6 @@
 # modified by Tupteq, Fredrik Johansson, and Daniel Nanz
 # modified by Maciej Fijalkowski
 # 2to3
-import pyjion
-import timeit
-import gc
-
 
 def combinations(l):
     result = []
