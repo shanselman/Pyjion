@@ -119,10 +119,13 @@ jobs:
       - name: Build arm64 Linux Docker image
         run: |
           rm -rf _skbuild
+          
           docker build -t pyjion_arm64 -f Dockerfile.manylinux.aarch64 .
 
       - name: Build arm64 manylinux wheel
         run: |
+          sudo apt-get install qemu binfmt-support qemu-user-static -y
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           docker run \
             --rm \
             -v "$(pwd):/github/workspace" pyjion_arm64
