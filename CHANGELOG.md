@@ -11,6 +11,7 @@
 * Fixed a bug in the DUP_TOP_TWO opcode with escaped variables
 * UNPACK_SEQUENCE will emit types for constant tuples of string, int and float
 * Added a simple benchmark suite script (`Tests/benchmarks/suite.py`)
+* Upgraded scikit-build to 0.12 for native VS2019 support
 
 ## 1.0.0 (rc3)
 
