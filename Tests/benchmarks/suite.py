@@ -27,10 +27,10 @@ if __name__ == "__main__":
         if hasattr(i, "__benchmarks__"):
             for benchmark in i.__benchmarks__:
                 func, desc, settings = benchmark
-                without_result = timeit.repeat(func, repeat=2, number=4)
+                without_result = timeit.repeat(func, repeat=5, number=5)
                 pyjion.enable()
                 pyjion.config(**settings)
-                with_result = timeit.repeat(func, repeat=2, number=4)
+                with_result = timeit.repeat(func, repeat=5, number=5)
                 pyjion.disable()
                 delta = (abs(fmean(with_result) - fmean(without_result)) / fmean(without_result)) * 100.0
                 if fmean(with_result) < fmean(without_result):
