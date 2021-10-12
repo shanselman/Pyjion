@@ -53,4 +53,4 @@ def fannkuch(n=DEFAULT_ARG):
             return max_flips
 
 
-__benchmarks__ = [(fannkuch, "fannkuch", {"level": 2})]
+__benchmarks__ = [(fannkuch, "fannkuch", {"level": 2, "pgc": True})]

@@ -112,4 +112,4 @@ def main(n=50000, ref='sun'):
     report_energy()
 
 
-__benchmarks__ = [(main, "nbody", {"level": 2})]
+__benchmarks__ = [(main, "nbody", {"level": 2, "pgc": True})]

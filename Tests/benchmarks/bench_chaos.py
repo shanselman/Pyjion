@@ -263,5 +263,5 @@ def main():
     chaos.create_image_chaos(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_ITERATIONS, "out.ppm", DEFAULT_RNG_SEED)
 
 
-__benchmarks__ = [(main, "chaos", {"level": 2})]
+__benchmarks__ = [(main, "chaos", {"level": 2, "pgc": True})]
 

@@ -17,4 +17,4 @@ def test_ints(n=10000):
         x *= z
 
 
-__benchmarks__ = [(test_floats, "floatmath_micro", {"level": 2}), (test_ints, "intmath_micro", {"level": 2})]
+__benchmarks__ = [(test_floats, "floatmath_micro", {"level": 2}), (test_ints, "intmath_micro", {"level": 2, "pgc": True})]

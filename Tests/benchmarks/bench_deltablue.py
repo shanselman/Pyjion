@@ -625,4 +625,4 @@ def delta_blue(n=100):
     projection_test(n)
 
 
-__benchmarks__ = [(delta_blue, "delta_blue", {"level": 2})]
+__benchmarks__ = [(delta_blue, "delta_blue", {"level": 2, "pgc": True})]

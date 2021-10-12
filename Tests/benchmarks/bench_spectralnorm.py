@@ -55,4 +55,4 @@ def bench_spectral_norm():
         vv += ve * ve
 
 
-__benchmarks__ = [(bench_spectral_norm, "spectralnorm", {"level": 2})]
+__benchmarks__ = [(bench_spectral_norm, "spectralnorm", {"level": 2, "pgc": False})]

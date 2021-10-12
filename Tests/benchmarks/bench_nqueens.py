@@ -52,4 +52,4 @@ def bench_n_queens(queen_count=8):
     list(n_queens(queen_count))
 
 
-__benchmarks__ = [(bench_n_queens, "nqueens", {"level": 2})]
+__benchmarks__ = [(bench_n_queens, "nqueens", {"level": 2, "pgc": True})]
