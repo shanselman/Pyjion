@@ -19,9 +19,10 @@ $ pip install pyjion
 
 Prerequisites:
 
-- CPython 3.9 or 3.10
+- CPython 3.10
 - CMake 3.2 +
 - .NET 6 RC1
+- scikit-build
 
 ```console
  $ git clone git@github.com:tonybaloney/pyjion --recurse-submodules
@@ -31,7 +32,7 @@ Prerequisites:
 
 ## Using Pyjion
 
-To get started, you need to have .NET installed, with Python 3.9 or 3.10 and the Pyjion package (I also recommend using a virtual environment).
+To get started, you need to have .NET installed, with Python 3.10 and the Pyjion package (I also recommend using a virtual environment).
 
 After importing pyjion, enable it by calling `pyjion.enable()` which sets a compilation threshold to 0 (the code only needs to be run once to be compiled by the JIT):
 

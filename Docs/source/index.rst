@@ -6,7 +6,7 @@
 Pyjion
 ======
 
-Pyjion drop-in JIT compiler for CPython 3.9. Pyjion can make your Python code execute faster without any code changes.
+Pyjion drop-in JIT compiler for CPython 3.10. Pyjion can make your Python code execute faster without any code changes.
 
 Trying Pyjion
 -------------
@@ -17,12 +17,12 @@ Prerequisites
 -------------
 
 - Pyjion requires `.NET 6 <https://dotnet.microsoft.com/download>`_ to be installed.
-- Pyjion requires `Python 3.9 or 3.10 <https://python.org/downloads>`_.
+- Pyjion requires `Python 3.10 <https://python.org/downloads>`_.
 
 Installing Pyjion
 -----------------
 
-Pyjion is best installed from PyPi within a Python 3.9 virtual environment. There are binary wheels for macOS, Linux and Windows. Make sure you have updated pip before installing.
+Pyjion is best installed from PyPi within a Python 3.10 virtual environment. There are binary wheels for macOS, Linux and Windows. Make sure you have updated pip before installing.
 
 To install from PyPi, use pip to install from a virtual environment:
 
@@ -33,7 +33,7 @@ To install from PyPi, use pip to install from a virtual environment:
 Using Pyjion
 ------------
 
-After following the installation steps, pyjion is a python module that you can import a Python 3.9 environment.
+After following the installation steps, pyjion is a python module that you can import a Python 3.10 environment.
 
 After importing pyjion, enable it by calling `pyjion.enable()` which sets a compilation threshold to 0 (the code only needs to be run once to be compiled by the JIT):
 
