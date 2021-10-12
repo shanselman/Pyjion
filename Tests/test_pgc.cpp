@@ -131,9 +131,9 @@ TEST_CASE("test UNPACK_SEQUENCE PGC") {
                 "    return int(a) + int(b)\n"
                 "  return x((1,2)) + x([3, 4]) + x('56')\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
-        CHECK(t.returns() == "21");
+        CHECK(t.raises() == PyjionUnboxingError);
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
-        CHECK(t.returns() == "21");
+        CHECK(t.raises() == PyjionUnboxingError);
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     }
 }
@@ -336,4 +336,18 @@ TEST_CASE("Test range iter yielding unboxed values") {
         CHECK(t.returns() == "[10, 5, 1]");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
+}
+TEST_CASE("Test unpacking sequence and math"){
+    SECTION("test UNPACK_SEQUENCE doesnt interfere with the graph") {
+        auto t = PgcProfilingTest("def f(n=10000):\n"
+                                      "  c = [(1., 1.3),(2.,3.),(3.,2.),(4., 3.)]\n"
+                                      "  for x, y in c:\n"
+                                      "      z = y * y + x - y\n"
+                                      "      return z\n");
+        CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
+        CHECK(t.returns() == "1.3900000000000003");
+        CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
+        CHECK(t.returns() == "1.3900000000000003");
+        CHECK(t.pgcStatus() == PgcStatus::Optimized);
+    }
 }

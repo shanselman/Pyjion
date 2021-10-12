@@ -31,6 +31,7 @@
 
 int main(int argc, char* const argv[]) {
     Py_Initialize();
+    PyjionUnboxingError = PyErr_NewException("pyjion.PyjionUnboxingError", PyExc_ValueError, nullptr);
 #ifdef WINDOWS
     JitInit(L"clrjit.dll");
 #else

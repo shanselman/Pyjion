@@ -1,5 +1,8 @@
 from typing import Dict, Any, Callable, Optional
 
+from pyjion import JitInfo
+
+
 def enable() -> bool:
     """
     Enable the JIT.
@@ -16,7 +19,7 @@ def disable() -> bool:
     """
     ...
 
-def info(f: Callable) -> Dict[str, Any]:
+def info(f: Callable) -> JitInfo:
     """
     Pyjion JIT information on a compiled function.
 

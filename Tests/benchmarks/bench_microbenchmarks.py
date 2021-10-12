@@ -17,16 +17,4 @@ def test_ints(n=10000):
         x *= z
 
 
-if __name__ == "__main__":
-    tests = (test_floats, test_ints)
-    for test in tests:
-        without_result = timeit.repeat(test, repeat=5, number=1000)
-        print("{0} took {1} min, {2} max, {3} mean without Pyjion".format(str(test), min(without_result), max(without_result), fmean(without_result)))
-        pyjion.enable()
-        pyjion.config(level=2, graph=True)
-        with_result = timeit.repeat(test, repeat=5, number=1000)
-        pyjion.disable()
-        print("{0} took {1} min, {2} max, {3} mean with Pyjion".format(str(test), min(with_result), max(with_result), fmean(with_result)))
-        delta = (abs(fmean(with_result) - fmean(without_result)) / fmean(without_result)) * 100.0
-        print(pyjion.graph(test))
-        print(f"Pyjion is {delta:.2f}% faster")
+__benchmarks__ = [(test_floats, "floatmath_micro", {"level": 2}), (test_ints, "intmath_micro", {"level": 2, "pgc": True})]

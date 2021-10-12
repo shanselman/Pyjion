@@ -51,9 +51,4 @@ def benchmark(n=POINTS):
     return maximize(points)
 
 
-if __name__ == "__main__":
-    print("Float took {0} without Pyjion".format(timeit.repeat(benchmark, repeat=5, number=1), ))
-    pyjion.enable()
-    pyjion.config(level=2)
-    print("Float took {0} with Pyjion".format(timeit.repeat(benchmark, repeat=5, number=1), ))
-    pyjion.disable()
+__benchmarks__ = [(benchmark, "float", {"level": 2, "pgc": True})]

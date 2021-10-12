@@ -625,9 +625,4 @@ def delta_blue(n=100):
     projection_test(n)
 
 
-if __name__ == "__main__":
-    print("Deltablue took {0} without Pyjion".format(timeit.repeat(delta_blue, repeat=5, number=1)))
-    pyjion.enable()
-    pyjion.config(level=2)
-    print("Deltablue took {0} with Pyjion".format(timeit.repeat(delta_blue, repeat=5, number=1)))
-    pyjion.disable()
+__benchmarks__ = [(delta_blue, "delta_blue", {"level": 2, "pgc": True})]

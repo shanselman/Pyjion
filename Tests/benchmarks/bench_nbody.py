@@ -5,10 +5,6 @@
 # modified by Tupteq, Fredrik Johansson, and Daniel Nanz
 # modified by Maciej Fijalkowski
 # 2to3
-import pyjion
-import timeit
-import gc
-
 
 def combinations(l):
     result = []
@@ -87,7 +83,6 @@ def advance(dt, n, bodies=SYSTEM, pairs=PAIRS):
 
 
 def report_energy(bodies=SYSTEM, pairs=PAIRS, e=0.0):
-
     for (((x1, y1, z1), v1, m1),
          ((x2, y2, z2), v2, m2)) in pairs:
         dx = x1 - x2
@@ -96,7 +91,6 @@ def report_energy(bodies=SYSTEM, pairs=PAIRS, e=0.0):
         e -= (m1 * m2) / ((dx * dx + dy * dy + dz * dz) ** 0.5)
     for (r, [vx, vy, vz], m) in bodies:
         e += m * (vx * vx + vy * vy + vz * vz) / 2.
-    print("%.9f" % e)
 
 
 def offset_momentum(ref, bodies=SYSTEM, px=0.0, py=0.0, pz=0.0):
@@ -118,17 +112,4 @@ def main(n=50000, ref='sun'):
     report_energy()
 
 
-if __name__ == "__main__":
-    print("N-body took {0} without Pyjion".format(timeit.repeat(main, repeat=5, number=1)))
-    pyjion.enable()
-    pyjion.config(level=2, graph=True)
-    print("N-body took {0} with Pyjion".format(timeit.repeat(main, repeat=5, number=1)))
-    pyjion.disable()
-    print(pyjion.info(offset_momentum))
-    print(pyjion.graph(offset_momentum))
-    print(pyjion.info(advance))
-    print(pyjion.graph(advance))
-    print(pyjion.info(report_energy))
-    print(pyjion.graph(report_energy))
-
-    gc.collect()
+__benchmarks__ = [(main, "nbody", {"level": 2, "pgc": True})]

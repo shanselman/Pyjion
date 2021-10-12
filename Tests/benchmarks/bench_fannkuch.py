@@ -53,9 +53,4 @@ def fannkuch(n=DEFAULT_ARG):
             return max_flips
 
 
-if __name__ == "__main__":
-    print("Fannkuch({1}) took {0} without Pyjion".format(timeit.repeat(fannkuch, repeat=5, number=1), DEFAULT_ARG))
-    pyjion.enable()
-    pyjion.config(level=2)
-    print("Fannkuch({1}) took {0} with Pyjion".format(timeit.repeat(fannkuch, repeat=5, number=1), DEFAULT_ARG))
-    pyjion.disable()
+__benchmarks__ = [(fannkuch, "fannkuch", {"level": 2, "pgc": True})]
