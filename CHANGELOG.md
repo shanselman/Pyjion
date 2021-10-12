@@ -1,5 +1,6 @@
 # Release notes
 
+* Fix a bug on `pyjion.config()` crashing when called with invalid arguments (#401)
 
 ## 1.0.0 (rc4)
 
