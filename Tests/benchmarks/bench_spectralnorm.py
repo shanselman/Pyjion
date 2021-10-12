@@ -10,10 +10,6 @@ Dirtily sped up by Simon Descarpentries
 Concurrency by Jason Stitt
 """
 
-import pyjion
-import timeit
-from statistics import fmean
-
 DEFAULT_N = 130
 
 
@@ -59,13 +55,4 @@ def bench_spectral_norm():
         vv += ve * ve
 
 
-if __name__ == "__main__":
-    without_result = timeit.repeat(bench_spectral_norm, repeat=5, number=10)
-    print("{0} took {1} min, {2} max, {3} mean without Pyjion".format("spectralnorm", min(without_result), max(without_result), fmean(without_result)))
-    pyjion.enable()
-    pyjion.config(level=2, pgc=False)
-    with_result = timeit.repeat(bench_spectral_norm, repeat=5, number=10)
-    pyjion.disable()
-    print("{0} took {1} min, {2} max, {3} mean with Pyjion".format("spectralnorm", min(with_result), max(with_result), fmean(with_result)))
-    delta = (abs(fmean(with_result) - fmean(without_result)) / fmean(without_result)) * 100.0
-    print(f"Pyjion is {delta:.2f}% faster")
+__benchmarks__ = [(bench_spectral_norm, "spectralnorm", {"level": 2})]

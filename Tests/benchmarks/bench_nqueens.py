@@ -1,6 +1,4 @@
 """Simple, brute-force N-Queens solver."""
-import pyjion
-import timeit
 
 __author__ = "collinwinter@google.com (Collin Winter)"
 
@@ -54,10 +52,4 @@ def bench_n_queens(queen_count=8):
     list(n_queens(queen_count))
 
 
-if __name__ == "__main__":
-    queen_count = 8
-    print("N-Queens took {0} without Pyjion".format(timeit.repeat(bench_n_queens, repeat=5, number=1)))
-    pyjion.enable()
-    pyjion.config(level=2, graph=True)
-    print("N-Queens took {0} with Pyjion".format(timeit.repeat(bench_n_queens, repeat=5, number=1)))
-    pyjion.disable()
+__benchmarks__ = [(bench_n_queens, "nqueens", {"level": 2})]

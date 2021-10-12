@@ -263,9 +263,5 @@ def main():
     chaos.create_image_chaos(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_ITERATIONS, "out.ppm", DEFAULT_RNG_SEED)
 
 
-if __name__ == "__main__":
-    print("Chaos took {0} without Pyjion".format(timeit.repeat(main, repeat=5, number=1)))
-    pyjion.enable()
-    pyjion.config(level=2)
-    print("Chaos took {0} with Pyjion".format(timeit.repeat(main, repeat=5, number=1)))
-    pyjion.disable()
+__benchmarks__ = [(main, "chaos", {"level": 2})]
+
