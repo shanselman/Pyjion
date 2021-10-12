@@ -41,7 +41,7 @@ jobs:
       - name: Run benchmark tests
         shell: bash
         run: |
-          python -m pip install  django==3.1.4
+          python -m pip install -r Tests/requirements_test.txt
           python Tests/benchmarks/suite.py
 
   bench-macos-11:
@@ -73,7 +73,7 @@ jobs:
       - name: Run benchmark tests
         shell: bash
         run: |
-          python -m pip install  django==3.1.4
+          python -m pip install -r Tests/requirements_test.txt
           python Tests/benchmarks/suite.py
 
   bench-windows:
@@ -128,5 +128,5 @@ jobs:
       - name: Run benchmark tests
         shell: bash
         run: |
-          python -m pip install  django==3.1.4
+          python -m pip install -r Tests/requirements_test.txt
           python Tests/benchmarks/suite.py
