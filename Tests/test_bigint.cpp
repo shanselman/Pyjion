@@ -23,26 +23,15 @@
 *
 */
 
+#include <catch2/catch.hpp>
+#include "testing_util.h"
 
-#include "codemodel.h"
 
-#include <utility>
-
-int BaseModule::AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr) {
-    if (existingSlots.find(addr) == existingSlots.end()) {
-        int token = METHOD_SLOT_SPACE + ++slotCursor;
-        m_methods[token] = new JITMethod(this, returnType, std::move(params), addr, false);
-        RegisterSymbol(token, "typeslot");// TODO : Get the name of the type at least..
-        return token;
-    } else {
-        return existingSlots[addr];
+TEST_CASE("Test bigint math") {
+    // +=, -= checks are to avoid constant folding
+    SECTION("test addition") {
+        auto t = EmissionTest(
+                "def f():\n    x = 1234567876543456765\n    return x + 123");
+        CHECK(t.returns() == "1234567876543456888");
     }
-}
-
-void BaseModule::RegisterSymbol(int32_t token, const char* label) {
-    symbolTable[token] = label;
-}
-
-SymbolTable BaseModule::GetSymbolTable() {
-    return symbolTable;
 }

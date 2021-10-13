@@ -1958,6 +1958,42 @@ LocalKind PythonCompiler::emit_binary_int(uint16_t opcode) {
     return LK_Int;
 }
 
+LocalKind PythonCompiler::emit_binary_bigint(uint16_t opcode) {
+    switch (opcode) {
+        case BINARY_ADD:
+        case INPLACE_ADD:
+            m_il.emit_call(METHOD_BIGINT_ADD);
+            return LK_Int;
+        case INPLACE_TRUE_DIVIDE:
+        case BINARY_TRUE_DIVIDE:
+            m_il.emit_call(METHOD_INT_TRUE_DIVIDE);
+            return LK_Int;
+        case INPLACE_MODULO:
+        case BINARY_MODULO:
+            m_il.emit_call(METHOD_INT_MOD);
+            return LK_Int;
+        case INPLACE_MULTIPLY:
+        case BINARY_MULTIPLY:
+            m_il.mul();
+            return LK_Int;
+        case INPLACE_SUBTRACT:
+        case BINARY_SUBTRACT:
+            m_il.sub();
+            return LK_Int;
+        case BINARY_POWER:
+        case INPLACE_POWER:
+            m_il.emit_call(METHOD_INT_POWER);
+            return LK_Int;
+        case BINARY_FLOOR_DIVIDE:
+        case INPLACE_FLOOR_DIVIDE:
+            m_il.emit_call(METHOD_INT_FLOOR_DIVIDE);
+            return LK_Int;
+        default:
+            throw UnexpectedValueException();
+    }
+    return LK_Int;
+}
+
 void PythonCompiler::emit_is(bool isNot) {
     m_il.emit_call(isNot ? METHOD_ISNOT : METHOD_IS);
 }
@@ -2285,6 +2321,12 @@ void PythonCompiler::emit_box(AbstractValueKind kind) {
         case AVK_Integer:
             m_il.emit_call(METHOD_PYLONG_FROM_LONGLONG);
             break;
+        case AVK_BigInteger:
+            m_il.emit_call(METHOD_BIGINT_AS_PYLONG);
+            break;
+        default:
+            assert("Unsupported type");
+            return;
     }
 };
 void PythonCompiler::emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources left, AbstractValueWithSources right) {
@@ -2385,6 +2427,36 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
             emit_int(1);
             emit_store_local(success);
             emit_mark_label(not_nan);
+
+            if (guard) {
+                emit_branch(BranchAlways, guard_pass);
+                emit_mark_label(guard_fail);
+                emit_int(1);
+                emit_store_local(success);
+                emit_load_local(lcl);
+                emit_guard_exception("int");
+                emit_nan_long();// keep the stack effect equivalent, this value is never used.
+                emit_mark_label(guard_pass);
+            }
+            emit_free_local(lcl);
+            break;
+        }
+        case AVK_BigInteger: {
+            Local lcl = emit_define_local(LK_Pointer);
+            Label guard_pass = emit_define_label();
+            Label guard_fail = emit_define_label();
+            emit_store_local(lcl);
+            if (guard) {
+                emit_load_local(lcl);
+                LD_FIELDI(PyObject, ob_type);
+                emit_ptr(&PyLong_Type);
+                emit_branch(BranchNotEqual, guard_fail);
+            }
+
+            emit_load_local(lcl);
+            m_il.emit_call(METHOD_PYLONG_AS_BIGINT);
+            emit_load_local(lcl);
+            decref();
 
             if (guard) {
                 emit_branch(BranchAlways, guard_pass);
@@ -2505,7 +2577,10 @@ public:
 };
 
 #define GLOBAL_METHOD(token, addr, returnType, ...) \
-    GlobalMethod g##token(token, JITMethod(&g_module, returnType, std::vector<Parameter>{__VA_ARGS__}, (void*) addr), #token);
+    GlobalMethod g##token(token, JITMethod(&g_module, returnType, std::vector<Parameter>{__VA_ARGS__}, (void*) addr, false), #token);
+
+#define GLOBAL_INTRINSIC(token, addr, returnType, ...) \
+    GlobalMethod g##token(token, JITMethod(&g_module, returnType, std::vector<Parameter>{__VA_ARGS__}, (void*) addr, true), #token);
 
 GLOBAL_METHOD(METHOD_ADD_TOKEN, &PyJit_Add, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
@@ -2753,6 +2828,13 @@ GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parame
 
 GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT));
+
+GLOBAL_METHOD(METHOD_PYLONG_AS_BIGINT, &PyjionBigInt_FromPyLong, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_AS_PYLONG, &PyjionBigInt_AsPyLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_PTR));
+GLOBAL_METHOD(METHOD_LONG_AS_BIGINT, &PyjionBigInt_FromInt64, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG));
+GLOBAL_METHOD(METHOD_BIGINT_ADD, &PyjionBigInt_Add, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR));
+
+GLOBAL_INTRINSIC(INTRINSIC_TEST, &PyJit_LongTrueDivide, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_LONG));
 
 const char* opcodeName(py_opcode opcode) {
 #define OP_TO_STR(x) \

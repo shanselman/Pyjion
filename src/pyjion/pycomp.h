@@ -250,6 +250,13 @@
 #define METHOD_SUBSCR_LIST_SLICE_STEPPED     0x0007000A
 #define METHOD_SUBSCR_LIST_SLICE_REVERSED    0x0007000B
 
+#define METHOD_PYLONG_AS_BIGINT              0x00080001
+#define METHOD_LONG_AS_BIGINT                0x00080002
+#define METHOD_BIGINT_ADD                    0x00080003
+#define METHOD_BIGINT_AS_PYLONG              0x00080004
+
+#define INTRINSIC_TEST                       0x10000001
+
 #define LD_FIELDA(type, field)                      \
     if (offsetof(type, field) > 0) {                \
         m_il.ld_i((int32_t) offsetof(type, field)); \
@@ -427,6 +434,7 @@ public:
 
     LocalKind emit_binary_float(uint16_t opcode) override;
     LocalKind emit_binary_int(uint16_t opcode) override;
+    LocalKind emit_binary_bigint(uint16_t opcode) override;
     void emit_binary_object(uint16_t opcode) override;
     void emit_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
     LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;

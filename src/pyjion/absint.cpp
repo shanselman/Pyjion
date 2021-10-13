@@ -2587,6 +2587,10 @@ void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcod
             m_comp->emit_long_long(PyLong_AsLongLong(constValue));
             incStack(1, STACK_KIND_VALUE_INT);
             break;
+        case AVK_BigInteger:
+            m_comp->emit_ptr(PyjionBigInt_FromPyLong(constValue));
+            incStack(1, STACK_KIND_OBJECT);
+            break;
         case AVK_Bool:
             if (constValue == Py_True)
                 m_comp->emit_int(1);

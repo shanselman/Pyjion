@@ -459,9 +459,11 @@ public:
     AbstractValueKind kind() override {
         return AVK_BigInteger;
     }
+    AbstractValue* binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) override;
     const char* describe() override {
         return "big int";
     }
+    static AbstractValue* binary(int op, AbstractValueWithSources& other);
 };
 
 class StringValue : public AbstractValue {

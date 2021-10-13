@@ -604,6 +604,12 @@ public:
         }
     }
 
+    void newarr(int32_t size, CorInfoType type) {
+        ld_i4(size);
+        m_il.push_back(CEE_NEWARR);
+        emit_int(type);
+    }
+
     void mark_sequence_point(size_t idx) {
 #ifdef DUMP_SEQUENCE_POINTS
         printf("Sequence Point: IL_%04lX: %zu\n", m_il.size(), idx);
@@ -636,7 +642,7 @@ public:
         uint8_t* nativeEntry;
         uint32_t nativeSizeOfCode;
         jitInfo->assignIL(m_il);
-        auto res = JITMethod(m_module, m_retType, m_params, nullptr, m_sequencePoints, m_callPoints);
+        auto res = JITMethod(m_module, m_retType, m_params, nullptr, m_sequencePoints, m_callPoints, false);
         CORINFO_METHOD_INFO methodInfo = to_method(&res, stackSize);
 #if (defined(HOST_OSX) && defined(HOST_ARM64))
         pthread_jit_write_protect_np(0);

@@ -392,6 +392,7 @@ public:
     // Performans a binary operation for values on the stack which are unboxed floating points
     virtual LocalKind emit_binary_float(uint16_t opcode) = 0;
     virtual LocalKind emit_binary_int(uint16_t opcode) = 0;
+    virtual LocalKind emit_binary_bigint(uint16_t opcode) = 0;
     // Performs a binary operation for values on the stack which are boxed objects
     virtual void emit_binary_object(uint16_t opcode) = 0;
     virtual void emit_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) = 0;

@@ -23,26 +23,33 @@
 *
 */
 
+#include "bigint.h"
 
-#include "codemodel.h"
 
-#include <utility>
-
-int BaseModule::AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr) {
-    if (existingSlots.find(addr) == existingSlots.end()) {
-        int token = METHOD_SLOT_SPACE + ++slotCursor;
-        m_methods[token] = new JITMethod(this, returnType, std::move(params), addr, false);
-        RegisterSymbol(token, "typeslot");// TODO : Get the name of the type at least..
-        return token;
-    } else {
-        return existingSlots[addr];
-    }
+PyjionBigInt* PyjionBigInt_FromInt64(int64_t value){
+    return new PyjionBigInt{
+        .shortVersion = value,
+        .isShort =  true,
+        .pythonObject = nullptr
+    };
 }
 
-void BaseModule::RegisterSymbol(int32_t token, const char* label) {
-    symbolTable[token] = label;
+PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject){
+    return new PyjionBigInt{
+            .shortVersion = 0,
+            .isShort = false,
+            .pythonObject = pythonObject
+    };
 }
 
-SymbolTable BaseModule::GetSymbolTable() {
-    return symbolTable;
+PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right){
+    left->shortVersion += right->shortVersion; // TODO : Check size and shift
+    return left;
+}
+
+PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*i){
+    if (i->isShort)
+        return PyLong_FromLongLong(i->shortVersion);
+    else
+        return i->pythonObject;
 }

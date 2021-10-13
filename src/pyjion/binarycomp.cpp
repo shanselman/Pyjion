@@ -791,6 +791,17 @@ LocalKind PythonCompiler::emit_unboxed_binary_object(uint16_t opcode, AbstractVa
     } else if (leftKind == AVK_Float && rightKind == AVK_Integer) {
         m_il.conv_r8();
         return emit_binary_float(opcode);
+    } else if (leftKind == AVK_BigInteger && rightKind == AVK_BigInteger) {
+        return emit_binary_bigint(opcode);
+    } else if (leftKind == AVK_BigInteger && rightKind == AVK_Integer) {
+        m_il.emit_call(METHOD_LONG_AS_BIGINT);
+        return emit_binary_bigint(opcode);
+    } else if (leftKind == AVK_Integer && rightKind == AVK_BigInteger) {
+        Local right_l = emit_define_local(LK_Pointer);
+        emit_store_local(right_l);
+        m_il.emit_call(METHOD_LONG_AS_BIGINT);
+        emit_load_and_free_local(right_l);
+        return emit_binary_bigint(opcode);
     } else {
         assert(false);
         return LK_Pointer;

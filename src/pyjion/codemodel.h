@@ -121,9 +121,7 @@ struct CallPoint {
 class BaseMethod {
 public:
     virtual void getCallInfo(CORINFO_CALL_INFO* pResult) = 0;
-    virtual uint32_t getMethodAttrs() {
-        return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE;
-    }
+    virtual uint32_t getMethodAttrs() = 0;
     virtual void findSig(CORINFO_SIG_INFO* sig) = 0;
     virtual void* getAddr() = 0;
     virtual void getFunctionEntryPoint(CORINFO_CONST_LOOKUP* pResult) = 0;
@@ -133,6 +131,7 @@ public:
     virtual void recordCallPointOffsetPosition(uint32_t ilOffset, uint32_t nativeOffset) = 0;
     virtual vector<SequencePoint> getSequencePoints() = 0;
     virtual vector<CallPoint> getCallPoints() = 0;
+    virtual bool isIntrinsic() = 0;
 };
 
 class JITMethod : public BaseMethod {
@@ -144,17 +143,20 @@ public:
     void* m_addr;
     vector<SequencePoint> m_sequencePoints;
     vector<CallPoint> m_callPoints;
+    bool m_hasIntrinsics;
 
-    JITMethod(BaseModule* module, CorInfoType returnType, std::vector<Parameter> params, void* addr) {
+    JITMethod(BaseModule* module, CorInfoType returnType, std::vector<Parameter> params, void* addr, bool intrinsics) {
         m_retType = returnType;
         m_params = std::move(params);
         m_module = module;
         m_addr = addr;
+        m_hasIntrinsics = intrinsics;
     }
 
     JITMethod(BaseModule* module, CorInfoType returnType, vector<Parameter> params, void* addr,
               const vector<pair<size_t, uint32_t>>& sequencePoints,
-              const vector<pair<size_t, int32_t>>& callPoints) : JITMethod(module, returnType, std::move(params), addr) {
+              const vector<pair<size_t, int32_t>>& callPoints,
+              bool hasIntrinsics) : JITMethod(module, returnType, std::move(params), addr, hasIntrinsics) {
         for (auto& point : sequencePoints) {
             m_sequencePoints.push_back({static_cast<uint32_t>(point.first),
                                         0,
@@ -172,11 +174,23 @@ public:
         return m_addr;
     }
 
+    uint32_t getMethodAttrs() override {
+        if (m_hasIntrinsics){
+            return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE | CORINFO_FLG_INTRINSIC;
+        } else {
+            return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE;
+        }
+    }
+
     void getCallInfo(CORINFO_CALL_INFO* pResult) override {
         pResult->codePointerLookup.lookupKind.needsRuntimeLookup = false;
         pResult->codePointerLookup.constLookup.accessType = IAT_PVALUE;
         pResult->codePointerLookup.constLookup.addr = &m_addr;
-        pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC;
+        if (m_hasIntrinsics) {
+            pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC | CORINFO_FLG_INTRINSIC | CORINFO_FLG_JIT_INTRINSIC;
+        } else {
+            pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC;
+        }
         pResult->kind = CORINFO_CALL;
         pResult->sig.args = (CORINFO_ARG_LIST_HANDLE) (m_params.empty() ? nullptr : &m_params[0]);
         pResult->sig.retType = m_retType;
@@ -233,6 +247,10 @@ public:
 
     vector<CallPoint> getCallPoints() override {
         return m_callPoints;
+    }
+
+    bool isIntrinsic() override {
+        return m_hasIntrinsics;
     }
 };
 

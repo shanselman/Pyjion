@@ -44,6 +44,7 @@
 #include "cee.h"
 #include "ipycomp.h"
 #include "exceptions.h"
+#include "bigint.h"
 
 #ifndef WINDOWS
 #include <sys/mman.h>
@@ -153,6 +154,10 @@ public:
             return fmod(dividend, divisor);
         }
     };
+
+    static void* newArrayDirectHelper(CORINFO_CLASS_HANDLE token, int64_t size) {
+        return nullptr;
+    }
 
     void* get_code_addr() override {
         return m_codeAddr;
@@ -907,9 +912,7 @@ public:
 
     // Quick check whether the type is a value class. Returns the same value as getClassAttribs(cls) & CORINFO_FLG_VALUECLASS, except faster.
     bool isValueClass(CORINFO_CLASS_HANDLE cls) override {
-        if (cls == PYOBJECT_PTR_TYPE)
-            return false;
-        return false;
+        return getClassAttribs(cls) & CORINFO_FLG_VALUECLASS;
     }
 
     // return flags (defined above, CORINFO_FLG_PUBLIC ...)
@@ -976,7 +979,7 @@ public:
     unsigned getClassSize(
             CORINFO_CLASS_HANDLE cls) override {
         WARN("getClassSize  not implemented\r\n");
-        return 0;
+        return 4;
     }
 
     unsigned getClassAlignmentRequirement(
@@ -1029,11 +1032,7 @@ public:
     // returns the newArr (1-Dim array) helper optimized for "arrayCls."
     CorInfoHelpFunc getNewArrHelper(
             CORINFO_CLASS_HANDLE arrayCls) override {
-        if (arrayCls == PYOBJECT_PTR_TYPE) {
-            return CORINFO_HELP_NEWARR_1_VC;
-        }
-        WARN("getNewArrHelper\r\n");
-        return CORINFO_HELP_UNDEF;
+        return CORINFO_HELP_NEWARR_1_DIRECT;
     }
 
     // returns the optimized "IsInstanceOf" or "ChkCast" helper
@@ -1509,6 +1508,9 @@ public:
 
     uint32_t getJitFlags(CORJIT_FLAGS* flags, uint32_t sizeInBytes) override {
         flags->Add(flags->CORJIT_FLAG_SKIP_VERIFICATION);
+#ifdef FEATURE_SIMD
+        flags->Add(flags->CORJIT_FLAG_FEATURE_SIMD);
+#endif
         if (m_compileDebug) {
             flags->Add(flags->CORJIT_FLAG_DEBUG_INFO);
             flags->Add(flags->CORJIT_FLAG_DEBUG_CODE);
@@ -1640,8 +1642,11 @@ public:
 
     const char* getMethodNameFromMetadata(CORINFO_METHOD_HANDLE ftn, const char** className, const char** namespaceName,
                                           const char** enclosingClassName) override {
-        WARN("getMethodNameFromMetadata not defined\r\n");
-        return nullptr;
+        auto* meth = reinterpret_cast<BaseMethod*>(ftn);
+        if (meth->isIntrinsic()) {
+            *namespaceName = "System.Runtime.Intrinsics";
+        }
+        return m_methodName;
     }
 
     bool getSystemVAmd64PassStructInRegisterDescriptor(CORINFO_CLASS_HANDLE structHnd,
@@ -1683,6 +1688,9 @@ public:
             case CORINFO_HELP_DBLREM:
                 helper = (void*) &dblRemHelper;
                 break;
+            case CORINFO_HELP_NEWARR_1_DIRECT:
+                helper = (void*) &newArrayDirectHelper;
+                break;
             default:
                 throw UnsupportedHelperException(ftnNum);
                 break;
@@ -1713,6 +1721,8 @@ public:
                 return (void*) verificationExceptionHelper;
             case CORINFO_HELP_DBLREM:
                 return (void*) dblRemHelper;
+            case CORINFO_HELP_NEWARR_1_DIRECT:
+                return (void*) newArrayDirectHelper;
             default:
                 throw UnsupportedHelperException(ftnNum);
         }
@@ -1789,10 +1799,26 @@ public:
         WARN("setEHinfo not implemented \r\n");
     }
 
-    CorInfoTypeWithMod
-    getArgType(CORINFO_SIG_INFO* sig, CORINFO_ARG_LIST_HANDLE args, CORINFO_CLASS_HANDLE* vcTypeRet) override {
-        *vcTypeRet = nullptr;
-        return (CorInfoTypeWithMod) (reinterpret_cast<Parameter*>(args))->m_type;
+
+    // Get the type of a particular argument
+    // CORINFO_TYPE_UNDEF is returned when there are no more arguments
+    // If the type returned is a primitive type (or an enum) *vcTypeRet set to NULL
+    // otherwise it is set to the TypeHandle associted with the type
+    // Enumerations will always look their underlying type (probably should fix this)
+    // Otherwise vcTypeRet is the type as would be seen by the IL,
+    // The return value is the type that is used for calling convention purposes
+    // (Thus if the EE wants a value class to be passed like an int, then it will
+    // return CORINFO_TYPE_INT
+    CorInfoTypeWithMod getArgType (
+        CORINFO_SIG_INFO*           sig,            /* IN */
+        CORINFO_ARG_LIST_HANDLE     args,           /* IN */
+        CORINFO_CLASS_HANDLE       *vcTypeRet       /* OUT */
+        ) override {
+        CorInfoType definedType = (reinterpret_cast<Parameter*>(args))->m_type;
+        if (definedType != CORINFO_TYPE_VALUECLASS && definedType != CORINFO_TYPE_CLASS) {
+            *vcTypeRet = nullptr;
+        }
+        return (CorInfoTypeWithMod) definedType;
     }
 
     void recordCallSite(uint32_t instrOffset,
@@ -1875,7 +1901,7 @@ public:
     // Quick check whether the method is a jit intrinsic. Returns the same value as getMethodAttribs(ftn) & CORINFO_FLG_JIT_INTRINSIC, except faster.
     bool isJitIntrinsic(CORINFO_METHOD_HANDLE ftn) override {
         // method attribs are CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE - so always false.
-        return false;
+        return reinterpret_cast<BaseMethod*>(ftn)->isIntrinsic();
     }
 
     bool runWithErrorTrap(
@@ -1913,6 +1939,14 @@ public:
             CORINFO_CLASS_HANDLE cls     /* IN: the class that we are checking */
             ) override {
         // Not used
+        return false;
+    }
+
+    // Is the given type in System.Private.Corelib and marked with IntrinsicAttribute?
+    // This defaults to false.
+    bool isIntrinsicType(
+            CORINFO_CLASS_HANDLE        classHnd
+    ) override {
         return false;
     }
 };

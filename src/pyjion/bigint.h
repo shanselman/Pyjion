@@ -23,26 +23,29 @@
 *
 */
 
+#ifndef PYJION_BIGINT_H
+#define PYJION_BIGINT_H
 
-#include "codemodel.h"
+#include <cstdint>
+#include <Python.h>
 
-#include <utility>
 
-int BaseModule::AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr) {
-    if (existingSlots.find(addr) == existingSlots.end()) {
-        int token = METHOD_SLOT_SPACE + ++slotCursor;
-        m_methods[token] = new JITMethod(this, returnType, std::move(params), addr, false);
-        RegisterSymbol(token, "typeslot");// TODO : Get the name of the type at least..
-        return token;
-    } else {
-        return existingSlots[addr];
+struct PyjionBigInt {
+    int64_t shortVersion;
+    bool isShort;
+    PyObject* pythonObject;
+
+    int64_t asLong() const {
+        if (isShort)
+            return shortVersion;
+        else
+            return PyLong_AsLongLong(pythonObject);
     }
-}
+};
 
-void BaseModule::RegisterSymbol(int32_t token, const char* label) {
-    symbolTable[token] = label;
-}
+PyjionBigInt* PyjionBigInt_FromInt64(int64_t value);
+PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject);
+PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt*  right);
+PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*);
 
-SymbolTable BaseModule::GetSymbolTable() {
-    return symbolTable;
-}
+#endif //PYJION_BIGINT_H
