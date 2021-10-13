@@ -35,16 +35,44 @@ PyjionBigInt* PyjionBigInt_FromInt64(int64_t value){
 }
 
 PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject){
-    return new PyjionBigInt{
-            .shortVersion = 0,
-            .isShort = false,
-            .pythonObject = pythonObject
-    };
+    if (Py_SIZE(pythonObject) > 8){ // TODO : Work out exact bits
+        return new PyjionBigInt{
+                .shortVersion = PyLong_AsLongLong(pythonObject),
+                .isShort = true,
+                .pythonObject = nullptr
+        };
+    } else {
+        return new PyjionBigInt{
+                .shortVersion = 0,
+                .isShort = false,
+                .pythonObject = pythonObject
+        };
+    }
 }
 
 PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right){
-    left->shortVersion += right->shortVersion; // TODO : Check size and shift
-    return left;
+    if (left->isShort && right->isShort){
+        left->shortVersion += right->shortVersion;
+        return left;
+    } else if (left->isShort && !right->isShort) {
+        return new PyjionBigInt{
+            .shortVersion = 0,
+            .isShort = false,
+            .pythonObject = PyNumber_Add(PyLong_FromLongLong(left->shortVersion), right->pythonObject)
+        };
+    } else if (!left->isShort && right->isShort) {
+        return new PyjionBigInt{
+            .shortVersion = 0,
+            .isShort = false,
+            .pythonObject = PyNumber_Add(left->pythonObject, PyLong_FromLongLong(right->shortVersion))
+        };
+    } else {
+        return new PyjionBigInt{
+            .shortVersion = 0,
+            .isShort = false,
+            .pythonObject = PyNumber_Add(left->pythonObject, right->pythonObject)
+        };
+    }
 }
 
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*i){
