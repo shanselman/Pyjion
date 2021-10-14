@@ -27,126 +27,143 @@
 #include "intrins.h"
 
 
-PyjionBigInt* PyjionBigInt_FromInt64(int64_t value) {
-    return new PyjionBigInt{
+PyjionBigInt* PyjionBigInt_FromInt64(int64_t value, PyjionBigIntRegister* bigIntRegister) {
+    auto result = new PyjionBigInt{
             .shortVersion = value,
             .isShort = true,
     };
+    bigIntRegister->add(result);
+    return result;
 }
 
-PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject) {
-    if (!IntegerValue::isBig(pythonObject)) {// TODO : Work out exact bits
-        return new PyjionBigInt{
+PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject, PyjionBigIntRegister* bigIntRegister) {
+    PyjionBigInt* result;
+    if (!IntegerValue::isBig(pythonObject)) {
+        result = new PyjionBigInt{
                 .shortVersion = PyLong_AsLongLong(pythonObject),
                 .isShort = true,
         };
     } else {
-        auto i = new PyjionBigInt{
+        result = new PyjionBigInt{
                 .shortVersion = -1,
                 .isShort = false,
         };
-        i->negative = (Py_SIZE(pythonObject) < 0);
+        result->negative = (Py_SIZE(pythonObject) < 0);
         auto size = Py_ABS(Py_SIZE(pythonObject));
         for (size_t idx = 0; idx < size; idx++) {
-            i->digits.push_back(((PyLongObject*) pythonObject)->ob_digit[idx]);
+            result->digits.push_back(((PyLongObject*) pythonObject)->ob_digit[idx]);
         }
-        return i;
     }
-}
-
-PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right) {
-    if (left->isShort && right->isShort) {
-        left->shortVersion += right->shortVersion;
-        delete right;
-        right = nullptr;
-        return left;
-    } 
-    PyjionBigInt* result = nullptr;
-    if (left->isShort && !right->isShort) {
-        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
-    } else if (!left->isShort && right->isShort) {
-        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
-    } else {
-        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
-    }
-    delete left;
-    left = nullptr;
-    delete right;
-    right = nullptr;
+    bigIntRegister->add(result);
     return result;
 }
 
-PyjionBigInt* PyjionBigInt_Sub(PyjionBigInt* left, PyjionBigInt* right) {
+PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
-        left->shortVersion -= right->shortVersion;
-        return left;
-    } else if (left->isShort && !right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_subtract(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
-    } else if (!left->isShort && right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_subtract(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
-    } else {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_subtract(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
+        return PyjionBigInt_FromInt64(left->shortVersion + right->shortVersion, bigIntRegister);
     }
+    PyjionBigInt* result = nullptr;
+    if (left->isShort && !right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    } else if (!left->isShort && right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)), bigIntRegister);
+    } else {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    }
+    return result;
 }
 
-double PyjionBigInt_TrueDivide(PyjionBigInt* left, PyjionBigInt* right) {
+PyjionBigInt* PyjionBigInt_Sub(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
-        return PyJit_LongTrueDivide(left->shortVersion, right->shortVersion);
-    } else if (left->isShort && !right->isShort) {
-        return PyFloat_AsDouble(PyLong_Type.tp_as_number->nb_true_divide(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
-    } else if (!left->isShort && right->isShort) {
-        return PyFloat_AsDouble(PyLong_Type.tp_as_number->nb_true_divide(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
-    } else {
-        return PyFloat_AsDouble(PyLong_Type.tp_as_number->nb_true_divide(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
+        return PyjionBigInt_FromInt64(left->shortVersion - right->shortVersion, bigIntRegister);
     }
+    PyjionBigInt* result = nullptr;
+    if (left->isShort && !right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_subtract(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    } else if (!left->isShort && right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_subtract(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)), bigIntRegister);
+    } else {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_subtract(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    }
+    return result;
 }
 
-PyjionBigInt* PyjionBigInt_Mod(PyjionBigInt* left, PyjionBigInt* right) {
+double PyjionBigInt_TrueDivide(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
+    double result = 0.;
     if (left->isShort && right->isShort) {
-        return PyjionBigInt_FromInt64(PyJit_LongMod(left->shortVersion, right->shortVersion));
+        result = PyJit_LongTrueDivide(left->shortVersion, right->shortVersion);
     } else if (left->isShort && !right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_remainder(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
+        result = PyFloat_AsDouble(PyLong_Type.tp_as_number->nb_true_divide(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
     } else if (!left->isShort && right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_remainder(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
+        result = PyFloat_AsDouble(PyLong_Type.tp_as_number->nb_true_divide(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
     } else {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_remainder(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
+        result = PyFloat_AsDouble(PyLong_Type.tp_as_number->nb_true_divide(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
     }
+    return result;
 }
 
-PyjionBigInt* PyjionBigInt_Multiply(PyjionBigInt* left, PyjionBigInt* right) {
+PyjionBigInt* PyjionBigInt_Mod(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
-        return PyjionBigInt_FromInt64(left->shortVersion * right->shortVersion);
-    } else if (left->isShort && !right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_multiply(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
-    } else if (!left->isShort && right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_multiply(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
-    } else {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_multiply(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
+        return PyjionBigInt_FromInt64(PyJit_LongMod(left->shortVersion, right->shortVersion), bigIntRegister);
     }
+    PyjionBigInt* result = nullptr;
+    if (left->isShort && !right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_remainder(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    } else if (!left->isShort && right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_remainder(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)), bigIntRegister);
+    } else {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_remainder(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    }
+    return result;
 }
 
-PyjionBigInt* PyjionBigInt_Power(PyjionBigInt* left, PyjionBigInt* right) {
+PyjionBigInt* PyjionBigInt_Multiply(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
-        return PyjionBigInt_FromInt64(PyJit_LongPow(left->shortVersion, right->shortVersion));// TODO : Check overflow!!!
-    } else if (left->isShort && !right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_power(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right), Py_None));
-    } else if (!left->isShort && right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_power(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion), Py_None));
-    } else {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_power(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right), Py_None));
+        // TODO : Work out overflows
+        return PyjionBigInt_FromInt64(left->shortVersion * right->shortVersion, bigIntRegister);
     }
+    PyjionBigInt* result = nullptr;
+    if (left->isShort && !right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_multiply(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    } else if (!left->isShort && right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_multiply(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)), bigIntRegister);
+    } else {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_multiply(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    }
+    return result;
 }
 
-PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right) {
+PyjionBigInt* PyjionBigInt_Power(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
-        return PyjionBigInt_FromInt64(PyJit_LongFloorDivide(left->shortVersion, right->shortVersion));
-    } else if (left->isShort && !right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_floor_divide(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
-    } else if (!left->isShort && right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_floor_divide(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
-    } else {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_floor_divide(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
+        // TODO : Check overflow!!!
+        return PyjionBigInt_FromInt64(PyJit_LongPow(left->shortVersion, right->shortVersion), bigIntRegister);
     }
+
+    PyjionBigInt* result = nullptr;
+    if (left->isShort && !right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_power(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right), Py_None), bigIntRegister);
+    } else if (!left->isShort && right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_power(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion), Py_None), bigIntRegister);
+    } else {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_power(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right), Py_None), bigIntRegister);
+    }
+    return result;
+}
+
+PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
+    if (left->isShort && right->isShort) {
+        return PyjionBigInt_FromInt64(PyJit_LongFloorDivide(left->shortVersion, right->shortVersion), bigIntRegister);
+    }
+
+    PyjionBigInt* result = nullptr;
+    if (left->isShort && !right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_floor_divide(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    } else if (!left->isShort && right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_floor_divide(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)), bigIntRegister);
+    } else {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_floor_divide(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)), bigIntRegister);
+    }
+    return result;
 }
 
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt* i) {
@@ -192,24 +209,26 @@ shortCompare:
     switch (op) {
         case Py_EQ:
             result = left->shortVersion == right->shortVersion;
+            break;
         case Py_NE:
             result = left->shortVersion != right->shortVersion;
+            break;
         case Py_GE:
             result = left->shortVersion >= right->shortVersion;
+            break;
         case Py_LE:
             result = left->shortVersion <= right->shortVersion;
+            break;
         case Py_LT:
             result = left->shortVersion < right->shortVersion;
+            break;
         case Py_GT:
             result = left->shortVersion > right->shortVersion;
+            break;
         default:
             result = -1;
     }
 
 cleanup:
-    delete left;
-    left = nullptr;
-    delete right;
-    right = nullptr;
     return result;
 }

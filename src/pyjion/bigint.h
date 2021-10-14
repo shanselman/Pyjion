@@ -39,15 +39,29 @@ struct PyjionBigInt {
     int64_t asLong();
 };
 
-PyjionBigInt* PyjionBigInt_FromInt64(int64_t value);
-PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject);
-PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right);
-PyjionBigInt* PyjionBigInt_Sub(PyjionBigInt* left, PyjionBigInt* right);
-double PyjionBigInt_TrueDivide(PyjionBigInt* left, PyjionBigInt* right);
-PyjionBigInt* PyjionBigInt_Mod(PyjionBigInt* left, PyjionBigInt* right);
-PyjionBigInt* PyjionBigInt_Multiply(PyjionBigInt* left, PyjionBigInt* right);
-PyjionBigInt* PyjionBigInt_Power(PyjionBigInt* left, PyjionBigInt* right);
-PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right);
+class PyjionBigIntRegister {
+    std::vector<PyjionBigInt*> ints;
+
+public:
+    void add(PyjionBigInt* i) {
+        ints.push_back(i);
+    }
+    ~PyjionBigIntRegister() {
+        for (auto i : ints) {
+            delete i;
+        }
+    }
+};
+
+PyjionBigInt* PyjionBigInt_FromInt64(int64_t value, PyjionBigIntRegister* bigIntRegister);
+PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject, PyjionBigIntRegister* bigIntRegister);
+PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
+PyjionBigInt* PyjionBigInt_Sub(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
+double PyjionBigInt_TrueDivide(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
+PyjionBigInt* PyjionBigInt_Mod(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
+PyjionBigInt* PyjionBigInt_Multiply(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
+PyjionBigInt* PyjionBigInt_Power(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
+PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
 int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t type);
 
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*);

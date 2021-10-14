@@ -494,6 +494,7 @@ public:
     virtual void emit_set_frame_stackdepth(uint32_t to) = 0;
 
     virtual void emit_bigint_shortvalue() = 0;
+    virtual void emit_pylong_as_bigint() = 0;
 };
 
 #endif

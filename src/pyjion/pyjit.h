@@ -47,6 +47,7 @@
 #include <Python.h>
 #include "codemodel.h"
 #include "absvalue.h"
+#include "bigint.h"
 
 using namespace std;
 
@@ -77,7 +78,7 @@ typedef struct {
     CFrame cframe;
 } PyTraceInfo;
 
-typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*);
+typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*, PyjionBigIntRegister*);
 
 enum OptimizationFlags {
     InlineIs = 1,          // OPT-1

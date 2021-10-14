@@ -2590,8 +2590,9 @@ void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcod
         case AVK_BigInteger:
         case AVK_Integer:
             if (IntegerValue::isBig(constValue)) {
-                m_comp->emit_ptr(PyjionBigInt_FromPyLong(constValue));
-                incStack(1, STACK_KIND_OBJECT);
+                m_comp->emit_ptr(constValue);
+                m_comp->emit_pylong_as_bigint();
+                incStack(1, STACK_KIND_VALUE_BIGINT);
             } else {
                 m_comp->emit_long_long(PyLong_AsLongLong(constValue));
                 incStack(1, STACK_KIND_VALUE_INT);
@@ -2777,8 +2778,8 @@ void AbstractInterpreter::unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, 
     if (!sources.hasValue())
         // Just see if its null/0
         m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
-    else{
-        switch(sources.Value->kind()){
+    else {
+        switch (sources.Value->kind()) {
             case AVK_Float:
                 m_comp->emit_float(0.0);
                 m_comp->emit_branch(isTrue ? BranchNotEqual : BranchEqual, target);

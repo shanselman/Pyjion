@@ -543,11 +543,14 @@ public:
     void emit_dec_frame_stackdepth(uint32_t by) override;
     void emit_set_frame_stackdepth(uint32_t to) override;
     void emit_bigint_shortvalue() override;
+    void emit_pylong_as_bigint() override;
+
 private:
     void load_frame();
     void load_tstate();
     void load_profile();
     void load_trace_info();
+    void load_bigint_register();
     void load_local(py_oparg oparg);
     void decref(bool noopt = false);
     CorInfoType to_clr_type(LocalKind kind);
