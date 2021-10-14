@@ -57,14 +57,23 @@ PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject) {
 PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right) {
     if (left->isShort && right->isShort) {
         left->shortVersion += right->shortVersion;
+        delete right;
+        right = nullptr;
         return left;
-    } else if (left->isShort && !right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
+    } 
+    PyjionBigInt* result = nullptr;
+    if (left->isShort && !right->isShort) {
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right)));
     } else if (!left->isShort && right->isShort) {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion)));
     } else {
-        return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
+        result = PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_add(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right)));
     }
+    delete left;
+    left = nullptr;
+    delete right;
+    right = nullptr;
+    return result;
 }
 
 PyjionBigInt* PyjionBigInt_Sub(PyjionBigInt* left, PyjionBigInt* right) {
@@ -141,8 +150,9 @@ PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right) 
 }
 
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt* i) {
+    PyObject* result = nullptr;
     if (i->isShort)
-        return PyLong_FromLongLong(i->shortVersion);
+        result = PyLong_FromLongLong(i->shortVersion);
     else {
         auto l = _PyLong_New(i->digits.size());
         for (size_t idx = 0; idx < i->digits.size(); idx++) {
@@ -151,8 +161,9 @@ PyObject* PyjionBigInt_AsPyLong(PyjionBigInt* i) {
         if (i->negative) {
             Py_SET_SIZE(l, -i->digits.size());
         }
-        return reinterpret_cast<PyObject*>(l);
+        result = reinterpret_cast<PyObject*>(l);
     }
+    return result;
 }
 
 int64_t PyjionBigInt::asLong() {
@@ -163,32 +174,42 @@ int64_t PyjionBigInt::asLong() {
 }
 
 int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t op) {
+    int result = -1;
+
     if (left->isShort && right->isShort)
         goto shortCompare;
 
     if (left->isShort && !right->isShort) {
-        return PyLong_Type.tp_richcompare(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right), op) == Py_True ? 1 : 0;
+        result = PyLong_Type.tp_richcompare(PyLong_FromLongLong(left->shortVersion), PyjionBigInt_AsPyLong(right), op) == Py_True ? 1 : 0;
     } else if (!left->isShort && right->isShort) {
-        return PyLong_Type.tp_richcompare(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion), op) == Py_True ? 1 : 0;
+        result = PyLong_Type.tp_richcompare(PyjionBigInt_AsPyLong(left), PyLong_FromLongLong(right->shortVersion), op) == Py_True ? 1 : 0;
     } else {
-        return PyLong_Type.tp_richcompare(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right), op) == Py_True ? 1 : 0;
+        result = PyLong_Type.tp_richcompare(PyjionBigInt_AsPyLong(left), PyjionBigInt_AsPyLong(right), op) == Py_True ? 1 : 0;
     }
+    goto cleanup;
 
 shortCompare:
     switch (op) {
         case Py_EQ:
-            return left->shortVersion == right->shortVersion;
+            result = left->shortVersion == right->shortVersion;
         case Py_NE:
-            return left->shortVersion != right->shortVersion;
+            result = left->shortVersion != right->shortVersion;
         case Py_GE:
-            return left->shortVersion >= right->shortVersion;
+            result = left->shortVersion >= right->shortVersion;
         case Py_LE:
-            return left->shortVersion <= right->shortVersion;
+            result = left->shortVersion <= right->shortVersion;
         case Py_LT:
-            return left->shortVersion < right->shortVersion;
+            result = left->shortVersion < right->shortVersion;
         case Py_GT:
-            return left->shortVersion > right->shortVersion;
+            result = left->shortVersion > right->shortVersion;
         default:
-            return -1;
+            result = -1;
     }
+
+cleanup:
+    delete left;
+    left = nullptr;
+    delete right;
+    right = nullptr;
+    return result;
 }
