@@ -29,12 +29,12 @@
 // Max int64 is 9_223_372_036_854_775_807
 
 TEST_CASE("Test IntegerValue:isBig()"){
-    auto small = GENERATE(0, 1, -1, 255, 10000, -10000, 10000000, -10000000);
     SECTION("Test small values"){
-        CHECK(!IntegerValue::isBig(PyLong_FromLongLong(small)));
+        auto smallNumbers = GENERATE(0, 1, -1, 255, 10000, -10000, 10000000, -10000000);
+        CHECK(!IntegerValue::isBig(PyLong_FromLongLong(smallNumbers)));
     }
-    auto big = GENERATE("9_223_372_036_854_775_807", "-9_223_372_036_854_775_807", "200200200200200200200200200", "-200200200200200200200200200");
     SECTION("Test big values"){
+        auto big = GENERATE("9_223_372_036_854_775_807", "-9_223_372_036_854_775_807", "200200200200200200200200200", "-200200200200200200200200200");
         CHECK(IntegerValue::isBig(PyLong_FromUnicodeObject(PyUnicode_FromString(big), 10)));
     }
 }
