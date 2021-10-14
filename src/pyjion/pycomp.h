@@ -252,8 +252,15 @@
 
 #define METHOD_PYLONG_AS_BIGINT              0x00080001
 #define METHOD_LONG_AS_BIGINT                0x00080002
-#define METHOD_BIGINT_ADD                    0x00080003
-#define METHOD_BIGINT_AS_PYLONG              0x00080004
+#define METHOD_BIGINT_AS_PYLONG              0x00080003
+#define METHOD_BIGINT_ADD                    0x00080004
+#define METHOD_BIGINT_SUB                    0x00080005
+#define METHOD_BIGINT_TRUEDIVIDE             0x00080006
+#define METHOD_BIGINT_MOD                    0x00080007
+#define METHOD_BIGINT_MULTIPLY               0x00080008
+#define METHOD_BIGINT_POWER                  0x00080009
+#define METHOD_BIGINT_FLOORDIVIDE            0x0008000A
+#define METHOD_BIGINT_RICHCOMPARE            0x0008000B
 
 #define INTRINSIC_TEST                       0x10000001
 
@@ -454,6 +461,7 @@ public:
     void emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) override;
     void emit_compare_floats(uint16_t compareType) override;
     void emit_compare_ints(uint16_t compareType) override;
+    void emit_compare_bigints(uint16_t compareType) override;
 
     void emit_store_fast(py_oparg local) override;
     void emit_unbound_local_check() override;
@@ -534,7 +542,7 @@ public:
     void emit_load_from_frame_value_stack(uint32_t idx) override;
     void emit_dec_frame_stackdepth(uint32_t by) override;
     void emit_set_frame_stackdepth(uint32_t to) override;
-
+    void emit_bigint_shortvalue() override;
 private:
     void load_frame();
     void load_tstate();

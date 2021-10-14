@@ -67,6 +67,7 @@ ZipValue Zip;
 // Container Sub-Types;
 TupleOfValue<AVK_Any> Tuple;
 TupleOfValue<AVK_Integer> TupleOfInteger;
+TupleOfValue<AVK_BigInteger> TupleOfBigInteger;
 TupleOfValue<AVK_Float> TupleOfFloat;
 TupleOfValue<AVK_String> TupleOfString;
 
@@ -1459,21 +1460,11 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind) {
     }
 }
 
-AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
+AbstractValueKind GetAbstractType(PyTypeObject* type) {
     if (type == nullptr) {
         return AVK_Any;
     } else if (type == &PyLong_Type) {
-        if (value == nullptr)
-            return AVK_BigInteger;
-        int overflow = 0;
-        long long result = PyLong_AsLongLongAndOverflow(value, &overflow);
-        if (overflow != 0) {
-            return AVK_BigInteger;
-        }
-        if (result > BIG_INTEGER) {
-            return AVK_BigInteger;
-        }
-        return AVK_Integer;
+        return AVK_BigInteger;
     } else if (type == &PyFloat_Type) {
         return AVK_Float;
     } else if (type == &PyDict_Type) {
@@ -1623,7 +1614,7 @@ PyTypeObject* VolatileValue::pythonType() {
 }
 
 AbstractValueKind VolatileValue::kind() {
-    return GetAbstractType(this->_type, this->lastValue());
+    return GetAbstractType(this->_type);
 }
 
 AbstractValueKind PgcValue::kind() {

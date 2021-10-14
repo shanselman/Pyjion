@@ -1809,11 +1809,11 @@ public:
     // The return value is the type that is used for calling convention purposes
     // (Thus if the EE wants a value class to be passed like an int, then it will
     // return CORINFO_TYPE_INT
-    CorInfoTypeWithMod getArgType (
-        CORINFO_SIG_INFO*           sig,            /* IN */
-        CORINFO_ARG_LIST_HANDLE     args,           /* IN */
-        CORINFO_CLASS_HANDLE       *vcTypeRet       /* OUT */
-        ) override {
+    CorInfoTypeWithMod getArgType(
+            CORINFO_SIG_INFO* sig,          /* IN */
+            CORINFO_ARG_LIST_HANDLE args,   /* IN */
+            CORINFO_CLASS_HANDLE* vcTypeRet /* OUT */
+            ) override {
         CorInfoType definedType = (reinterpret_cast<Parameter*>(args))->m_type;
         if (definedType != CORINFO_TYPE_VALUECLASS && definedType != CORINFO_TYPE_CLASS) {
             *vcTypeRet = nullptr;
@@ -1945,8 +1945,7 @@ public:
     // Is the given type in System.Private.Corelib and marked with IntrinsicAttribute?
     // This defaults to false.
     bool isIntrinsicType(
-            CORINFO_CLASS_HANDLE        classHnd
-    ) override {
+            CORINFO_CLASS_HANDLE classHnd) override {
         return false;
     }
 };

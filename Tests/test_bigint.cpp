@@ -26,12 +26,49 @@
 #include <catch2/catch.hpp>
 #include "testing_util.h"
 
+// Max int64 is 9_223_372_036_854_775_807
+
+TEST_CASE("Test IntegerValue:isBig()"){
+    auto small = GENERATE(0, 1, -1, 255, 10000, -10000, 10000000, -10000000);
+    SECTION("Test small values"){
+        CHECK(!IntegerValue::isBig(PyLong_FromLongLong(small)));
+    }
+    auto big = GENERATE("9_223_372_036_854_775_807", "-9_223_372_036_854_775_807", "200200200200200200200200200", "-200200200200200200200200200");
+    SECTION("Test big values"){
+        CHECK(IntegerValue::isBig(PyLong_FromUnicodeObject(PyUnicode_FromString(big), 10)));
+    }
+}
 
 TEST_CASE("Test bigint math") {
     // +=, -= checks are to avoid constant folding
-    SECTION("test addition") {
+    SECTION("test addition of max int64 with int") {
         auto t = EmissionTest(
-                "def f():\n    x = 1234567876543456765\n    return x + 123");
-        CHECK(t.returns() == "1234567876543456888");
+                "def f():\n    x = 9_223_372_036_854_775_807\n    return x + 1");
+        CHECK(t.returns() == "9223372036854775808");
+    }
+    SECTION("test addition of max int64 with max int64") {
+        auto t = EmissionTest(
+                "def f():\n    x = 9_223_372_036_854_775_807\n    return x + 9_223_372_036_854_775_807");
+        CHECK(t.returns() == "18446744073709551614");
+    }
+    SECTION("test addition of big int with big int") {
+        auto t = EmissionTest(
+                "def f():\n    x = 100_100_100_100_100_100_100_100_100\n    return x + 100_100_100_100_100_100_100_100_100");
+        CHECK(t.returns() == "200200200200200200200200200");
+    }
+    SECTION("test addition of big int with int") {
+        auto t = EmissionTest(
+                "def f():\n    x = 100_100_100_100_100_100_100_100_100\n    return x + 100");
+        CHECK(t.returns() == "100100100100100100100100200");
+    }
+    SECTION("test addition of -ve big int with int") {
+        auto t = EmissionTest(
+                "def f():\n    x = -100_100_100_100_100_100_100_100_100\n    return x + 100");
+        CHECK(t.returns() == "-100100100100100100100100000");
+    }
+    SECTION("test subtraction of big with int") {
+        auto t = EmissionTest(
+                "def f():\n    x = 100_100_100_100_100_100_100_100_100\n    return x - 100");
+        CHECK(t.returns() == "100100100100100100100100000");
     }
 }

@@ -442,6 +442,11 @@ class IntegerValue : public AbstractValue {
 
 public:
     static AbstractValue* binary(int op, AbstractValueWithSources& other);
+    static bool isBig(PyObject* val) {
+        if (val == nullptr)
+            return false;
+        return (Py_ABS(Py_SIZE(val)) > 2);
+    }
 };
 
 class InternIntegerValue : public IntegerValue {
@@ -492,7 +497,7 @@ class TupleValue : public AbstractValue {
     const char* describe() override;
 };
 
-template <AbstractValueKind Kind>
+template<AbstractValueKind Kind>
 class TupleOfValue : public TupleValue {
 public:
     AbstractValueKind itemKind() override {
@@ -754,7 +759,6 @@ extern UndefinedValue Undefined;
 extern AnyValue Any;
 extern BoolValue Bool;
 extern IntegerValue Integer;
-extern InternIntegerValue InternInteger;
 extern BigIntegerValue BigInteger;
 extern FloatValue Float;
 extern ListValue List;
@@ -789,10 +793,11 @@ extern ZipValue Zip;
 
 extern TupleOfValue<AVK_Any> Tuple;
 extern TupleOfValue<AVK_Integer> TupleOfInteger;
+extern TupleOfValue<AVK_BigInteger> TupleOfBigInteger;
 extern TupleOfValue<AVK_Float> TupleOfFloat;
 extern TupleOfValue<AVK_String> TupleOfString;
 
 AbstractValue* avkToAbstractValue(AbstractValueKind);
-AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value = nullptr);
+AbstractValueKind GetAbstractType(PyTypeObject* type);
 PyTypeObject* GetPyType(AbstractValueKind type);
 #endif

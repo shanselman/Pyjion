@@ -83,7 +83,8 @@ enum LocalKind {
     LK_Float,
     LK_Int,
     LK_Bool,
-    LK_NativeInt
+    LK_NativeInt,
+    LK_BigInt,
 };
 
 enum BranchType {
@@ -414,6 +415,7 @@ public:
     virtual void emit_compare_object(uint16_t compareType) = 0;
     virtual void emit_compare_floats(uint16_t compareType) = 0;
     virtual void emit_compare_ints(uint16_t compareType) = 0;
+    virtual void emit_compare_bigints(uint16_t compareType) = 0;
 
     virtual void emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) = 0;
     // Performs a comparison for values on the stack which are objects, keeping a boxed Python object as the result.
@@ -490,6 +492,8 @@ public:
     virtual void emit_load_from_frame_value_stack(uint32_t idx) = 0;
     virtual void emit_dec_frame_stackdepth(uint32_t by) = 0;
     virtual void emit_set_frame_stackdepth(uint32_t to) = 0;
+
+    virtual void emit_bigint_shortvalue() = 0;
 };
 
 #endif

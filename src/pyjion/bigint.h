@@ -28,24 +28,28 @@
 
 #include <cstdint>
 #include <Python.h>
-
+#include <vector>
 
 struct PyjionBigInt {
-    int64_t shortVersion;
+    int64_t shortVersion = -1;
     bool isShort;
-    PyObject* pythonObject;
+    bool negative;// Only used in long integers.
+    std::vector<digit> digits;
 
-    int64_t asLong() const {
-        if (isShort)
-            return shortVersion;
-        else
-            return PyLong_AsLongLong(pythonObject);
-    }
+    int64_t asLong();
 };
 
 PyjionBigInt* PyjionBigInt_FromInt64(int64_t value);
 PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject);
-PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt*  right);
+PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right);
+PyjionBigInt* PyjionBigInt_Sub(PyjionBigInt* left, PyjionBigInt* right);
+double PyjionBigInt_TrueDivide(PyjionBigInt* left, PyjionBigInt* right);
+PyjionBigInt* PyjionBigInt_Mod(PyjionBigInt* left, PyjionBigInt* right);
+PyjionBigInt* PyjionBigInt_Multiply(PyjionBigInt* left, PyjionBigInt* right);
+PyjionBigInt* PyjionBigInt_Power(PyjionBigInt* left, PyjionBigInt* right);
+PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right);
+int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t type);
+
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*);
 
-#endif //PYJION_BIGINT_H
+#endif//PYJION_BIGINT_H

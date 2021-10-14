@@ -273,6 +273,13 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx) {
 }
 
 PyObject* InstructionGraph::makeGraph(const char* name) {
+    if (PyErr_Occurred()) {
+#ifdef DEBUG_VERBOSE
+        PyErr_Print();
+#endif
+        PyErr_Clear();
+    }
+
     PyObject* g = PyUnicode_FromFormat("digraph %s { \n", name);
     PyUnicode_AppendAndDel(&g, PyUnicode_FromString("\tnode [shape=box];\n\tFRAME [label=FRAME];\n"));
     set<py_opindex> exceptionHandlers;

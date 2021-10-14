@@ -425,7 +425,7 @@ private:
 
     void jumpIfOrPop(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
     void popJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
-    void unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
+    void unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset, AbstractValueWithSources sources);
     void jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo);
     void testBoolAndBranch(Local value, bool isTrue, Label target);
 

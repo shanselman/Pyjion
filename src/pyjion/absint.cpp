@@ -195,7 +195,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
 void AbstractInterpreter::setLocalType(size_t index, PyObject* val) {
     auto& lastState = mStartStates[0];
     if (val != nullptr) {
-        auto localInfo = AbstractLocalInfo(new ArgumentValue(Py_TYPE(val), val, GetAbstractType(Py_TYPE(val), val)));
+        auto localInfo = AbstractLocalInfo(new ArgumentValue(Py_TYPE(val), val, GetAbstractType(Py_TYPE(val))));
         localInfo.ValueInfo.Sources = newSource(new LocalSource(index));
         lastState.replaceLocal(index, localInfo);
     }
@@ -1029,13 +1029,10 @@ AbstractValue* AbstractInterpreter::toAbstract(PyObject* obj) {
     if (obj == Py_None) {
         return &None;
     } else if (PyLong_CheckExact(obj)) {
-        int ovf;
-        long value = PyLong_AsLongAndOverflow(obj, &ovf);
-        if (ovf || value > 2147483647 || value < -2147483647)
+        if (IntegerValue::isBig(obj))
             return &BigInteger;
-        if (Py_SIZE(obj) < 4 && IS_SMALL_INT(value))
-            return &InternInteger;
-        return &Integer;
+        else
+            return &Integer;
     } else if (PyUnicode_Check(obj)) {
         return &String;
     } else if (PyList_CheckExact(obj)) {
@@ -1043,18 +1040,20 @@ AbstractValue* AbstractInterpreter::toAbstract(PyObject* obj) {
     } else if (PyDict_CheckExact(obj)) {
         return &Dict;
     } else if (PyTuple_CheckExact(obj)) {
-        if (PyTuple_GET_SIZE(obj) == 0){
+        if (PyTuple_GET_SIZE(obj) == 0) {
             return &Tuple;
         }
         auto t = Py_TYPE(PyTuple_GET_ITEM(obj, 0));
-        for (int i = 1; i < PyTuple_GET_SIZE(obj); i++){
+        for (int i = 1; i < PyTuple_GET_SIZE(obj); i++) {
             if (Py_TYPE(PyTuple_GET_ITEM(obj, i)) != t)
                 return &Tuple;
         }
-        auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)), PyTuple_GET_ITEM(obj, 0));
-        switch (abstractType){
+        auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)));
+        switch (abstractType) {
             case AVK_String:
                 return &TupleOfString;
+            case AVK_BigInteger:
+                return &TupleOfBigInteger;
             case AVK_Integer:
                 return &TupleOfInteger;
             case AVK_Float:
@@ -1460,6 +1459,11 @@ void AbstractInterpreter::incStack(size_t size, LocalKind kind) {
         case LK_Bool:
             m_stack.inc(size, STACK_KIND_VALUE_INT);
             break;
+        case LK_BigInt:
+            m_stack.inc(size, STACK_KIND_VALUE_BIGINT);
+            break;
+        default:
+            m_stack.inc(size, STACK_KIND_OBJECT);
     }
 }
 
@@ -1757,7 +1761,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             case POP_JUMP_IF_TRUE:
             case POP_JUMP_IF_FALSE:
                 if (CAN_UNBOX() && op.escape) {
-                    unboxedPopJumpIf(byte != POP_JUMP_IF_FALSE, opcodeIndex, op.jumpsTo);
+                    unboxedPopJumpIf(byte != POP_JUMP_IF_FALSE, opcodeIndex, op.jumpsTo, stackInfo.top());
                 } else {
                     popJumpIf(byte != POP_JUMP_IF_FALSE, opcodeIndex, op.jumpsTo);
                 }
@@ -2577,19 +2581,21 @@ void AbstractInterpreter::loadConst(py_oparg constIndex, py_opindex opcodeIndex)
 
 void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcodeIndex) {
     auto constValue = PyTuple_GetItem(mCode->co_consts, constIndex);
-    auto abstractT = GetAbstractType(constValue->ob_type, constValue);
+    auto abstractT = GetAbstractType(constValue->ob_type);
     switch (abstractT) {
         case AVK_Float:
             m_comp->emit_float(PyFloat_AS_DOUBLE(constValue));
             incStack(1, STACK_KIND_VALUE_FLOAT);
             break;
-        case AVK_Integer:
-            m_comp->emit_long_long(PyLong_AsLongLong(constValue));
-            incStack(1, STACK_KIND_VALUE_INT);
-            break;
         case AVK_BigInteger:
-            m_comp->emit_ptr(PyjionBigInt_FromPyLong(constValue));
-            incStack(1, STACK_KIND_OBJECT);
+        case AVK_Integer:
+            if (IntegerValue::isBig(constValue)) {
+                m_comp->emit_ptr(PyjionBigInt_FromPyLong(constValue));
+                incStack(1, STACK_KIND_OBJECT);
+            } else {
+                m_comp->emit_long_long(PyLong_AsLongLong(constValue));
+                incStack(1, STACK_KIND_VALUE_INT);
+            }
             break;
         case AVK_Bool:
             if (constValue == Py_True)
@@ -2763,16 +2769,33 @@ void AbstractInterpreter::popJumpIf(bool isTrue, py_opindex opcodeIndex, py_opar
     m_offsetStack[jumpTo] = ValueStack(m_stack);
 }
 
-void AbstractInterpreter::unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg jumpTo) {
-    if (jumpTo <= opcodeIndex) {
+void AbstractInterpreter::unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset, AbstractValueWithSources sources) {
+    if (offset <= opcodeIndex) {
         m_comp->emit_pending_calls();
     }
-    auto target = getOffsetLabel(jumpTo);
-
-    m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+    auto target = getOffsetLabel(offset);
+    if (!sources.hasValue())
+        // Just see if its null/0
+        m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+    else{
+        switch(sources.Value->kind()){
+            case AVK_Float:
+                m_comp->emit_float(0.0);
+                m_comp->emit_branch(isTrue ? BranchNotEqual : BranchEqual, target);
+                break;
+            case AVK_Bool:
+            case AVK_Integer:
+                m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+                break;
+            case AVK_BigInteger:
+                m_comp->emit_bigint_shortvalue();
+                m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+                break;
+        }
+    }
 
     decStack();
-    m_offsetStack[jumpTo] = ValueStack(m_stack);
+    m_offsetStack[offset] = ValueStack(m_stack);
 }
 
 void AbstractInterpreter::jumpAbsolute(py_opindex index, py_opindex from) {
