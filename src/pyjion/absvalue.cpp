@@ -278,6 +278,37 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_XOR:
                 return &Integer;
         }
+    }else if (other_kind == AVK_BigInteger) {
+        switch (op) {
+            case BINARY_MODULO:
+            case INPLACE_MODULO:
+                return this;
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_TRUE_DIVIDE: {
+                return &Float;
+            }
+            case BINARY_ADD:
+            case BINARY_AND:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_LSHIFT:
+            case BINARY_MULTIPLY:
+            case BINARY_OR:
+            case BINARY_POWER:
+            case BINARY_RSHIFT:
+            case BINARY_SUBTRACT:
+            case BINARY_XOR:
+            case INPLACE_ADD:
+            case INPLACE_AND:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_LSHIFT:
+            case INPLACE_MULTIPLY:
+            case INPLACE_OR:
+            case INPLACE_POWER:
+            case INPLACE_RSHIFT:
+            case INPLACE_SUBTRACT:
+            case INPLACE_XOR:
+                return &BigInteger;
+        }
     } else if (other_kind == AVK_List) {
         switch (op) {
             case BINARY_MULTIPLY:
@@ -946,6 +977,24 @@ AbstractValue* FloatValue::binary(int op, AbstractValueWithSources& other) {
                 return &Float;
         }
     } else if (other_kind == AVK_Integer) {
+        switch (op) {
+            case BINARY_ADD:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_MODULO:
+            case BINARY_MULTIPLY:
+            case BINARY_POWER:
+            case BINARY_SUBTRACT:
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_ADD:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_MODULO:
+            case INPLACE_MULTIPLY:
+            case INPLACE_POWER:
+            case INPLACE_SUBTRACT:
+            case INPLACE_TRUE_DIVIDE:
+                return &Float;
+        }
+    } else if (other_kind == AVK_BigInteger) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_FLOOR_DIVIDE:
