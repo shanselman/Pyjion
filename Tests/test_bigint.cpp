@@ -77,6 +77,16 @@ TEST_CASE("Test bigint math") {
                 "def f():\n    x = 100\n    return x ** 100");
         CHECK(t.returns() == "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
     }
+    SECTION("test float multiply with  big int") {
+        auto t = EmissionTest(
+                "def f():\n    x = 100_100_100_100_100_100_100_100_100\n    return x * 100.");
+        CHECK(t.returns() == "1.001001001001001e+28");
+    }
+    SECTION("test big int multiply with float") {
+        auto t = EmissionTest(
+                "def f():\n    x = 100.\n    return x * 100_100_100_100_100_100_100_100_100");
+        CHECK(t.returns() == "1.001001001001001e+28");
+    }
 }
 
 TEST_CASE("Test power function"){
