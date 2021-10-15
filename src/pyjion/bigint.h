@@ -65,5 +65,6 @@ PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right, 
 int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t type);
 
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*);
+double PyjionBigInt_AsDouble(PyjionBigInt*);
 
 #endif//PYJION_BIGINT_H

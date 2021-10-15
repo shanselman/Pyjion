@@ -804,6 +804,17 @@ LocalKind PythonCompiler::emit_unboxed_binary_object(uint16_t opcode, AbstractVa
         m_il.emit_call(METHOD_LONG_AS_BIGINT);
         emit_load_and_free_local(right_l);
         return emit_binary_bigint(opcode);
+    } else if (leftKind == AVK_Float && rightKind == AVK_BigInteger) {
+        load_bigint_register();
+        m_il.emit_call(METHOD_BIGINT_AS_DOUBLE);
+        return emit_binary_float(opcode);
+    } else if (leftKind == AVK_BigInteger && rightKind == AVK_Float) {
+        Local right_l = emit_define_local(LK_Pointer);
+        emit_store_local(right_l);
+        load_bigint_register();
+        m_il.emit_call(METHOD_BIGINT_AS_DOUBLE);
+        emit_load_and_free_local(right_l);
+        return emit_binary_float(opcode);
     } else {
         assert(false);
         return LK_Pointer;

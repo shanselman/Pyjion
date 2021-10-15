@@ -262,3 +262,14 @@ shortCompare:
 cleanup:
     return result;
 }
+
+double PyjionBigInt_AsDouble(PyjionBigInt*i) {
+    if (i->isShort){
+        return (double)i->shortVersion;
+    } else {
+        auto l = PyjionBigInt_AsPyLong(i);
+        double result = PyLong_AsDouble(l);
+        Py_XDECREF(l);
+        return result;
+    }
+}

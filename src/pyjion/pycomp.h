@@ -261,6 +261,7 @@
 #define METHOD_BIGINT_POWER                  0x00080009
 #define METHOD_BIGINT_FLOORDIVIDE            0x0008000A
 #define METHOD_BIGINT_RICHCOMPARE            0x0008000B
+#define METHOD_BIGINT_AS_DOUBLE              0x0008000C
 
 #define INTRINSIC_TEST                       0x10000001
 
