@@ -151,7 +151,6 @@ TEST_CASE("Test instruction graphs") {
         t.assertInstruction(10, LOAD_FAST, 2, true);
     }
 
-    setOptimizationLevel(2);
     SECTION("test BINARY_MULTIPLY is unboxed at level 2") {
         auto t = InstructionGraphTest("def f(n=10000):\n"
                                       "  for y in range(n):\n"
@@ -163,5 +162,4 @@ TEST_CASE("Test instruction graphs") {
         t.assertInstruction(20, BINARY_MULTIPLY, 0, true); // * should be unboxed
         t.assertInstruction(36, INPLACE_MULTIPLY, 0, true); // *= should be unboxed
     }
-    setOptimizationLevel(1);
 }
