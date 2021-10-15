@@ -1475,7 +1475,7 @@ TEST_CASE("int binary op type inference", "[int][binary op][inference]") {
                         new VariableVerifier(6, 1, AVK_Undefined, true), // y not assigned yet
                         new VariableVerifier(8, 1, AVK_Integer),         // y assigned
                         new VariableVerifier(14, 2, AVK_Undefined, true),// z not assigned yet
-                        new VariableVerifier(16, 2, AVK_BigInteger),     // z assigned
+                        new VariableVerifier(16, 2, AVK_Integer),     // z assigned
                 }));
     }
 
@@ -1612,7 +1612,7 @@ TEST_CASE("int binary op type inference", "[int][binary op][inference]") {
                         new VariableVerifier(4, 0, AVK_Integer),        // x assigned
                         new VariableVerifier(6, 1, AVK_Undefined, true),// y not assigned yet
                         new VariableVerifier(12, 1, AVK_Integer),       // y assigned
-                        new VariableVerifier(16, 0, AVK_BigInteger)     // x assigned in-place
+                        new VariableVerifier(16, 0, AVK_Integer)     // x assigned in-place
                 }));
     }
 
