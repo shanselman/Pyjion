@@ -28,7 +28,7 @@ def main(input_file, opt_level, pgc):
         for case in test_cases:
             pyjion.enable()
             print(f"Trying with Optimizations = {opt_level}")
-            pyjion.config(level=opt_level, pgc=pgc)
+            pyjion.config(level=opt_level, pgc=pgc, graph=True)
             r = unittest.result.TestResult()
             case.run(r)
             if r.wasSuccessful():

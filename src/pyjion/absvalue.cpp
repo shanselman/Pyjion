@@ -1430,7 +1430,7 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind) {
         case AVK_Method:
             return &Method;
         case AVK_BigInteger:
-            return &Integer;
+            return &BigInteger;
         case AVK_Range:
             return &Range;
         case AVK_RangeIterator:
