@@ -45,6 +45,7 @@
 #include "ipycomp.h"
 #include "exceptions.h"
 #include "bigint.h"
+#include "hwintrinsics.h"
 
 #ifndef WINDOWS
 #include <sys/mman.h>
@@ -1644,7 +1645,9 @@ public:
                                           const char** enclosingClassName) override {
         auto* meth = reinterpret_cast<BaseMethod*>(ftn);
         if (meth->isIntrinsic()) {
-            *namespaceName = "System.Runtime.Intrinsics";
+            *namespaceName = "System.Runtime.Intrinsics"; // namespaceForIntrinsic(NI_SSE2_Subtract);
+            *className = "Vector128"; //classnameForIntrinsic(NI_SSE2_Subtract);
+            return "Create"; // methodForIntrinsic(NI_SSE2_Subtract);
         }
         return m_methodName;
     }
@@ -1894,8 +1897,7 @@ public:
     CorInfoIntrinsics getIntrinsicID(
             CORINFO_METHOD_HANDLE method,
             bool* pMustExpand) override {
-        WARN("getIntrinsicID not implemented\r\n");
-        return CORINFO_INTRINSIC_Object_GetType;
+        return CORINFO_INTRINSIC_Illegal;
     }
 
     // Quick check whether the method is a jit intrinsic. Returns the same value as getMethodAttribs(ftn) & CORINFO_FLG_JIT_INTRINSIC, except faster.

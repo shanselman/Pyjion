@@ -176,7 +176,7 @@ public:
 
     uint32_t getMethodAttrs() override {
         if (m_hasIntrinsics) {
-            return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE | CORINFO_FLG_INTRINSIC;
+            return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE | CORINFO_FLG_INTRINSIC | CORINFO_FLG_JIT_INTRINSIC;
         } else {
             return CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE;
         }
