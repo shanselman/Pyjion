@@ -471,37 +471,36 @@ TEST_CASE("Unary tests") {
                 "def f():\n    x = 1\n    y = 32\n    return x << y");
         CHECK(t.returns() == "4294967296");
     }
-    SECTION("test63") {
+    SECTION("test small left shift small 62") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 62\n    return x << y");
         CHECK(t.returns() == "4611686018427387904");
     }
-    SECTION("test64") {
+    SECTION("test small left shift small 63") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 63\n    return x << y");
         CHECK(t.returns() == "9223372036854775808");
     }
-    SECTION("test65") {
+    SECTION("test small left shift small 64") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 64\n    return x << y");
         CHECK(t.returns() == "18446744073709551616");
     }
-    SECTION("test66") {
+    SECTION("test medium int left shift small") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    y = 1\n    return x << y");
         CHECK(t.returns() == "9223372036854775806");
     }
-    SECTION("test67") {
+    SECTION("test large left shift small") {
         auto t = EmissionTest(
                 "def f():\n    x = 9223372036854775807\n    y = 1\n    return x << y");
         CHECK(t.returns() == "18446744073709551614");
     }
-    SECTION("test68") {
+    SECTION("test small right shift large") {
         auto t = EmissionTest(
-                "def f():\n    x = 9223372036854775807\n    y = 9223372036854775807\n    return x << y");
-        CHECK(t.raises() == PyExc_MemoryError);
+                "def f():\n    x = 1\n    y = 9223372036854775807\n    return x >> y");
+        CHECK(t.returns() == "0");
     }
-
     SECTION("small int power") {
         auto t = EmissionTest(
                 "def f():\n    x = 1\n    y = 2\n    return x ** y");

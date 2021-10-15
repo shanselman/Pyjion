@@ -25,7 +25,8 @@
 
 #include <catch2/catch.hpp>
 #include "testing_util.h"
-
+#include "intrins.h"
+#define MAXINT64 9223372036854775807
 // Max int64 is 9_223_372_036_854_775_807
 
 TEST_CASE("Test IntegerValue:isBig()"){
@@ -70,5 +71,24 @@ TEST_CASE("Test bigint math") {
         auto t = EmissionTest(
                 "def f():\n    x = 100_100_100_100_100_100_100_100_100\n    return x - 100");
         CHECK(t.returns() == "100100100100100100100100000");
+    }
+    SECTION("test power of 2 small ints into a big int") {
+        auto t = EmissionTest(
+                "def f():\n    x = 100\n    return x ** 100");
+        CHECK(t.returns() == "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+    }
+}
+
+TEST_CASE("Test power function"){
+    SECTION("Test overflow"){
+        CHECK(PyJit_LongPow(2, 2) == 4);
+        CHECK(PyJit_LongPow(2, 3) == 8);
+        CHECK(PyJit_LongPow(2, 4) == 16);
+        CHECK(PyJit_LongPow(2, 5) == 32);
+        CHECK(PyJit_LongPow(2, 6) == 64);
+        CHECK(PyJit_LongPow(2, 32) == 4294967296);
+        CHECK(PyJit_LongPow(2, 63) == 9223372036854775808);
+        CHECK(PyJit_LongPow(2, 65) == 0);
+        CHECK(PyJit_LongPow(2, 65) == 0);
     }
 }

@@ -59,15 +59,12 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
     switch (opcode) {
         case BINARY_POWER:
         case INPLACE_POWER:
-            if (OPT_ENABLED(IntegerUnboxingPower)) {
-                return true;
-            } else {
-                for (auto& t : edgesIn) {
-                    if (t == AVK_Integer)
-                        return false;
-                }
-                return true;
+            for (auto& t : edgesIn) {
+                if (t == AVK_Integer)
+                    return false;
             }
+            return true;
+
 
         case INPLACE_MULTIPLY:
         case BINARY_MULTIPLY:

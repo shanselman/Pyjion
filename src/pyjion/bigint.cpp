@@ -119,8 +119,13 @@ PyjionBigInt* PyjionBigInt_Mod(PyjionBigInt* left, PyjionBigInt* right, PyjionBi
 
 PyjionBigInt* PyjionBigInt_Multiply(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
-        // TODO : Work out overflows
-        return PyjionBigInt_FromInt64(left->shortVersion * right->shortVersion, bigIntRegister);
+        auto x = left->shortVersion * right->shortVersion;
+        if (left->shortVersion != 0 && x / left->shortVersion != right->shortVersion) {
+            // overflow handling
+            return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_multiply(PyLong_FromLongLong(left->shortVersion), PyLong_FromLongLong(right->shortVersion)), bigIntRegister);
+        } else {
+            return PyjionBigInt_FromInt64(x, bigIntRegister);
+        }
     }
     PyjionBigInt* result = nullptr;
     if (left->isShort && !right->isShort) {
@@ -135,8 +140,11 @@ PyjionBigInt* PyjionBigInt_Multiply(PyjionBigInt* left, PyjionBigInt* right, Pyj
 
 PyjionBigInt* PyjionBigInt_Power(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
-        // TODO : Check overflow!!!
-        return PyjionBigInt_FromInt64(PyJit_LongPow(left->shortVersion, right->shortVersion), bigIntRegister);
+        auto result = PyJit_LongPow(left->shortVersion, right->shortVersion);
+        if (left->shortVersion != 0 && result != 0)
+            return PyjionBigInt_FromInt64(result, bigIntRegister);
+        else
+            return PyjionBigInt_FromPyLong(PyLong_Type.tp_as_number->nb_power(PyLong_FromLongLong(left->shortVersion), PyLong_FromLongLong(right->shortVersion), Py_None), bigIntRegister);
     }
 
     PyjionBigInt* result = nullptr;

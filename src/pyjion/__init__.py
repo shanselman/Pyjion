@@ -104,7 +104,6 @@ class OptimizationFlags(IntFlag):
     Unboxing = 4092
     IsNone = 8184
     IntegerUnboxingMultiply = 16368
-    IntegerUnboxingPower = 32736
 
 
 class CompilationResult(IntEnum):

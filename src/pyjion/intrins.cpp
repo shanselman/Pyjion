@@ -2675,9 +2675,11 @@ long long PyJit_LongMod(long long x, long long y) {
 long long PyJit_LongPow(long long base, long long exp) {
     long long result = 1;
     for (;;) {
-        if (exp & 1) result *= base;
+        if (exp & 1)
+            result *= base;
         exp >>= 1;
-        if (!exp) break;
+        if (!exp)
+            break;
         base *= base;
     }
     return result;

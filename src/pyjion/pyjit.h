@@ -96,7 +96,6 @@ enum OptimizationFlags {
     Unboxing = 4092,       // OPTIMIZE_UNBOXING; // OPT-16
     IsNone = 8184,         // OPTIMIZE_ISNONE; // OPT-17
     IntegerUnboxingMultiply = 16368,
-    IntegerUnboxingPower = 32736,
 };
 
 inline OptimizationFlags operator|(OptimizationFlags a, OptimizationFlags b) {
