@@ -67,6 +67,7 @@ class PyjionJittedCode;
 
 bool JitInit(const wchar_t* jitpath);
 PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile);
+static inline PyObject* PyJit_CheckFunctionResult(PyThreadState *tstate, PyObject *result, PyFrameObject* frame);
 static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile);
 PyObject* PyJit_EvalFrame(PyThreadState*, PyFrameObject*, int);
 PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject);
