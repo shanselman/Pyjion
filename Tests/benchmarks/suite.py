@@ -6,6 +6,7 @@ import warnings
 
 import pyjion
 import pathlib
+import sys
 from statistics import fmean
 from rich.console import Console
 from rich.table import Table
@@ -35,6 +36,8 @@ if __name__ == "__main__":
         profiles_out.mkdir()
 
     for f in pathlib.Path(__file__).parent.glob("bench_*.py"):
+        if len(sys.argv) > 1 and f.stem != f"bench_{sys.argv[1]}":
+            continue
         i = __import__(f.stem, globals(), locals(), )
         if hasattr(i, "__benchmarks__"):
             for benchmark in i.__benchmarks__:
@@ -42,16 +45,16 @@ if __name__ == "__main__":
                 with cProfile.Profile() as pr:
                     without_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
 
-                pr.dump_stats(graphs_out / f'{f.stem}_without.pstat')
+                pr.dump_stats(profiles_out / f'{f.stem}_without.pstat')
 
-                pyjion.enable()
-                pyjion.config(**settings, graph=True)
                 with cProfile.Profile() as pr:
+                    pyjion.enable()
+                    pyjion.config(**settings, graph=True)
                     with_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
+                    pyjion.disable()
 
-                pr.dump_stats(graphs_out / f'{f.stem}_with.pstat')
+                pr.dump_stats(profiles_out / f'{f.stem}_with.pstat')
 
-                pyjion.disable()
                 with open(graphs_out / f'{f.stem}.dot', 'w') as dot:
                     for k, attrib in i.__dict__.items():
                         if hasattr(attrib, "__code__"):
