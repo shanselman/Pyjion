@@ -129,7 +129,7 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
         return nullptr;
     }
 
-    auto* bigIntRegister = new PyjionBigIntRegister();
+    auto* bigIntRegister = new PyjionBigIntRegister(1000);
     PyTraceInfo trace_info;
     /* Mark trace_info as uninitialized */
     trace_info.code = nullptr;

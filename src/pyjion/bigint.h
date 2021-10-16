@@ -43,8 +43,14 @@ class PyjionBigIntRegister {
     std::vector<PyjionBigInt*> ints;
 
 public:
+    explicit PyjionBigIntRegister(size_t reserve = 0){
+        ints.reserve(reserve);
+    }
     void add(PyjionBigInt* i) {
         ints.push_back(i);
+    }
+    size_t size(){
+        return ints.size();
     }
     ~PyjionBigIntRegister() {
         for (auto i : ints) {
