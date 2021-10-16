@@ -33,7 +33,7 @@ ExceptionHandler* ExceptionHandlerManager::SetRootHandler(Label handlerLabel) {
             ValueStack(),
             EhfNone,
             nullptr);
-    m_exceptionHandlers.push_back(
+    m_exceptionHandlers.emplace_back(
             rootHandler);
     return m_exceptionHandlers[0];
 }
@@ -49,7 +49,7 @@ ExceptionHandler* ExceptionHandlerManager::AddSetupFinallyHandler(Label handlerL
             currentHandler);
     m_handlerIndexes[handlerIndex] = newHandler;
 
-    m_exceptionHandlers.push_back(
+    m_exceptionHandlers.emplace_back(
             newHandler);
     return newHandler;
 }

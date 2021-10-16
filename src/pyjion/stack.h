@@ -113,6 +113,10 @@ public:
         return vector<BlockInfo>::push_back(block);
     }
 
+    void emplace_back(BlockInfo block) {
+        vector<BlockInfo>::emplace_back(block);
+    }
+
     bool beyond(py_opindex curByte) {
         return (size() > 1 &&
                 curByte >= back().EndOffset &&

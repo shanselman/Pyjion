@@ -114,7 +114,7 @@ void InstructionGraph::fixInstructions() {
         auto edgesIn = getEdges(instruction.first);
         vector<AbstractValueKind> typesIn;
         for (auto& edgeIn : edgesIn) {
-            typesIn.push_back(edgeIn.kind);
+            typesIn.emplace_back(edgeIn.kind);
             if (!supportsEscaping(edgeIn.kind))
                 allEdgesEscapable = false;
         }
@@ -397,7 +397,7 @@ vector<Edge> InstructionGraph::getEdges(py_opindex idx) {
     vector<Edge> result;
     for (size_t i = 0; i <= max_position; i++) {
         if (filteredEdges.find(i) != filteredEdges.end())
-            result.push_back(filteredEdges[i]);
+            result.emplace_back(filteredEdges[i]);
     }
     return result;
 }
@@ -415,7 +415,7 @@ vector<Edge> InstructionGraph::getEdgesFrom(py_opindex idx) {
     vector<Edge> result;
     for (size_t i = 0; i <= max_position; i++) {
         if (filteredEdges.find(i) != filteredEdges.end())
-            result.push_back(filteredEdges[i]);
+            result.emplace_back(filteredEdges[i]);
     }
     return result;
 }

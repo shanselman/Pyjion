@@ -196,7 +196,7 @@ public:
     }
 
     void push(AbstractValueWithSources value) {
-        mStack.push_back(value);
+        mStack.emplace_back(value);
     }
 
     size_t stackSize() const {
@@ -358,7 +358,7 @@ private:
     void initStartingState();
     AbstractInterpreterResult preprocess();
     AbstractSource* newSource(AbstractSource* source) {
-        m_sources.push_back(source);
+        m_sources.emplace_back(source);
         return source;
     }
 

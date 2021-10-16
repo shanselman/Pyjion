@@ -47,7 +47,7 @@ public:
         ints.reserve(reserve);
     }
     void add(PyjionBigInt* i) {
-        ints.push_back(i);
+        ints.emplace_back(i);
     }
     size_t size(){
         return ints.size();

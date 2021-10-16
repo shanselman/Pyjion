@@ -50,8 +50,9 @@ PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject, PyjionBigIntRegist
         };
         result->negative = (Py_SIZE(pythonObject) < 0);
         auto size = Py_ABS(Py_SIZE(pythonObject));
+        result->digits.reserve(size);
         for (size_t idx = 0; idx < size; idx++) {
-            result->digits.push_back(((PyLongObject*) pythonObject)->ob_digit[idx]);
+            result->digits.emplace_back(((PyLongObject*) pythonObject)->ob_digit[idx]);
         }
     }
     bigIntRegister->add(result);

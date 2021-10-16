@@ -129,7 +129,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
             case SETUP_ASYNC_WITH:
             case FOR_ITER:
                 blockStarts.emplace_back(opcodeIndex, jumpsTo(byte, oparg, curByte));
-                ehKind.push_back(true);
+                ehKind.emplace_back(true);
                 break;
             // Opcodes that pop basic blocks
             case POP_EXCEPT:
@@ -240,10 +240,10 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
     // walk all the blocks in the code one by one, analyzing them, and enqueing any
     // new blocks that we encounter from branches.
     deque<py_opindex> queue;
-    queue.push_back(0);
+    queue.emplace_back(0);
     vector<const char*> utf8_names;
     for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++)
-        utf8_names.push_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
+        utf8_names.emplace_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
     // Keep a list of SETUP_FINALLY instructions and their offsets, to push the exception values onto the stack
     unordered_map<py_opindex, py_opindex> tryExceptMarkers;
     do {
@@ -436,7 +436,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
 
                     // merge our current state into the branched to location...
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
 
                     // we'll continue processing after the jump with our new state...
@@ -447,7 +447,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
 
                     // merge our current state into the branched to location...
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
 
                     // we'll continue processing after the jump with our new state...
@@ -459,7 +459,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     top.Sources = newSource(new IntermediateSource(curByte));
                     lastState.push(top);
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     auto value = POP_VALUE();
                 } break;
@@ -469,7 +469,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     top.Sources = newSource(new IntermediateSource(curByte));
                     lastState.push(top);
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     auto value = POP_VALUE();
                 } break;
@@ -478,19 +478,19 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     POP_VALUE();
 
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     goto next_block;
                 case JUMP_ABSOLUTE:
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
                     goto next_block;
                 case JUMP_FORWARD:
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
@@ -772,7 +772,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     auto leaveState = lastState;
                     auto iterator = leaveState.pop(curByte, 0);// Iterator
                     if (updateStartState(leaveState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
 
                     iterator.Sources = newSource(new IntermediateSource(curByte));
@@ -834,7 +834,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     PUSH_INTERMEDIATE_TO(&Any, finallyState);
                     if (updateStartState(finallyState, jumpsTo(opcode, oparg, opcodeIndex))) {
                         jump = 1;
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     PUSH_INTERMEDIATE(&Any);
                     break;
@@ -844,7 +844,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     tryExceptMarkers[jumpsTo(opcode, oparg, opcodeIndex)] = curByte;
                     auto ehState = lastState;
                     if (updateStartState(ehState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     break;
                 }
@@ -1197,7 +1197,7 @@ Label AbstractInterpreter::getOffsetLabel(py_opindex jumpTo) {
 
 void AbstractInterpreter::ensureRaiseAndFreeLocals(size_t localCount) {
     while (m_raiseAndFreeLocals.size() <= localCount) {
-        m_raiseAndFreeLocals.push_back(m_comp->emit_define_local());
+        m_raiseAndFreeLocals.emplace_back(m_comp->emit_define_local());
     }
 }
 
@@ -1211,7 +1211,7 @@ vector<Label>& AbstractInterpreter::getRaiseAndFreeLabels(size_t blockId) {
 
 void AbstractInterpreter::ensureLabels(vector<Label>& labels, size_t count) {
     for (auto i = labels.size(); i < count; i++) {
-        labels.push_back(m_comp->emit_define_label());
+        labels.emplace_back(m_comp->emit_define_label());
     }
 }
 
@@ -1619,7 +1619,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     auto rootHandler = m_exceptionHandler.SetRootHandler(rootHandlerLabel);
 
     // Push root block to stack, has no end offset
-    m_blockStack.push_back(BlockInfo(-1, NOP, rootHandler));
+    m_blockStack.emplace_back(BlockInfo(-1, NOP, rootHandler));
 
     // Loop through all opcodes in this frame
     for (py_opindex curByte = 0; curByte < mSize; curByte += SIZEOF_CODEUNIT) {
@@ -1651,7 +1651,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                     EXCEPT_HANDLER,
                     handler->BackHandler,
                     EhfInExceptHandler);
-            m_blockStack.push_back(newBlock);
+            m_blockStack.emplace_back(newBlock);
             m_comp->emit_mark_label(handler->ErrorTarget);
             m_comp->emit_pop_block();
             m_comp->emit_pop();
@@ -2196,7 +2196,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         SETUP_FINALLY,
                         newHandler);
 
-                m_blockStack.push_back(newBlock);
+                m_blockStack.emplace_back(newBlock);
                 m_comp->emit_push_block(SETUP_FINALLY, op.jumpsTo, 0);
 
                 ValueStack newStack = ValueStack(m_stack);
