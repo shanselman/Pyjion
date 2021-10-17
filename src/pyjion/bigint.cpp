@@ -470,6 +470,82 @@ cleanup:
     return result;
 }
 
+int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uint32_t op) {
+    int result = -1;
+    PyObject *leftTmp = nullptr, *rightTmp = nullptr;
+
+    if (!right->isShort) {
+        leftTmp = PyLong_FromLongLong(left);
+        rightTmp = PyjionBigInt_AsPyLong(right);
+        result = PyLong_Type.tp_richcompare(leftTmp, rightTmp, op) == Py_True ? 1 : 0;
+        Py_XDECREF(leftTmp);
+        Py_XDECREF(rightTmp);
+        return result;
+    } else {
+        switch (op) {
+            case Py_EQ:
+                result = left == right->shortVersion;
+                break;
+            case Py_NE:
+                result = left != right->shortVersion;
+                break;
+            case Py_GE:
+                result = left >= right->shortVersion;
+                break;
+            case Py_LE:
+                result = left <= right->shortVersion;
+                break;
+            case Py_LT:
+                result = left < right->shortVersion;
+                break;
+            case Py_GT:
+                result = left > right->shortVersion;
+                break;
+            default:
+                result = -1;
+        }
+        return result;
+    }
+}
+
+int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t op){
+    int result = -1;
+    PyObject *leftTmp = nullptr, *rightTmp = nullptr;
+
+    if (!left->isShort) {
+        leftTmp = PyjionBigInt_AsPyLong(left);
+        rightTmp = PyLong_FromLongLong(right);
+        result = PyLong_Type.tp_richcompare(leftTmp, rightTmp, op) == Py_True ? 1 : 0;
+        Py_XDECREF(leftTmp);
+        Py_XDECREF(rightTmp);
+        return result;
+    } else {
+        switch (op) {
+            case Py_EQ:
+                result = left->shortVersion == right;
+                break;
+            case Py_NE:
+                result = left->shortVersion != right;
+                break;
+            case Py_GE:
+                result = left->shortVersion >= right;
+                break;
+            case Py_LE:
+                result = left->shortVersion <= right;
+                break;
+            case Py_LT:
+                result = left->shortVersion < right;
+                break;
+            case Py_GT:
+                result = left->shortVersion > right;
+                break;
+            default:
+                result = -1;
+        }
+        return result;
+    }
+}
+
 double PyjionBigInt_AsDouble(PyjionBigInt*i) {
     if (i->isShort){
         return (double)i->shortVersion;

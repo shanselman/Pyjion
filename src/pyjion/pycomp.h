@@ -276,6 +276,8 @@
 #define METHOD_BIGINT_POWER_INT_RIGHT        0x00080018
 #define METHOD_BIGINT_FLOORDIVIDE_INT_LEFT   0x00080019
 #define METHOD_BIGINT_FLOORDIVIDE_INT_RIGHT  0x0008001A
+#define METHOD_BIGINT_RICHCOMPARE_INT_LEFT   0x0008001B
+#define METHOD_BIGINT_RICHCOMPARE_INT_RIGHT  0x0008001C
 
 #define INTRINSIC_TEST                       0x10000001
 
@@ -479,6 +481,8 @@ public:
     void emit_compare_floats(uint16_t compareType) override;
     void emit_compare_ints(uint16_t compareType) override;
     void emit_compare_bigints(uint16_t compareType) override;
+    void emit_compare_bigints_int_left(uint16_t compareType) override;
+    void emit_compare_bigints_int_right(uint16_t compareType) override;
 
     void emit_store_fast(py_oparg local) override;
     void emit_unbound_local_check() override;

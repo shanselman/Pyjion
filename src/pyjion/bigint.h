@@ -104,6 +104,8 @@ PyjionBigInt* PyjionBigInt_FloorDivideInt64Left(int64_t left, PyjionBigInt* righ
 PyjionBigInt* PyjionBigInt_FloorDivideInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister);
 
 int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t type);
+int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uint32_t type);
+int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t type);
 
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*);
 double PyjionBigInt_AsDouble(PyjionBigInt*);

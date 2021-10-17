@@ -418,6 +418,8 @@ public:
     virtual void emit_compare_floats(uint16_t compareType) = 0;
     virtual void emit_compare_ints(uint16_t compareType) = 0;
     virtual void emit_compare_bigints(uint16_t compareType) = 0;
+    virtual void emit_compare_bigints_int_left(uint16_t compareType) = 0;
+    virtual void emit_compare_bigints_int_right(uint16_t compareType) = 0;
 
     virtual void emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) = 0;
     // Performs a comparison for values on the stack which are objects, keeping a boxed Python object as the result.

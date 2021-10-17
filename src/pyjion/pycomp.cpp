@@ -2211,6 +2211,16 @@ void PythonCompiler::emit_compare_bigints(uint16_t compareType) {
     m_il.emit_call(METHOD_BIGINT_RICHCOMPARE);
 }
 
+void PythonCompiler::emit_compare_bigints_int_left(uint16_t compareType) {
+    m_il.ld_u4(compareType);
+    m_il.emit_call(METHOD_BIGINT_RICHCOMPARE_INT_LEFT);
+}
+
+void PythonCompiler::emit_compare_bigints_int_right(uint16_t compareType) {
+    m_il.ld_u4(compareType);
+    m_il.emit_call(METHOD_BIGINT_RICHCOMPARE_INT_RIGHT);
+}
+
 void PythonCompiler::emit_load_method(void* name) {
     auto* methodLocation = reinterpret_cast<PyJitMethodLocation*>(_PyObject_New(&PyJitMethodLocation_Type));
     methodLocation->method = nullptr;
@@ -2958,6 +2968,8 @@ GLOBAL_METHOD(METHOD_BIGINT_AS_PYLONG, &PyjionBigInt_AsPyLong, CORINFO_TYPE_NATI
 GLOBAL_METHOD(METHOD_LONG_AS_BIGINT, &PyjionBigInt_FromInt64, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BIGINT_ADD, &PyjionBigInt_Add, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BIGINT_RICHCOMPARE, &PyjionBigInt_RichCompare, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_UINT));
+GLOBAL_METHOD(METHOD_BIGINT_RICHCOMPARE_INT_LEFT, &PyjionBigInt_RichCompareInt64Left, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_UINT));
+GLOBAL_METHOD(METHOD_BIGINT_RICHCOMPARE_INT_RIGHT, &PyjionBigInt_RichCompareInt64Right, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_UINT));
 GLOBAL_METHOD(METHOD_BIGINT_AS_DOUBLE, &PyjionBigInt_AsDouble, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_PTR));
 GLOBAL_METHOD(METHOD_BIGINT_ADD_INT_LEFT, &PyjionBigInt_AddInt64Left, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BIGINT_ADD_INT_RIGHT, &PyjionBigInt_AddInt64Right, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
