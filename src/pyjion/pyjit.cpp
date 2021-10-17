@@ -129,7 +129,7 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
         return nullptr;
     }
 
-    auto* bigIntRegister = new PyjionBigIntRegister(1000);
+    auto* bigIntRegister = new PyjionBigIntRegister(profile != nullptr ? profile->getBigIntReserve() : 10);
     PyTraceInfo trace_info;
     /* Mark trace_info as uninitialized */
     trace_info.code = nullptr;
@@ -147,6 +147,8 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
         tstate->cframe = trace_info.cframe.previous;
         tstate->cframe->use_tracing = trace_info.cframe.use_tracing;
         Pyjit_LeaveRecursiveCall();
+        if (profile != nullptr)
+            profile->setBigIntReserve(bigIntRegister->size());
         delete bigIntRegister;
         return PyJit_CheckFunctionResult(tstate, res, frame);
     } catch (const std::exception& e) {

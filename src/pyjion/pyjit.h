@@ -54,11 +54,17 @@ using namespace std;
 class PyjionCodeProfile {
     unordered_map<size_t, unordered_map<size_t, PyTypeObject*>> stackTypes;
     unordered_map<size_t, unordered_map<size_t, AbstractValueKind>> stackKinds;
-
+    size_t bigIntReserve = 10;
 public:
     void record(size_t opcodePosition, size_t stackPosition, PyObject* obj);
     PyTypeObject* getType(size_t opcodePosition, size_t stackPosition);
     AbstractValueKind getKind(size_t opcodePosition, size_t stackPosition);
+    void setBigIntReserve(size_t i){
+        bigIntReserve = i;
+    }
+    size_t getBigIntReserve(){
+        return bigIntReserve;
+    }
     ~PyjionCodeProfile();
 };
 

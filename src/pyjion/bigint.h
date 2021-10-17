@@ -70,6 +70,10 @@ public:
             PyMem_Free(i);
         }
     }
+
+    size_t size(){
+        return ints.size();
+    }
 };
 
 PyjionBigInt* PyjionBigInt_FromInt64(int64_t value, PyjionBigIntRegister* bigIntRegister);
