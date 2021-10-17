@@ -28,7 +28,7 @@
 
 #include <cstdint>
 #include <Python.h>
-#include <forward_list>
+#include <vector>
 
 struct PyjionBigInt {
     int64_t shortVersion = -1;
@@ -43,10 +43,11 @@ struct PyjionBigInt {
 
 
 class PyjionBigIntRegister {
-    std::forward_list<PyjionBigInt*> ints;
+    std::vector<PyjionBigInt*> ints;
 public:
     explicit PyjionBigIntRegister(size_t reserve = 0) {
         // TODO : Check reserve size allocation
+        ints.reserve(reserve);
     }
 
     PyjionBigInt* addLong(long size) {
@@ -54,14 +55,14 @@ public:
         i->shortVersion = -1;
         i->isShort = false;
         i->numDigits = size;
-        ints.push_front(i);
+        ints.emplace_back(i);
         return i;
     }
     PyjionBigInt* addShort(int64_t value) {
         PyjionBigInt* i = static_cast<PyjionBigInt*>(PyMem_Malloc(sizeof(PyjionBigInt)));
         i->shortVersion = value;
         i->isShort = true;
-        ints.push_front(i);
+        ints.emplace_back(i);
         return i;
     }
 
