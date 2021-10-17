@@ -6,10 +6,12 @@ import warnings
 
 import pyjion
 import pathlib
+import sys
 from statistics import fmean
 from rich.console import Console
 from rich.table import Table
 from rich.text import Text
+import cProfile
 
 REPEAT = 5
 TIMES = 5
@@ -29,22 +31,36 @@ if __name__ == "__main__":
     graphs_out = pathlib.Path(__file__).parent / 'graphs'
     if not graphs_out.exists():
         graphs_out.mkdir()
+    profiles_out = pathlib.Path(__file__).parent / 'profiles'
+    if not profiles_out.exists():
+        profiles_out.mkdir()
 
     for f in pathlib.Path(__file__).parent.glob("bench_*.py"):
+        if len(sys.argv) > 1 and f.stem != f"bench_{sys.argv[1]}":
+            continue
         i = __import__(f.stem, globals(), locals(), )
         if hasattr(i, "__benchmarks__"):
             for benchmark in i.__benchmarks__:
                 func, desc, settings = benchmark
-                without_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
-                pyjion.enable()
-                pyjion.config(**settings, graph=True)
-                with_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
-                pyjion.disable()
+                with cProfile.Profile() as pr:
+                    without_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
+
+                pr.dump_stats(profiles_out / f'{f.stem}_without.pstat')
+
+                with cProfile.Profile() as pr:
+                    pyjion.enable()
+                    pyjion.config(**settings, graph=True)
+                    with_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
+                    pyjion.disable()
+
+                pr.dump_stats(profiles_out / f'{f.stem}_with.pstat')
+
                 with open(graphs_out / f'{f.stem}.dot', 'w') as dot:
                     for k, attrib in i.__dict__.items():
                         if hasattr(attrib, "__code__"):
                             if pyjion.info(attrib.__code__).failed:
-                                warnings.warn(f"Failed to compile {attrib.__code__} with result {pyjion.info(attrib.__code__).compile_result}")
+                                warnings.warn(
+                                    f"Failed to compile {attrib.__code__} with result {pyjion.info(attrib.__code__).compile_result}")
                             else:
                                 g = pyjion.graph(attrib.__code__)
                                 if g:

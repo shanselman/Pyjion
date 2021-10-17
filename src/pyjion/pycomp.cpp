@@ -47,6 +47,7 @@ PythonCompiler::PythonCompiler(PyCodeObject* code) : m_il(m_module = new UserMod
                                                                   Parameter(CORINFO_TYPE_NATIVEINT),// PyThreadState*
                                                                   Parameter(CORINFO_TYPE_NATIVEINT),// PyjionCodeProfile*
                                                                   Parameter(CORINFO_TYPE_NATIVEINT),// PyTraceInfo
+                                                                  Parameter(CORINFO_TYPE_NATIVEINT),// PyjionBigIntRegister*
                                                           }) {
     this->m_code = code;
     m_lasti = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
@@ -67,6 +68,10 @@ void PythonCompiler::load_profile() {
 
 void PythonCompiler::load_trace_info() {
     m_il.ld_arg(4);
+}
+
+void PythonCompiler::load_bigint_register() {
+    m_il.ld_arg(5);
 }
 
 bool PythonCompiler::emit_push_frame() {
@@ -1958,6 +1963,135 @@ LocalKind PythonCompiler::emit_binary_int(uint16_t opcode) {
     return LK_Int;
 }
 
+LocalKind PythonCompiler::emit_binary_bigint(uint16_t opcode) {
+    switch (opcode) {
+        case BINARY_ADD:
+        case INPLACE_ADD:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_ADD);
+            return LK_BigInt;
+        case INPLACE_TRUE_DIVIDE:
+        case BINARY_TRUE_DIVIDE:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_TRUEDIVIDE);
+            return LK_Float;
+        case INPLACE_MODULO:
+        case BINARY_MODULO:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_MOD);
+            return LK_BigInt;
+        case INPLACE_MULTIPLY:
+        case BINARY_MULTIPLY:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_MULTIPLY);
+            return LK_BigInt;
+        case INPLACE_SUBTRACT:
+        case BINARY_SUBTRACT:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_SUB);
+            return LK_BigInt;
+        case BINARY_POWER:
+        case INPLACE_POWER:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_POWER);
+            return LK_BigInt;
+        case BINARY_FLOOR_DIVIDE:
+        case INPLACE_FLOOR_DIVIDE:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_FLOORDIVIDE);
+            return LK_BigInt;
+        default:
+            throw UnexpectedValueException();
+    }
+    return LK_BigInt;
+}
+
+LocalKind PythonCompiler::emit_binary_bigint_int_left(uint16_t opcode) {
+    switch (opcode) {
+        case BINARY_ADD:
+        case INPLACE_ADD:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_ADD_INT_LEFT);
+            return LK_BigInt;
+        case INPLACE_TRUE_DIVIDE:
+        case BINARY_TRUE_DIVIDE:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_TRUEDIVIDE_INT_LEFT);
+            return LK_Float;
+        case INPLACE_MODULO:
+        case BINARY_MODULO:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_MOD_INT_LEFT);
+            return LK_BigInt;
+        case INPLACE_MULTIPLY:
+        case BINARY_MULTIPLY:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_MULTIPLY_INT_LEFT);
+            return LK_BigInt;
+        case INPLACE_SUBTRACT:
+        case BINARY_SUBTRACT:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_SUB_INT_LEFT);
+            return LK_BigInt;
+        case BINARY_POWER:
+        case INPLACE_POWER:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_POWER_INT_LEFT);
+            return LK_BigInt;
+        case BINARY_FLOOR_DIVIDE:
+        case INPLACE_FLOOR_DIVIDE:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_FLOORDIVIDE_INT_LEFT);
+            return LK_BigInt;
+        default:
+            throw UnexpectedValueException();
+    }
+    return LK_BigInt;
+}
+
+LocalKind PythonCompiler::emit_binary_bigint_int_right(uint16_t opcode) {
+    switch (opcode) {
+        case BINARY_ADD:
+        case INPLACE_ADD:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_ADD_INT_RIGHT);
+            return LK_BigInt;
+        case INPLACE_TRUE_DIVIDE:
+        case BINARY_TRUE_DIVIDE:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_TRUEDIVIDE_INT_RIGHT);
+            return LK_Float;
+        case INPLACE_MODULO:
+        case BINARY_MODULO:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_MOD_INT_RIGHT);
+            return LK_BigInt;
+        case INPLACE_MULTIPLY:
+        case BINARY_MULTIPLY:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_MULTIPLY_INT_RIGHT);
+            return LK_BigInt;
+        case INPLACE_SUBTRACT:
+        case BINARY_SUBTRACT:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_SUB_INT_RIGHT);
+            return LK_BigInt;
+        case BINARY_POWER:
+        case INPLACE_POWER:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_POWER_INT_RIGHT);
+            return LK_BigInt;
+        case BINARY_FLOOR_DIVIDE:
+        case INPLACE_FLOOR_DIVIDE:
+            load_bigint_register();
+            m_il.emit_call(METHOD_BIGINT_FLOORDIVIDE_INT_RIGHT);
+            return LK_BigInt;
+        default:
+            throw UnexpectedValueException();
+    }
+    return LK_BigInt;
+}
+
 void PythonCompiler::emit_is(bool isNot) {
     m_il.emit_call(isNot ? METHOD_ISNOT : METHOD_IS);
 }
@@ -2070,6 +2204,24 @@ void PythonCompiler::emit_compare_ints(uint16_t compareType) {
         default:
             throw UnexpectedValueException();
     };
+}
+
+void PythonCompiler::emit_compare_bigints(uint16_t compareType) {
+    m_il.ld_u4(compareType);
+    load_bigint_register();
+    m_il.emit_call(METHOD_BIGINT_RICHCOMPARE);
+}
+
+void PythonCompiler::emit_compare_bigints_int_left(uint16_t compareType) {
+    m_il.ld_u4(compareType);
+    load_bigint_register();
+    m_il.emit_call(METHOD_BIGINT_RICHCOMPARE_INT_LEFT);
+}
+
+void PythonCompiler::emit_compare_bigints_int_right(uint16_t compareType) {
+    m_il.ld_u4(compareType);
+    load_bigint_register();
+    m_il.emit_call(METHOD_BIGINT_RICHCOMPARE_INT_RIGHT);
 }
 
 void PythonCompiler::emit_load_method(void* name) {
@@ -2285,6 +2437,11 @@ void PythonCompiler::emit_box(AbstractValueKind kind) {
         case AVK_Integer:
             m_il.emit_call(METHOD_PYLONG_FROM_LONGLONG);
             break;
+        case AVK_BigInteger:
+            m_il.emit_call(METHOD_BIGINT_AS_PYLONG);
+            break;
+        default:
+            throw UnexpectedValueException();
     }
 };
 void PythonCompiler::emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources left, AbstractValueWithSources right) {
@@ -2312,6 +2469,28 @@ void PythonCompiler::emit_compare_unboxed(uint16_t compareType, AbstractValueWit
         return emit_compare_floats(compareType);
     } else if (leftKind == AVK_Float && rightKind == AVK_Integer) {
         m_il.conv_r8();
+        return emit_compare_floats(compareType);
+    } else if (leftKind == AVK_BigInteger && rightKind == AVK_BigInteger) {
+        return emit_compare_bigints(compareType);
+    } else if (leftKind == AVK_BigInteger && rightKind == AVK_Integer) {
+        load_bigint_register();
+        m_il.emit_call(METHOD_LONG_AS_BIGINT);
+        return emit_compare_bigints(compareType);
+    } else if (leftKind == AVK_Integer && rightKind == AVK_BigInteger) {
+        Local right_l = emit_define_local(LK_BigInt);
+        emit_store_local(right_l);
+        load_bigint_register();
+        m_il.emit_call(METHOD_LONG_AS_BIGINT);
+        emit_load_and_free_local(right_l);
+        return emit_compare_bigints(compareType);
+    } else if (leftKind == AVK_BigInteger && rightKind == AVK_Float) {
+        m_il.emit_call(METHOD_BIGINT_AS_DOUBLE);
+        return emit_compare_floats(compareType);
+    } else if (leftKind == AVK_Float && rightKind == AVK_BigInteger) {
+        Local right_l = emit_define_local(LK_BigInt);
+        emit_store_local(right_l);
+        m_il.emit_call(METHOD_BIGINT_AS_DOUBLE);
+        emit_load_and_free_local(right_l);
         return emit_compare_floats(compareType);
     } else {
         throw UnexpectedValueException();
@@ -2385,6 +2564,37 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
             emit_int(1);
             emit_store_local(success);
             emit_mark_label(not_nan);
+
+            if (guard) {
+                emit_branch(BranchAlways, guard_pass);
+                emit_mark_label(guard_fail);
+                emit_int(1);
+                emit_store_local(success);
+                emit_load_local(lcl);
+                emit_guard_exception("int");
+                emit_nan_long();// keep the stack effect equivalent, this value is never used.
+                emit_mark_label(guard_pass);
+            }
+            emit_free_local(lcl);
+            break;
+        }
+        case AVK_BigInteger: {
+            Local lcl = emit_define_local(LK_Pointer);
+            Label guard_pass = emit_define_label();
+            Label guard_fail = emit_define_label();
+            emit_store_local(lcl);
+            if (guard) {
+                emit_load_local(lcl);
+                LD_FIELDI(PyObject, ob_type);
+                emit_ptr(&PyLong_Type);
+                emit_branch(BranchNotEqual, guard_fail);
+            }
+
+            emit_load_local(lcl);
+            load_bigint_register();
+            m_il.emit_call(METHOD_PYLONG_AS_BIGINT);
+            emit_load_local(lcl);
+            decref();
 
             if (guard) {
                 emit_branch(BranchAlways, guard_pass);
@@ -2488,6 +2698,14 @@ void PythonCompiler::emit_escape_edges(vector<Edge> edges, Local success) {
     }
 }
 
+void PythonCompiler::emit_bigint_shortvalue() {
+    LD_FIELDI(PyjionBigInt, shortVersion);
+}
+
+void PythonCompiler::emit_pylong_as_bigint() {
+    load_bigint_register();
+    m_il.emit_call(METHOD_PYLONG_AS_BIGINT);
+}
 
 /************************************************************************
 * End Compiler interface implementation
@@ -2505,7 +2723,10 @@ public:
 };
 
 #define GLOBAL_METHOD(token, addr, returnType, ...) \
-    GlobalMethod g##token(token, JITMethod(&g_module, returnType, std::vector<Parameter>{__VA_ARGS__}, (void*) addr), #token);
+    GlobalMethod g##token(token, JITMethod(&g_module, returnType, std::vector<Parameter>{__VA_ARGS__}, (void*) addr, false), #token);
+
+#define GLOBAL_INTRINSIC(token, addr, returnType, ...) \
+    GlobalMethod g##token(token, JITMethod(&g_module, returnType, std::vector<Parameter>{__VA_ARGS__}, (void*) addr, true), #token);
 
 GLOBAL_METHOD(METHOD_ADD_TOKEN, &PyJit_Add, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
@@ -2753,6 +2974,37 @@ GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parame
 
 GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT));
+
+GLOBAL_METHOD(METHOD_PYLONG_AS_BIGINT, &PyjionBigInt_FromPyLong, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_AS_PYLONG, &PyjionBigInt_AsPyLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_PTR));
+GLOBAL_METHOD(METHOD_LONG_AS_BIGINT, &PyjionBigInt_FromInt64, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_ADD, &PyjionBigInt_Add, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_RICHCOMPARE, &PyjionBigInt_RichCompare, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_UINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_RICHCOMPARE_INT_LEFT, &PyjionBigInt_RichCompareInt64Left, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_UINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_RICHCOMPARE_INT_RIGHT, &PyjionBigInt_RichCompareInt64Right, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_UINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_AS_DOUBLE, &PyjionBigInt_AsDouble, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_PTR));
+GLOBAL_METHOD(METHOD_BIGINT_ADD_INT_LEFT, &PyjionBigInt_AddInt64Left, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_ADD_INT_RIGHT, &PyjionBigInt_AddInt64Right, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_SUB, &PyjionBigInt_Sub, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_SUB_INT_LEFT, &PyjionBigInt_SubInt64Left, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_SUB_INT_RIGHT, &PyjionBigInt_SubInt64Right, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_TRUEDIVIDE, &PyjionBigInt_TrueDivide, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_TRUEDIVIDE_INT_LEFT, &PyjionBigInt_TrueDivideInt64Left, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_TRUEDIVIDE_INT_RIGHT, &PyjionBigInt_TrueDivideInt64Right, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_MOD, &PyjionBigInt_Mod, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_MOD_INT_LEFT, &PyjionBigInt_ModInt64Left, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_MOD_INT_RIGHT, &PyjionBigInt_ModInt64Right, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_MULTIPLY, &PyjionBigInt_Multiply, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_MULTIPLY_INT_LEFT, &PyjionBigInt_MultiplyInt64Left, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_MULTIPLY_INT_RIGHT, &PyjionBigInt_MultiplyInt64Right, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_POWER, &PyjionBigInt_Power, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_POWER_INT_LEFT, &PyjionBigInt_PowerInt64Left, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_POWER_INT_RIGHT, &PyjionBigInt_PowerInt64Right, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_FLOORDIVIDE, &PyjionBigInt_FloorDivide, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_FLOORDIVIDE_INT_LEFT, &PyjionBigInt_FloorDivideInt64Left, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_BIGINT_FLOORDIVIDE_INT_RIGHT, &PyjionBigInt_FloorDivideInt64Right, CORINFO_TYPE_PTR, Parameter(CORINFO_TYPE_PTR), Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT));
+
+GLOBAL_INTRINSIC(INTRINSIC_TEST, &PyJit_LongTrueDivide, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_LONG));
 
 const char* opcodeName(py_opcode opcode) {
 #define OP_TO_STR(x) \

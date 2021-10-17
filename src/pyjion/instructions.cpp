@@ -114,7 +114,7 @@ void InstructionGraph::fixInstructions() {
         auto edgesIn = getEdges(instruction.first);
         vector<AbstractValueKind> typesIn;
         for (auto& edgeIn : edgesIn) {
-            typesIn.push_back(edgeIn.kind);
+            typesIn.emplace_back(edgeIn.kind);
             if (!supportsEscaping(edgeIn.kind))
                 allEdgesEscapable = false;
         }
@@ -273,6 +273,13 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx) {
 }
 
 PyObject* InstructionGraph::makeGraph(const char* name) {
+    if (PyErr_Occurred()) {
+#ifdef DEBUG_VERBOSE
+        PyErr_Print();
+#endif
+        PyErr_Clear();
+    }
+
     PyObject* g = PyUnicode_FromFormat("digraph %s { \n", name);
     PyUnicode_AppendAndDel(&g, PyUnicode_FromString("\tnode [shape=box];\n\tFRAME [label=FRAME];\n"));
     set<py_opindex> exceptionHandlers;
@@ -390,7 +397,7 @@ vector<Edge> InstructionGraph::getEdges(py_opindex idx) {
     vector<Edge> result;
     for (size_t i = 0; i <= max_position; i++) {
         if (filteredEdges.find(i) != filteredEdges.end())
-            result.push_back(filteredEdges[i]);
+            result.emplace_back(filteredEdges[i]);
     }
     return result;
 }
@@ -408,7 +415,7 @@ vector<Edge> InstructionGraph::getEdgesFrom(py_opindex idx) {
     vector<Edge> result;
     for (size_t i = 0; i <= max_position; i++) {
         if (filteredEdges.find(i) != filteredEdges.end())
-            result.push_back(filteredEdges[i]);
+            result.emplace_back(filteredEdges[i]);
     }
     return result;
 }

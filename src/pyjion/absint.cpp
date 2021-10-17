@@ -129,7 +129,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
             case SETUP_ASYNC_WITH:
             case FOR_ITER:
                 blockStarts.emplace_back(opcodeIndex, jumpsTo(byte, oparg, curByte));
-                ehKind.push_back(true);
+                ehKind.emplace_back(true);
                 break;
             // Opcodes that pop basic blocks
             case POP_EXCEPT:
@@ -195,7 +195,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
 void AbstractInterpreter::setLocalType(size_t index, PyObject* val) {
     auto& lastState = mStartStates[0];
     if (val != nullptr) {
-        auto localInfo = AbstractLocalInfo(new ArgumentValue(Py_TYPE(val), val, GetAbstractType(Py_TYPE(val), val)));
+        auto localInfo = AbstractLocalInfo(new ArgumentValue(Py_TYPE(val), val, GetAbstractType(Py_TYPE(val))));
         localInfo.ValueInfo.Sources = newSource(new LocalSource(index));
         lastState.replaceLocal(index, localInfo);
     }
@@ -240,10 +240,10 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
     // walk all the blocks in the code one by one, analyzing them, and enqueing any
     // new blocks that we encounter from branches.
     deque<py_opindex> queue;
-    queue.push_back(0);
+    queue.emplace_back(0);
     vector<const char*> utf8_names;
     for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++)
-        utf8_names.push_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
+        utf8_names.emplace_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
     // Keep a list of SETUP_FINALLY instructions and their offsets, to push the exception values onto the stack
     unordered_map<py_opindex, py_opindex> tryExceptMarkers;
     do {
@@ -436,7 +436,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
 
                     // merge our current state into the branched to location...
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
 
                     // we'll continue processing after the jump with our new state...
@@ -447,7 +447,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
 
                     // merge our current state into the branched to location...
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
 
                     // we'll continue processing after the jump with our new state...
@@ -459,7 +459,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     top.Sources = newSource(new IntermediateSource(curByte));
                     lastState.push(top);
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     auto value = POP_VALUE();
                 } break;
@@ -469,7 +469,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     top.Sources = newSource(new IntermediateSource(curByte));
                     lastState.push(top);
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     auto value = POP_VALUE();
                 } break;
@@ -478,19 +478,19 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     POP_VALUE();
 
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     goto next_block;
                 case JUMP_ABSOLUTE:
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
                     goto next_block;
                 case JUMP_FORWARD:
                     if (updateStartState(lastState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     // Done processing this basic block, we'll need to see a branch
                     // to the following opcodes before we'll process them.
@@ -772,7 +772,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     auto leaveState = lastState;
                     auto iterator = leaveState.pop(curByte, 0);// Iterator
                     if (updateStartState(leaveState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
 
                     iterator.Sources = newSource(new IntermediateSource(curByte));
@@ -834,7 +834,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     PUSH_INTERMEDIATE_TO(&Any, finallyState);
                     if (updateStartState(finallyState, jumpsTo(opcode, oparg, opcodeIndex))) {
                         jump = 1;
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     PUSH_INTERMEDIATE(&Any);
                     break;
@@ -844,7 +844,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     tryExceptMarkers[jumpsTo(opcode, oparg, opcodeIndex)] = curByte;
                     auto ehState = lastState;
                     if (updateStartState(ehState, jumpsTo(opcode, oparg, opcodeIndex))) {
-                        queue.push_back(jumpsTo(opcode, oparg, opcodeIndex));
+                        queue.emplace_back(jumpsTo(opcode, oparg, opcodeIndex));
                     }
                     break;
                 }
@@ -1029,13 +1029,10 @@ AbstractValue* AbstractInterpreter::toAbstract(PyObject* obj) {
     if (obj == Py_None) {
         return &None;
     } else if (PyLong_CheckExact(obj)) {
-        int ovf;
-        long value = PyLong_AsLongAndOverflow(obj, &ovf);
-        if (ovf || value > 2147483647 || value < -2147483647)
+        if (IntegerValue::isBig(obj))
             return &BigInteger;
-        if (Py_SIZE(obj) < 4 && IS_SMALL_INT(value))
-            return &InternInteger;
-        return &Integer;
+        else
+            return &Integer;
     } else if (PyUnicode_Check(obj)) {
         return &String;
     } else if (PyList_CheckExact(obj)) {
@@ -1043,18 +1040,20 @@ AbstractValue* AbstractInterpreter::toAbstract(PyObject* obj) {
     } else if (PyDict_CheckExact(obj)) {
         return &Dict;
     } else if (PyTuple_CheckExact(obj)) {
-        if (PyTuple_GET_SIZE(obj) == 0){
+        if (PyTuple_GET_SIZE(obj) == 0) {
             return &Tuple;
         }
         auto t = Py_TYPE(PyTuple_GET_ITEM(obj, 0));
-        for (int i = 1; i < PyTuple_GET_SIZE(obj); i++){
+        for (int i = 1; i < PyTuple_GET_SIZE(obj); i++) {
             if (Py_TYPE(PyTuple_GET_ITEM(obj, i)) != t)
                 return &Tuple;
         }
-        auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)), PyTuple_GET_ITEM(obj, 0));
-        switch (abstractType){
+        auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)));
+        switch (abstractType) {
             case AVK_String:
                 return &TupleOfString;
+            case AVK_BigInteger:
+                return &TupleOfBigInteger;
             case AVK_Integer:
                 return &TupleOfInteger;
             case AVK_Float:
@@ -1198,7 +1197,7 @@ Label AbstractInterpreter::getOffsetLabel(py_opindex jumpTo) {
 
 void AbstractInterpreter::ensureRaiseAndFreeLocals(size_t localCount) {
     while (m_raiseAndFreeLocals.size() <= localCount) {
-        m_raiseAndFreeLocals.push_back(m_comp->emit_define_local());
+        m_raiseAndFreeLocals.emplace_back(m_comp->emit_define_local());
     }
 }
 
@@ -1212,7 +1211,7 @@ vector<Label>& AbstractInterpreter::getRaiseAndFreeLabels(size_t blockId) {
 
 void AbstractInterpreter::ensureLabels(vector<Label>& labels, size_t count) {
     for (auto i = labels.size(); i < count; i++) {
-        labels.push_back(m_comp->emit_define_label());
+        labels.emplace_back(m_comp->emit_define_label());
     }
 }
 
@@ -1460,6 +1459,11 @@ void AbstractInterpreter::incStack(size_t size, LocalKind kind) {
         case LK_Bool:
             m_stack.inc(size, STACK_KIND_VALUE_INT);
             break;
+        case LK_BigInt:
+            m_stack.inc(size, STACK_KIND_VALUE_BIGINT);
+            break;
+        default:
+            m_stack.inc(size, STACK_KIND_OBJECT);
     }
 }
 
@@ -1615,7 +1619,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     auto rootHandler = m_exceptionHandler.SetRootHandler(rootHandlerLabel);
 
     // Push root block to stack, has no end offset
-    m_blockStack.push_back(BlockInfo(-1, NOP, rootHandler));
+    m_blockStack.emplace_back(BlockInfo(-1, NOP, rootHandler));
 
     // Loop through all opcodes in this frame
     for (py_opindex curByte = 0; curByte < mSize; curByte += SIZEOF_CODEUNIT) {
@@ -1647,7 +1651,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                     EXCEPT_HANDLER,
                     handler->BackHandler,
                     EhfInExceptHandler);
-            m_blockStack.push_back(newBlock);
+            m_blockStack.emplace_back(newBlock);
             m_comp->emit_mark_label(handler->ErrorTarget);
             m_comp->emit_pop_block();
             m_comp->emit_pop();
@@ -1757,7 +1761,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             case POP_JUMP_IF_TRUE:
             case POP_JUMP_IF_FALSE:
                 if (CAN_UNBOX() && op.escape) {
-                    unboxedPopJumpIf(byte != POP_JUMP_IF_FALSE, opcodeIndex, op.jumpsTo);
+                    unboxedPopJumpIf(byte != POP_JUMP_IF_FALSE, opcodeIndex, op.jumpsTo, stackInfo.top());
                 } else {
                     popJumpIf(byte != POP_JUMP_IF_FALSE, opcodeIndex, op.jumpsTo);
                 }
@@ -2192,7 +2196,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                         SETUP_FINALLY,
                         newHandler);
 
-                m_blockStack.push_back(newBlock);
+                m_blockStack.emplace_back(newBlock);
                 m_comp->emit_push_block(SETUP_FINALLY, op.jumpsTo, 0);
 
                 ValueStack newStack = ValueStack(m_stack);
@@ -2524,6 +2528,11 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         if (g_pyjionSettings.graph) {
             result.instructionGraph = instructionGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));
 
+//            // This snippet is really useful from time to time. Keep it here commented out
+//            if (PyUnicode_CompareWithASCIIString(mCode->co_name, "test_float_conversion") == 0){
+//                printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
+//            }
+
 #ifdef DUMP_INSTRUCTION_GRAPHS
             printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
 #endif
@@ -2577,15 +2586,22 @@ void AbstractInterpreter::loadConst(py_oparg constIndex, py_opindex opcodeIndex)
 
 void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcodeIndex) {
     auto constValue = PyTuple_GetItem(mCode->co_consts, constIndex);
-    auto abstractT = GetAbstractType(constValue->ob_type, constValue);
+    auto abstractT = GetAbstractType(constValue->ob_type);
     switch (abstractT) {
         case AVK_Float:
             m_comp->emit_float(PyFloat_AS_DOUBLE(constValue));
             incStack(1, STACK_KIND_VALUE_FLOAT);
             break;
+        case AVK_BigInteger:
         case AVK_Integer:
-            m_comp->emit_long_long(PyLong_AsLongLong(constValue));
-            incStack(1, STACK_KIND_VALUE_INT);
+            if (IntegerValue::isBig(constValue)) {
+                m_comp->emit_ptr(constValue);
+                m_comp->emit_pylong_as_bigint();
+                incStack(1, STACK_KIND_VALUE_BIGINT);
+            } else {
+                m_comp->emit_long_long(PyLong_AsLongLong(constValue));
+                incStack(1, STACK_KIND_VALUE_INT);
+            }
             break;
         case AVK_Bool:
             if (constValue == Py_True)
@@ -2759,16 +2775,33 @@ void AbstractInterpreter::popJumpIf(bool isTrue, py_opindex opcodeIndex, py_opar
     m_offsetStack[jumpTo] = ValueStack(m_stack);
 }
 
-void AbstractInterpreter::unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg jumpTo) {
-    if (jumpTo <= opcodeIndex) {
+void AbstractInterpreter::unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset, AbstractValueWithSources sources) {
+    if (offset <= opcodeIndex) {
         m_comp->emit_pending_calls();
     }
-    auto target = getOffsetLabel(jumpTo);
-
-    m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+    auto target = getOffsetLabel(offset);
+    if (!sources.hasValue())
+        // Just see if its null/0
+        m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+    else {
+        switch (sources.Value->kind()) {
+            case AVK_Float:
+                m_comp->emit_float(0.0);
+                m_comp->emit_branch(isTrue ? BranchNotEqual : BranchEqual, target);
+                break;
+            case AVK_Bool:
+            case AVK_Integer:
+                m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+                break;
+            case AVK_BigInteger:
+                m_comp->emit_bigint_shortvalue();
+                m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
+                break;
+        }
+    }
 
     decStack();
-    m_offsetStack[jumpTo] = ValueStack(m_stack);
+    m_offsetStack[offset] = ValueStack(m_stack);
 }
 
 void AbstractInterpreter::jumpAbsolute(py_opindex index, py_opindex from) {

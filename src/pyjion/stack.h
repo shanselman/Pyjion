@@ -33,9 +33,10 @@
 
 
 enum StackEntryKind {
-    STACK_KIND_VALUE_FLOAT = 0,// An unboxed float
-    STACK_KIND_VALUE_INT = 1,  // An unboxed int
-    STACK_KIND_OBJECT = 2      // A Python object, or a tagged int which might be an object
+    STACK_KIND_VALUE_FLOAT = 0, // An unboxed float
+    STACK_KIND_VALUE_INT = 1,   // An unboxed int
+    STACK_KIND_OBJECT = 2,      // A Python object, or a tagged int which might be an object
+    STACK_KIND_VALUE_BIGINT = 3,// A PyjionBigInt
 };
 
 StackEntryKind avkAsStackEntryKind(AbstractValueKind k);
@@ -110,6 +111,10 @@ public:
 
     void push_back(BlockInfo block) {
         return vector<BlockInfo>::push_back(block);
+    }
+
+    void emplace_back(BlockInfo block) {
+        vector<BlockInfo>::emplace_back(block);
     }
 
     bool beyond(py_opindex curByte) {

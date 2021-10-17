@@ -196,7 +196,7 @@ public:
     }
 
     void push(AbstractValueWithSources value) {
-        mStack.push_back(value);
+        mStack.emplace_back(value);
     }
 
     size_t stackSize() const {
@@ -358,7 +358,7 @@ private:
     void initStartingState();
     AbstractInterpreterResult preprocess();
     AbstractSource* newSource(AbstractSource* source) {
-        m_sources.push_back(source);
+        m_sources.emplace_back(source);
         return source;
     }
 
@@ -425,7 +425,7 @@ private:
 
     void jumpIfOrPop(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
     void popJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
-    void unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
+    void unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset, AbstractValueWithSources sources);
     void jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo);
     void testBoolAndBranch(Local value, bool isTrue, Label target);
 

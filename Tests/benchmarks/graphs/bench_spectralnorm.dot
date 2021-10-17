@@ -23,18 +23,18 @@ digraph eval_A {
 	OP4 -> OP6 [label="Local (int) U0" color=red];
 	OP8 -> OP12 [label="Local (int) U1" color=red];
 	OP10 -> OP12 [label="Local (int) U0" color=red];
-	OP12 -> OP16 [label="Intermediate (int) UN1" color=purple];
+	OP12 -> OP16 [label="Intermediate (big int) UN1" color=purple];
 	OP14 -> OP16 [label="Const (int) UN0" color=purple];
-	OP6 -> OP18 [label="Intermediate (int) UN1" color=purple];
-	OP16 -> OP18 [label="Intermediate (int) UN0" color=purple];
-	OP18 -> OP22 [label="Intermediate (int) UN1" color=purple];
+	OP6 -> OP18 [label="Intermediate (big int) UN1" color=purple];
+	OP16 -> OP18 [label="Intermediate (big int) UN0" color=purple];
+	OP18 -> OP22 [label="Intermediate (big int) UN1" color=purple];
 	OP20 -> OP22 [label="Const (int) UN0" color=purple];
-	OP22 -> OP26 [label="Intermediate (int) UN1" color=purple];
+	OP22 -> OP26 [label="Intermediate (big int) UN1" color=purple];
 	OP24 -> OP26 [label="Local (int) U0" color=red];
-	OP26 -> OP30 [label="Intermediate (int) UN1" color=purple];
+	OP26 -> OP30 [label="Intermediate (big int) UN1" color=purple];
 	OP28 -> OP30 [label="Const (int) UN0" color=purple];
 	OP0 -> OP32 [label="Const (float) UN1" color=purple];
-	OP30 -> OP32 [label="Intermediate (int) UN0" color=purple];
+	OP30 -> OP32 [label="Intermediate (big int) UN0" color=purple];
 	OP32 -> OP34 [label="Intermediate (float) B0" color=green];
 }
 digraph eval_times_u { 
@@ -43,7 +43,7 @@ digraph eval_times_u {
 	OP0 [label="0 LOAD_CLOSURE (0)" color="black"];
 	OP2 [label="2 LOAD_CLOSURE (1)" color="black"];
 	OP4 [label="4 BUILD_TUPLE (2)" color="black"];
-	OP6 [label="6 LOAD_CONST (<code object <listcomp> at 0x10b2b6740, )" color="black"];
+	OP6 [label="6 LOAD_CONST (<code object <listcomp> at 0x1096d3920, )" color="black"];
 	OP8 [label="8 LOAD_CONST ('eval_times_u.<locals>.<listcomp>')" color="black"];
 	OP10 [label="10 MAKE_FUNCTION (8)" color="black"];
 	OP12 [label="12 LOAD_GLOBAL (range)" color="black"];

@@ -67,6 +67,7 @@ ZipValue Zip;
 // Container Sub-Types;
 TupleOfValue<AVK_Any> Tuple;
 TupleOfValue<AVK_Integer> TupleOfInteger;
+TupleOfValue<AVK_BigInteger> TupleOfBigInteger;
 TupleOfValue<AVK_Float> TupleOfFloat;
 TupleOfValue<AVK_String> TupleOfString;
 
@@ -276,6 +277,37 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_SUBTRACT:
             case INPLACE_XOR:
                 return &Integer;
+        }
+    }else if (other_kind == AVK_BigInteger) {
+        switch (op) {
+            case BINARY_MODULO:
+            case INPLACE_MODULO:
+                return this;
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_TRUE_DIVIDE: {
+                return &Float;
+            }
+            case BINARY_ADD:
+            case BINARY_AND:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_LSHIFT:
+            case BINARY_MULTIPLY:
+            case BINARY_OR:
+            case BINARY_POWER:
+            case BINARY_RSHIFT:
+            case BINARY_SUBTRACT:
+            case BINARY_XOR:
+            case INPLACE_ADD:
+            case INPLACE_AND:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_LSHIFT:
+            case INPLACE_MULTIPLY:
+            case INPLACE_OR:
+            case INPLACE_POWER:
+            case INPLACE_RSHIFT:
+            case INPLACE_SUBTRACT:
+            case INPLACE_XOR:
+                return &BigInteger;
         }
     } else if (other_kind == AVK_List) {
         switch (op) {
@@ -568,11 +600,8 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
                     return &BigInteger;
             case BINARY_POWER:
             case INPLACE_POWER:
-                if (OPT_ENABLED(IntegerUnboxingPower))
-                    return &Integer;
-                else
-                    // TODO: assert Integer if the values are known (const)
-                    return &BigInteger;
+                // TODO: assert Integer if the values are known (const)
+                return &BigInteger;
             case BINARY_ADD:
             case BINARY_AND:
             case BINARY_FLOOR_DIVIDE:
@@ -592,6 +621,36 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_SUBTRACT:
             case INPLACE_XOR:
                 return &Integer;
+        }
+    } else if (other_kind == AVK_BigInteger) {
+        switch (op) {
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_TRUE_DIVIDE: {
+                return &Float;
+            }
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+            case BINARY_POWER:
+            case INPLACE_POWER:
+            case BINARY_ADD:
+            case BINARY_AND:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_LSHIFT:
+            case BINARY_MODULO:
+            case BINARY_OR:
+            case BINARY_RSHIFT:
+            case BINARY_SUBTRACT:
+            case BINARY_XOR:
+            case INPLACE_ADD:
+            case INPLACE_AND:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_LSHIFT:
+            case INPLACE_MODULO:
+            case INPLACE_OR:
+            case INPLACE_RSHIFT:
+            case INPLACE_SUBTRACT:
+            case INPLACE_XOR:
+                return &BigInteger;
         }
     } else if (other_kind == AVK_List) {
         switch (op) {
@@ -637,6 +696,163 @@ AbstractValueKind IntegerValue::resolveMethod(const char* name) {
             return b.second;
     }
     return AVK_Any;
+}
+
+AbstractValue* BigIntegerValue::binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {
+    return BigIntegerValue::binary(op, other);
+}
+
+AbstractValue* BigIntegerValue::binary(int op, AbstractValueWithSources& other) {
+    auto other_kind = other.Value->kind();
+    if (other_kind == AVK_Bool) {
+        switch (op) {
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_TRUE_DIVIDE: {
+                return &Float;
+            }
+            case BINARY_ADD:
+            case BINARY_AND:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_LSHIFT:
+            case BINARY_MODULO:
+            case BINARY_MULTIPLY:
+            case BINARY_OR:
+            case BINARY_POWER:
+            case BINARY_RSHIFT:
+            case BINARY_SUBTRACT:
+            case BINARY_XOR:
+            case INPLACE_ADD:
+            case INPLACE_AND:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_LSHIFT:
+            case INPLACE_MODULO:
+            case INPLACE_MULTIPLY:
+            case INPLACE_OR:
+            case INPLACE_POWER:
+            case INPLACE_RSHIFT:
+            case INPLACE_SUBTRACT:
+            case INPLACE_XOR:
+                return &BigInteger;
+        }
+    } else if (other_kind == AVK_Bytes) {
+        switch (op) {
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+                return &Bytes;
+        }
+    } else if (other_kind == AVK_Complex) {
+        switch (op) {
+            case BINARY_ADD:
+            case BINARY_MULTIPLY:
+            case BINARY_POWER:
+            case BINARY_SUBTRACT:
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_ADD:
+            case INPLACE_MULTIPLY:
+            case INPLACE_POWER:
+            case INPLACE_SUBTRACT:
+            case INPLACE_TRUE_DIVIDE:
+                return &Complex;
+        }
+    } else if (other_kind == AVK_Float) {
+        switch (op) {
+            case BINARY_ADD:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_MODULO:
+            case BINARY_MULTIPLY:
+            case BINARY_POWER:
+            case BINARY_SUBTRACT:
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_ADD:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_MODULO:
+            case INPLACE_MULTIPLY:
+            case INPLACE_POWER:
+            case INPLACE_SUBTRACT:
+            case INPLACE_TRUE_DIVIDE: {
+                return &Float;
+            }
+        }
+    } else if (other_kind == AVK_Integer) {
+        switch (op) {
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_TRUE_DIVIDE: {
+                return &Float;
+            }
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+            case BINARY_POWER:
+            case INPLACE_POWER:
+            case BINARY_ADD:
+            case BINARY_AND:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_LSHIFT:
+            case BINARY_MODULO:
+            case BINARY_OR:
+            case BINARY_RSHIFT:
+            case BINARY_SUBTRACT:
+            case BINARY_XOR:
+            case INPLACE_ADD:
+            case INPLACE_AND:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_LSHIFT:
+            case INPLACE_MODULO:
+            case INPLACE_OR:
+            case INPLACE_RSHIFT:
+            case INPLACE_SUBTRACT:
+            case INPLACE_XOR:
+                return &BigInteger;
+        }
+    } else if (other_kind == AVK_BigInteger) {
+        switch (op) {
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_TRUE_DIVIDE: {
+                return &Float;
+            }
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+            case BINARY_POWER:
+            case INPLACE_POWER:
+            case BINARY_ADD:
+            case BINARY_AND:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_LSHIFT:
+            case BINARY_MODULO:
+            case BINARY_OR:
+            case BINARY_RSHIFT:
+            case BINARY_SUBTRACT:
+            case BINARY_XOR:
+            case INPLACE_ADD:
+            case INPLACE_AND:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_LSHIFT:
+            case INPLACE_MODULO:
+            case INPLACE_OR:
+            case INPLACE_RSHIFT:
+            case INPLACE_SUBTRACT:
+            case INPLACE_XOR:
+                return &BigInteger;
+        }
+    } else if (other_kind == AVK_List) {
+        switch (op) {
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+                return &List;
+        }
+    } else if (other_kind == AVK_String) {
+        switch (op) {
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+                return &String;
+        }
+    } else if (other_kind == AVK_Tuple) {
+        switch (op) {
+            case BINARY_MULTIPLY:
+            case INPLACE_MULTIPLY:
+                return &Tuple;
+        }
+    }
+    return &Any;
 }
 
 // StringValue methods
@@ -761,6 +977,24 @@ AbstractValue* FloatValue::binary(int op, AbstractValueWithSources& other) {
                 return &Float;
         }
     } else if (other_kind == AVK_Integer) {
+        switch (op) {
+            case BINARY_ADD:
+            case BINARY_FLOOR_DIVIDE:
+            case BINARY_MODULO:
+            case BINARY_MULTIPLY:
+            case BINARY_POWER:
+            case BINARY_SUBTRACT:
+            case BINARY_TRUE_DIVIDE:
+            case INPLACE_ADD:
+            case INPLACE_FLOOR_DIVIDE:
+            case INPLACE_MODULO:
+            case INPLACE_MULTIPLY:
+            case INPLACE_POWER:
+            case INPLACE_SUBTRACT:
+            case INPLACE_TRUE_DIVIDE:
+                return &Float;
+        }
+    } else if (other_kind == AVK_BigInteger) {
         switch (op) {
             case BINARY_ADD:
             case BINARY_FLOOR_DIVIDE:
@@ -1242,7 +1476,7 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind) {
         case AVK_Method:
             return &Method;
         case AVK_BigInteger:
-            return &Integer;
+            return &BigInteger;
         case AVK_Range:
             return &Range;
         case AVK_RangeIterator:
@@ -1272,21 +1506,11 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind) {
     }
 }
 
-AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
+AbstractValueKind GetAbstractType(PyTypeObject* type) {
     if (type == nullptr) {
         return AVK_Any;
     } else if (type == &PyLong_Type) {
-        if (value == nullptr)
-            return AVK_BigInteger;
-        int overflow = 0;
-        long long result = PyLong_AsLongLongAndOverflow(value, &overflow);
-        if (overflow != 0) {
-            return AVK_BigInteger;
-        }
-        if (result > BIG_INTEGER) {
-            return AVK_BigInteger;
-        }
-        return AVK_Integer;
+        return AVK_BigInteger;
     } else if (type == &PyFloat_Type) {
         return AVK_Float;
     } else if (type == &PyDict_Type) {
@@ -1436,7 +1660,7 @@ PyTypeObject* VolatileValue::pythonType() {
 }
 
 AbstractValueKind VolatileValue::kind() {
-    return GetAbstractType(this->_type, this->lastValue());
+    return GetAbstractType(this->_type);
 }
 
 AbstractValueKind PgcValue::kind() {
@@ -1449,6 +1673,8 @@ AbstractValue* VolatileValue::binary(AbstractSource* selfSources, int op, Abstra
             return FloatValue::binary(op, other);
         case AVK_Integer:
             return IntegerValue::binary(op, other);
+        case AVK_BigInteger:
+            return BigIntegerValue::binary(op, other);
     }
     return AbstractValue::binary(selfSources, op, other);
 }

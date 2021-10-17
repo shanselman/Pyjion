@@ -124,7 +124,7 @@ digraph chain_test {
 	OP18 -> OP22 [label="Local (int) U1" color=red];
 	OP20 -> OP22 [label="Const (int) UN0" color=purple];
 	OP16 -> OP24 [label="Builtin (type) -1" color=black];
-	OP22 -> OP24 [label="Intermediate (int) B0" color=green];
+	OP22 -> OP24 [label="Intermediate (big int) B0" color=green];
 	OP24 -> OP26 [label="Local (range) -0" color=black];
 	OP26 -> OP28 [label="Intermediate (range iterator) -0" color=black];
 	OP28 -> OP30 [label="Intermediate (int) U0" color=red];
@@ -438,7 +438,7 @@ digraph projection_test {
 	OP186 -> OP190 [label="Local (int) U1" color=red];
 	OP188 -> OP190 [label="Const (int) UN0" color=purple];
 	OP184 -> OP192 [label="Builtin (type) -1" color=black];
-	OP190 -> OP192 [label="Intermediate (int) B0" color=green];
+	OP190 -> OP192 [label="Intermediate (big int) B0" color=green];
 	OP192 -> OP194 [label="Local (range) -0" color=black];
 	OP194 -> OP196 [label="Intermediate (range iterator) -0" color=black];
 	OP196 -> OP198 [label="Intermediate (int) U0" color=red];
@@ -462,7 +462,7 @@ digraph projection_test {
 	OP244 -> OP248 [label="Local (int) U1" color=red];
 	OP246 -> OP248 [label="Const (int) UN0" color=purple];
 	OP242 -> OP250 [label="Builtin (type) -1" color=black];
-	OP248 -> OP250 [label="Intermediate (int) B0" color=green];
+	OP248 -> OP250 [label="Intermediate (big int) B0" color=green];
 	OP250 -> OP252 [label="Local (range) -0" color=black];
 	OP252 -> OP254 [label="Intermediate (range iterator) -0" color=black];
 	OP254 -> OP256 [label="Intermediate (int) U0" color=red];

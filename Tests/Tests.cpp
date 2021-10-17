@@ -41,7 +41,7 @@ int main(int argc, char* const argv[]) {
     g_pyjionSettings.debug = true;
     g_pyjionSettings.codeObjectSizeLimit = 1000000;
     g_pyjionSettings.exceptionHandling = true;
-    setOptimizationLevel(1);
+    setOptimizationLevel(2);
     int result = Catch::Session().run(argc, argv);
     Py_Finalize();
     return result;

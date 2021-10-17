@@ -63,7 +63,6 @@ void setOptimizationLevel(unsigned short level) {
     SET_OPT(Unboxing, level, 1);
     SET_OPT(IsNone, level, 1);
     SET_OPT(IntegerUnboxingMultiply, level, 2);
-    SET_OPT(IntegerUnboxingPower, level, 2);
 }
 
 PyjionJittedCode::~PyjionJittedCode() {
@@ -102,11 +101,35 @@ static inline void Pyjit_LeaveRecursiveCall() {
     tstate->recursion_depth--;
 }
 
+static inline PyObject*
+PyJit_CheckFunctionResult(PyThreadState *tstate, PyObject *result, PyFrameObject* frame)
+{
+    if (result == nullptr) {
+        if (!PyErr_Occurred()) {
+            PyErr_Format(PyExc_SystemError,
+                  "%s returned NULL without setting an exception",
+                          PyUnicode_AsUTF8(frame->f_code->co_name));
+            return nullptr;
+        }
+    }
+    else {
+        if (PyErr_Occurred()) {
+            Py_DECREF(result);
+
+            _PyErr_FormatFromCause(PyExc_SystemError,
+                        "%s returned a result with an exception set", PyUnicode_AsUTF8(frame->f_code->co_name));
+            return nullptr;
+        }
+    }
+    return result;
+}
+
 static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
     if (Pyjit_EnterRecursiveCall("")) {
         return nullptr;
     }
 
+    auto* bigIntRegister = new PyjionBigIntRegister(profile != nullptr ? profile->getBigIntReserve() : 10);
     PyTraceInfo trace_info;
     /* Mark trace_info as uninitialized */
     trace_info.code = nullptr;
@@ -115,33 +138,26 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
     trace_info.cframe.previous = prev_cframe;
     tstate->cframe = &trace_info.cframe;
 
-#ifdef DEBUG_VERBOSE
-    printf("Starting execution of frame %s at %d with state %s\n", PyUnicode_AsUTF8(frame->f_code->co_name), frame->f_lasti, frameStateAsString(frame->f_state));
-#endif
-
     if (frame->f_state != PY_FRAME_SUSPENDED)
         frame->f_stackdepth = -1;
     frame->f_state = PY_FRAME_EXECUTING;
 
     try {
-        auto res = ((Py_EvalFunc) state)(nullptr, frame, tstate, profile, &trace_info);
+        auto res = ((Py_EvalFunc) state)(nullptr, frame, tstate, profile, &trace_info, bigIntRegister);
         tstate->cframe = trace_info.cframe.previous;
         tstate->cframe->use_tracing = trace_info.cframe.use_tracing;
         Pyjit_LeaveRecursiveCall();
-        _Py_CheckFunctionResult(tstate, nullptr, res, __func__);
-#ifdef DEBUG_VERBOSE
-        printf("Ended execution of frame %s at %d with state %s\n",
-               PyUnicode_AsUTF8(frame->f_code->co_name),
-               frame->f_lasti,
-               frameStateAsString(frame->f_state));
-#endif
-        return res;
+        if (profile != nullptr)
+            profile->setBigIntReserve(bigIntRegister->size());
+        delete bigIntRegister;
+        return PyJit_CheckFunctionResult(tstate, res, frame);
     } catch (const std::exception& e) {
 #ifdef DEBUG_VERBOSE
         printf("Caught exception on execution of frame %s\n", e.what());
 #endif
         PyErr_SetString(PyExc_RuntimeError, e.what());
         Pyjit_LeaveRecursiveCall();
+        delete bigIntRegister;
         return nullptr;
     }
 }

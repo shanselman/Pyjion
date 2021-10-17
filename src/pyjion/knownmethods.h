@@ -35,7 +35,7 @@ unordered_map<const char*, AbstractValueKind> builtinReturnTypes = {
         {"hex", AVK_String},
         {"id", AVK_Integer},
         {"input", AVK_String},
-        {"int", AVK_Integer},
+        {"int", AVK_BigInteger},
         {"isinstance", AVK_Bool},
         {"issubclass", AVK_Bool},
         {"iter", AVK_Iterable},
