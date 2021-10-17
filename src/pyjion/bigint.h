@@ -36,6 +36,7 @@ struct PyjionBigInt {
     bool negative;// Only used in long integers.
     int64_t numDigits = 0;
     int64_t asLong();
+    Py_ssize_t pySize() const;
     digit digits[1];
 };
 
@@ -107,11 +108,11 @@ PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right, 
 PyjionBigInt* PyjionBigInt_FloorDivideInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister);
 PyjionBigInt* PyjionBigInt_FloorDivideInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister);
 
-int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t type);
-int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uint32_t type);
-int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t type);
+int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t type, PyjionBigIntRegister* bigIntRegister);
+int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uint32_t type, PyjionBigIntRegister* bigIntRegister);
+int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t type, PyjionBigIntRegister* bigIntRegister);
 
 PyObject* PyjionBigInt_AsPyLong(PyjionBigInt*);
 double PyjionBigInt_AsDouble(PyjionBigInt*);
-
+PyjionBigInt* PyjionBigInt_FromLongLong(int64_t ival, PyjionBigIntRegister* bigIntRegister);
 #endif//PYJION_BIGINT_H

@@ -420,68 +420,85 @@ int64_t PyjionBigInt::asLong() {
         return PyLong_AsLongLong(PyjionBigInt_AsPyLong(this));
 }
 
-int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t op) {
-    int result = -1;
-    PyObject *leftTmp = nullptr, *rightTmp = nullptr;
-
-    if (left->isShort && right->isShort)
-        goto shortCompare;
-
-    if (left->isShort && !right->isShort) {
-        leftTmp = PyLong_FromLongLong(left->shortVersion);
-        rightTmp = PyjionBigInt_AsPyLong(right);
-    } else if (!left->isShort && right->isShort) {
-        leftTmp = PyjionBigInt_AsPyLong(left);
-        rightTmp = PyLong_FromLongLong(right->shortVersion);
-    } else {
-        leftTmp = PyjionBigInt_AsPyLong(left);
-        rightTmp = PyjionBigInt_AsPyLong(right);
-    }
-    result = PyLong_Type.tp_richcompare(leftTmp, rightTmp, op) == Py_True ? 1 : 0;
-    Py_XDECREF(leftTmp);
-    Py_XDECREF(rightTmp);
-    goto cleanup;
-
-shortCompare:
-    switch (op) {
-        case Py_EQ:
-            result = left->shortVersion == right->shortVersion;
-            break;
-        case Py_NE:
-            result = left->shortVersion != right->shortVersion;
-            break;
-        case Py_GE:
-            result = left->shortVersion >= right->shortVersion;
-            break;
-        case Py_LE:
-            result = left->shortVersion <= right->shortVersion;
-            break;
-        case Py_LT:
-            result = left->shortVersion < right->shortVersion;
-            break;
-        case Py_GT:
-            result = left->shortVersion > right->shortVersion;
-            break;
-        default:
-            result = -1;
-    }
-
-cleanup:
-    return result;
+Py_ssize_t PyjionBigInt::pySize() const {
+    if (negative)
+        return -numDigits;
+    else
+        return numDigits;
 }
 
-int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uint32_t op) {
+int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32_t op, PyjionBigIntRegister* bigIntRegister) {
     int result = -1;
-    PyObject *leftTmp = nullptr, *rightTmp = nullptr;
+    PyjionBigInt *leftTmp = nullptr, *rightTmp = nullptr;
 
-    if (!right->isShort) {
-        leftTmp = PyLong_FromLongLong(left);
-        rightTmp = PyjionBigInt_AsPyLong(right);
-        result = PyLong_Type.tp_richcompare(leftTmp, rightTmp, op) == Py_True ? 1 : 0;
-        Py_XDECREF(leftTmp);
-        Py_XDECREF(rightTmp);
+    if (left->isShort && right->isShort) {
+        // Short comparison
+        switch (op) {
+            case Py_EQ:
+                result = left->shortVersion == right->shortVersion;
+                break;
+            case Py_NE:
+                result = left->shortVersion != right->shortVersion;
+                break;
+            case Py_GE:
+                result = left->shortVersion >= right->shortVersion;
+                break;
+            case Py_LE:
+                result = left->shortVersion <= right->shortVersion;
+                break;
+            case Py_LT:
+                result = left->shortVersion < right->shortVersion;
+                break;
+            case Py_GT:
+                result = left->shortVersion > right->shortVersion;
+                break;
+            default:
+                result = -1;
+        }
+
         return result;
+    }
+
+    if (left->isShort && !right->isShort) {
+        leftTmp = PyjionBigInt_FromLongLong(left->shortVersion, bigIntRegister);
+        rightTmp = right;
+    } else if (!left->isShort && right->isShort) {
+        leftTmp = left;
+        rightTmp = PyjionBigInt_FromLongLong(left->shortVersion, bigIntRegister);
     } else {
+        leftTmp = left;
+        rightTmp = right;
+    }
+    ssize_t sign = leftTmp->pySize() - rightTmp->pySize();
+    if (sign == 0) {
+        Py_ssize_t i = leftTmp->numDigits;
+        sdigit diff = 0;
+        while (--i >= 0) {
+            diff = (sdigit) leftTmp->digits[i] - (sdigit) rightTmp->digits[i];
+            if (diff) {
+                break;
+            }
+        }
+        sign = leftTmp->negative ? -diff : diff;
+    }
+    switch (op) {
+        case Py_EQ: if (sign == 0) return 1; return 0;
+        case Py_NE: if (sign != 0) return 1; return 0;
+        case Py_LT: if (sign < 0) return 1; return 0;
+        case Py_GT: if (sign > 0) return 1; return 0;
+        case Py_LE: if (sign <= 0) return 1; return 0;
+        case Py_GE: if (sign >= 0) return 1; return 0;
+        default:
+            Py_UNREACHABLE();
+    }
+}
+
+int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uint32_t op, PyjionBigIntRegister* bigIntRegister) {
+    int result = -1;
+    PyjionBigInt *leftTmp = nullptr, *rightTmp = nullptr;
+
+    if (right->isShort) {
+        // Short comparison
         switch (op) {
             case Py_EQ:
                 result = left == right->shortVersion;
@@ -504,22 +521,43 @@ int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uin
             default:
                 result = -1;
         }
+
         return result;
+    }
+
+    leftTmp = PyjionBigInt_FromLongLong(left, bigIntRegister);
+    rightTmp = right;
+
+    ssize_t sign = leftTmp->pySize() - rightTmp->pySize();
+    if (sign == 0) {
+        Py_ssize_t i = leftTmp->numDigits;
+        sdigit diff = 0;
+        while (--i >= 0) {
+            diff = (sdigit) leftTmp->digits[i] - (sdigit) rightTmp->digits[i];
+            if (diff) {
+                break;
+            }
+        }
+        sign = leftTmp->negative ? -diff : diff;
+    }
+    switch (op) {
+        case Py_EQ: if (sign == 0) return 1; return 0;
+        case Py_NE: if (sign != 0) return 1; return 0;
+        case Py_LT: if (sign < 0) return 1; return 0;
+        case Py_GT: if (sign > 0) return 1; return 0;
+        case Py_LE: if (sign <= 0) return 1; return 0;
+        case Py_GE: if (sign >= 0) return 1; return 0;
+        default:
+            Py_UNREACHABLE();
     }
 }
 
-int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t op){
+int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t op, PyjionBigIntRegister* bigIntRegister){
     int result = -1;
-    PyObject *leftTmp = nullptr, *rightTmp = nullptr;
+    PyjionBigInt *leftTmp = nullptr, *rightTmp = nullptr;
 
-    if (!left->isShort) {
-        leftTmp = PyjionBigInt_AsPyLong(left);
-        rightTmp = PyLong_FromLongLong(right);
-        result = PyLong_Type.tp_richcompare(leftTmp, rightTmp, op) == Py_True ? 1 : 0;
-        Py_XDECREF(leftTmp);
-        Py_XDECREF(rightTmp);
-        return result;
-    } else {
+    if (left->isShort) {
+        // Short comparison
         switch (op) {
             case Py_EQ:
                 result = left->shortVersion == right;
@@ -542,7 +580,34 @@ int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, ui
             default:
                 result = -1;
         }
+
         return result;
+    }
+
+    leftTmp = left;
+    rightTmp = PyjionBigInt_FromLongLong(right, bigIntRegister);
+
+    ssize_t sign = leftTmp->pySize() - rightTmp->pySize();
+    if (sign == 0) {
+        Py_ssize_t i = leftTmp->numDigits;
+        sdigit diff = 0;
+        while (--i >= 0) {
+            diff = (sdigit) leftTmp->digits[i] - (sdigit) rightTmp->digits[i];
+            if (diff) {
+                break;
+            }
+        }
+        sign = leftTmp->negative ? -diff : diff;
+    }
+    switch (op) {
+        case Py_EQ: if (sign == 0) return 1; return 0;
+        case Py_NE: if (sign != 0) return 1; return 0;
+        case Py_LT: if (sign < 0) return 1; return 0;
+        case Py_GT: if (sign > 0) return 1; return 0;
+        case Py_LE: if (sign <= 0) return 1; return 0;
+        case Py_GE: if (sign >= 0) return 1; return 0;
+        default:
+            Py_UNREACHABLE();
     }
 }
 
@@ -555,4 +620,42 @@ double PyjionBigInt_AsDouble(PyjionBigInt*i) {
         Py_XDECREF(l);
         return result;
     }
+}
+
+PyjionBigInt* PyjionBigInt_FromLongLong(int64_t ival, PyjionBigIntRegister* bigIntRegister){
+    // From PyLong_FromLongLong
+    PyjionBigInt*v;
+    uint64_t abs_ival;
+    uint64_t t;  /* unsigned so >> doesn't propagate sign bit */
+    int ndigits = 0;
+    int negative = 0;
+
+    if (ival < 0) {
+        /* avoid signed overflow on negation;  see comments
+           in PyLong_FromLong above. */
+        abs_ival = (uint64_t)(-1-ival) + 1;
+        negative = 1;
+    }
+    else {
+        abs_ival = (uint64_t)ival;
+    }
+
+    /* Count the number of Python digits.
+       We used to pick 5 ("big enough for anything"), but that's a
+       waste of time and space given that 5*15 = 75 bits are rarely
+       needed. */
+    t = abs_ival;
+    while (t) {
+        ++ndigits;
+        t >>= PyLong_SHIFT;
+    }
+    v = bigIntRegister->addLong(ndigits);
+    digit *p = v->digits;
+    v->negative = negative;
+    t = abs_ival;
+    while (t) {
+        *p++ = (digit)(t & PyLong_MASK);
+        t >>= PyLong_SHIFT;
+    }
+    return v;
 }
