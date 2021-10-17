@@ -118,7 +118,7 @@ public:
         for (auto& i : *localList) {
             if (i.m_index == local.m_index) {
                 // locals shouldn't be double freed...
-                assert(FALSE);
+                throw UnexpectedValueException();
             }
         }
 #endif

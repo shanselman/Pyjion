@@ -262,6 +262,20 @@
 #define METHOD_BIGINT_FLOORDIVIDE            0x0008000A
 #define METHOD_BIGINT_RICHCOMPARE            0x0008000B
 #define METHOD_BIGINT_AS_DOUBLE              0x0008000C
+#define METHOD_BIGINT_ADD_INT_LEFT           0x0008000D
+#define METHOD_BIGINT_ADD_INT_RIGHT          0x0008000E
+#define METHOD_BIGINT_SUB_INT_LEFT           0x0008000F
+#define METHOD_BIGINT_SUB_INT_RIGHT          0x00080010
+#define METHOD_BIGINT_TRUEDIVIDE_INT_LEFT    0x00080011
+#define METHOD_BIGINT_TRUEDIVIDE_INT_RIGHT   0x00080012
+#define METHOD_BIGINT_MOD_INT_LEFT           0x00080013
+#define METHOD_BIGINT_MOD_INT_RIGHT          0x00080014
+#define METHOD_BIGINT_MULTIPLY_INT_LEFT      0x00080015
+#define METHOD_BIGINT_MULTIPLY_INT_RIGHT     0x00080016
+#define METHOD_BIGINT_POWER_INT_LEFT         0x00080017
+#define METHOD_BIGINT_POWER_INT_RIGHT        0x00080018
+#define METHOD_BIGINT_FLOORDIVIDE_INT_LEFT   0x00080019
+#define METHOD_BIGINT_FLOORDIVIDE_INT_RIGHT  0x0008001A
 
 #define INTRINSIC_TEST                       0x10000001
 
@@ -443,6 +457,8 @@ public:
     LocalKind emit_binary_float(uint16_t opcode) override;
     LocalKind emit_binary_int(uint16_t opcode) override;
     LocalKind emit_binary_bigint(uint16_t opcode) override;
+    LocalKind emit_binary_bigint_int_left(uint16_t opcode) override;
+    LocalKind emit_binary_bigint_int_right(uint16_t opcode) override;
     void emit_binary_object(uint16_t opcode) override;
     void emit_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
     LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;

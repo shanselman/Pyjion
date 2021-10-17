@@ -794,16 +794,9 @@ LocalKind PythonCompiler::emit_unboxed_binary_object(uint16_t opcode, AbstractVa
     } else if (leftKind == AVK_BigInteger && rightKind == AVK_BigInteger) {
         return emit_binary_bigint(opcode);
     } else if (leftKind == AVK_BigInteger && rightKind == AVK_Integer) {
-        load_bigint_register();
-        m_il.emit_call(METHOD_LONG_AS_BIGINT);
-        return emit_binary_bigint(opcode);
+        return emit_binary_bigint_int_right(opcode);
     } else if (leftKind == AVK_Integer && rightKind == AVK_BigInteger) {
-        Local right_l = emit_define_local(LK_Pointer);
-        emit_store_local(right_l);
-        load_bigint_register();
-        m_il.emit_call(METHOD_LONG_AS_BIGINT);
-        emit_load_and_free_local(right_l);
-        return emit_binary_bigint(opcode);
+        return emit_binary_bigint_int_left(opcode);
     } else if (leftKind == AVK_Float && rightKind == AVK_BigInteger) {
         m_il.emit_call(METHOD_BIGINT_AS_DOUBLE);
         return emit_binary_float(opcode);
@@ -814,7 +807,6 @@ LocalKind PythonCompiler::emit_unboxed_binary_object(uint16_t opcode, AbstractVa
         emit_load_and_free_local(right_l);
         return emit_binary_float(opcode);
     } else {
-        assert(false);
-        return LK_Pointer;
+        throw UnexpectedValueException();
     }
 }
