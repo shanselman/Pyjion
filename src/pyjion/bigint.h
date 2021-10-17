@@ -46,7 +46,6 @@ class PyjionBigIntRegister {
     std::vector<PyjionBigInt*> ints;
 public:
     explicit PyjionBigIntRegister(size_t reserve = 0) {
-        // TODO : Check reserve size allocation
         ints.reserve(reserve);
     }
 
