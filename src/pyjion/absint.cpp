@@ -1903,8 +1903,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 if (OPT_ENABLED(FunctionCalls) &&
                     stackInfo.size() >= (oparg + 1) &&
                     stackInfo.nth(oparg + 1).hasSource() &&
-                    stackInfo.nth(oparg + 1).hasValue() &&
-                    !mTracingEnabled) {
+                    stackInfo.nth(oparg + 1).hasValue() && !mTracingEnabled) {
                     FLAG_OPT_USAGE(FunctionCalls);
                     m_comp->emit_call_function_inline(oparg, stackInfo.nth(oparg + 1));
                     decStack(oparg + 1);// target + args(oparg)

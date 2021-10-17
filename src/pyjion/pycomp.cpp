@@ -2322,14 +2322,23 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
     }
     emit_store_local(argumentLocal);
     emit_store_local(functionLocal);
-    if (functionType != &PyCFunction_Type ||
+
+    if (functionType == &PyFunction_Type) {
+        // Send all function calls through vectorcall_call
+        emit_load_local(functionLocal);
+        emit_load_local(argumentLocal);
+        emit_null();// kwargs
+        m_il.emit_call(METHOD_VECTORCALL);
+    } else if (functionType != &PyCFunction_Type ||
         functionObject == nullptr ||
         !PyCFunction_Check(functionObject)) {
+        // General object call
         emit_load_local(functionLocal);
         emit_load_local(argumentLocal);
         emit_null();// kwargs
         m_il.emit_call(METHOD_OBJECTCALL);
     } else {
+        // Is a CFunction..
         int flags = PyCFunction_GET_FLAGS(functionObject);
         if (!(flags & METH_VARARGS)) {
             emit_load_local(functionLocal);
@@ -2388,6 +2397,7 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
             }
         }
     }
+
     emit_load_local(gstate);
     m_il.emit_call(METHOD_GIL_RELEASE);
     // Decref all the args.
