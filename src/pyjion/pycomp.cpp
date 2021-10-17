@@ -2480,6 +2480,15 @@ void PythonCompiler::emit_compare_unboxed(uint16_t compareType, AbstractValueWit
         m_il.emit_call(METHOD_LONG_AS_BIGINT);
         emit_load_and_free_local(right_l);
         return emit_compare_bigints(compareType);
+    } else if (leftKind == AVK_BigInteger && rightKind == AVK_Float) {
+        m_il.emit_call(METHOD_BIGINT_AS_DOUBLE);
+        return emit_compare_floats(compareType);
+    } else if (leftKind == AVK_Float && rightKind == AVK_BigInteger) {
+        Local right_l = emit_define_local(LK_BigInt);
+        emit_store_local(right_l);
+        m_il.emit_call(METHOD_BIGINT_AS_DOUBLE);
+        emit_load_and_free_local(right_l);
+        return emit_compare_floats(compareType);
     } else {
         throw UnexpectedValueException();
     }
