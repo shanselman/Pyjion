@@ -28,33 +28,46 @@
 
 #include <cstdint>
 #include <Python.h>
-#include <vector>
+#include <forward_list>
 
 struct PyjionBigInt {
     int64_t shortVersion = -1;
     bool isShort;
     bool negative;// Only used in long integers.
-    std::vector<digit> digits;
-
+    int64_t numDigits = 0;
     int64_t asLong();
+    digit digits[1];
 };
 
-class PyjionBigIntRegister {
-    std::vector<PyjionBigInt*> ints;
+#define SIZEOF_BIGINT(n) ((sizeof(PyjionBigInt) - sizeof(PyjionBigInt::digits)) + (n * sizeof(digit)))
 
+
+class PyjionBigIntRegister {
+    std::forward_list<PyjionBigInt*> ints;
 public:
-    explicit PyjionBigIntRegister(size_t reserve = 0){
-        ints.reserve(reserve);
+    explicit PyjionBigIntRegister(size_t reserve = 0) {
+        // TODO : Check reserve size allocation
     }
-    void add(PyjionBigInt* i) {
-        ints.emplace_back(i);
+
+    PyjionBigInt* addLong(long size) {
+        PyjionBigInt* i = static_cast<PyjionBigInt*>(PyMem_Malloc(SIZEOF_BIGINT(size)));
+        i->shortVersion = -1;
+        i->isShort = false;
+        i->numDigits = size;
+        ints.push_front(i);
+        return i;
     }
-    size_t size(){
-        return ints.size();
+    PyjionBigInt* addShort(int64_t value) {
+        PyjionBigInt* i = static_cast<PyjionBigInt*>(PyMem_Malloc(sizeof(PyjionBigInt)));
+        i->shortVersion = value;
+        i->isShort = true;
+        ints.push_front(i);
+        return i;
     }
+
     ~PyjionBigIntRegister() {
         for (auto i : ints) {
-            delete i;
+            PyMem_Free(i);
         }
     }
 };

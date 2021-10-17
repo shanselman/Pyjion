@@ -26,36 +26,22 @@
 #include "bigint.h"
 #include "intrins.h"
 
-
 PyjionBigInt* PyjionBigInt_FromInt64(int64_t value, PyjionBigIntRegister* bigIntRegister) {
-    auto result = new PyjionBigInt{
-            .shortVersion = value,
-            .isShort = true,
-    };
-    bigIntRegister->add(result);
-    return result;
+    return bigIntRegister->addShort(value);
 }
 
 PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject, PyjionBigIntRegister* bigIntRegister) {
     PyjionBigInt* result;
     if (!IntegerValue::isBig(pythonObject)) {
-        result = new PyjionBigInt{
-                .shortVersion = PyLong_AsLongLong(pythonObject),
-                .isShort = true,
-        };
+        return bigIntRegister->addShort(PyLong_AsLongLong(pythonObject));
     } else {
-        result = new PyjionBigInt{
-                .shortVersion = -1,
-                .isShort = false,
-        };
-        result->negative = (Py_SIZE(pythonObject) < 0);
         auto size = Py_ABS(Py_SIZE(pythonObject));
-        result->digits.reserve(size);
+        result = bigIntRegister->addLong(size);
+        result->negative = (Py_SIZE(pythonObject) < 0);
         for (size_t idx = 0; idx < size; idx++) {
-            result->digits.emplace_back(((PyLongObject*) pythonObject)->ob_digit[idx]);
+            result->digits[idx] = ((PyLongObject*) pythonObject)->ob_digit[idx];
         }
     }
-    bigIntRegister->add(result);
     return result;
 }
 
@@ -195,12 +181,12 @@ PyObject* PyjionBigInt_AsPyLong(PyjionBigInt* i) {
     if (i->isShort)
         result = PyLong_FromLongLong(i->shortVersion);
     else {
-        auto l = _PyLong_New(i->digits.size());
-        for (size_t idx = 0; idx < i->digits.size(); idx++) {
+        auto l = _PyLong_New(i->numDigits);
+        for (size_t idx = 0; idx < i->numDigits; idx++) {
             l->ob_digit[idx] = i->digits[idx];
         }
         if (i->negative) {
-            Py_SET_SIZE(l, -i->digits.size());
+            Py_SET_SIZE(l, -i->numDigits);
         }
         result = reinterpret_cast<PyObject*>(l);
     }
