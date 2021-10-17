@@ -97,7 +97,6 @@ TEST_CASE("Test power function"){
         CHECK(PyJit_LongPow(2, 5) == 32);
         CHECK(PyJit_LongPow(2, 6) == 64);
         CHECK(PyJit_LongPow(2, 32) == 4294967296);
-        CHECK(PyJit_LongPow(2, 63) == 9223372036854775808);
         CHECK(PyJit_LongPow(2, 65) == 0);
         CHECK(PyJit_LongPow(2, 65) == 0);
     }
