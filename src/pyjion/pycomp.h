@@ -567,6 +567,9 @@ public:
     void emit_bigint_shortvalue() override;
     void emit_pylong_as_bigint() override;
 
+    bool usesBigInts() override {
+        return m_hasBigInts;
+    }
 private:
     void load_frame();
     void load_tstate();

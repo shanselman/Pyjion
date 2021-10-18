@@ -51,6 +51,25 @@
 
 using namespace std;
 
+enum OptimizationFlags {
+    InlineIs = 1,          // OPT-1
+    InlineDecref = 2,      // OPT-2
+    InternRichCompare = 4, // OPT-3
+    InlineFramePushPop = 8,// OPT-5
+    KnownStoreSubscr = 16, // OPT-6
+    KnownBinarySubscr = 32,// OPT-7
+    InlineIterators = 64,  // OPTIMIZE_ITERATORS; // OPT-9
+    HashedNames = 128,     // OPTIMIZE_HASHED_NAMES; // OPT-10
+    BuiltinMethods = 256,  // OPTIMIZE_BUILTIN_METHODS; // OPT-12
+    TypeSlotLookups = 512, //OPTIMIZE_TYPESLOT_LOOKUPS; // OPT-13
+    FunctionCalls = 1024,  // OPTIMIZE_FUNCTION_CALLS; // OPT-14
+    LoadAttr = 2056,       // OPTIMIZE_LOAD_ATTR; // OPT-15
+    Unboxing = 4092,       // OPTIMIZE_UNBOXING; // OPT-16
+    IsNone = 8184,         // OPTIMIZE_ISNONE; // OPT-17
+    IntegerUnboxingMultiply = 16368,
+    BigIntegers = 32736
+};
+
 class PyjionCodeProfile : public PyjionBase {
     unordered_map<size_t, unordered_map<size_t, PyTypeObject*>> stackTypes;
     unordered_map<size_t, unordered_map<size_t, AbstractValueKind>> stackKinds;
@@ -75,7 +94,7 @@ class PyjionJittedCode;
 bool JitInit(const wchar_t* jitpath);
 PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile);
 static inline PyObject* PyJit_CheckFunctionResult(PyThreadState* tstate, PyObject* result, PyFrameObject* frame);
-static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile);
+static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionJittedCode*);
 PyObject* PyJit_EvalFrame(PyThreadState*, PyFrameObject*, int);
 PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject);
 
@@ -88,23 +107,7 @@ typedef struct {
 
 typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*, PyjionBigIntRegister*);
 
-enum OptimizationFlags {
-    InlineIs = 1,          // OPT-1
-    InlineDecref = 2,      // OPT-2
-    InternRichCompare = 4, // OPT-3
-    InlineFramePushPop = 8,// OPT-5
-    KnownStoreSubscr = 16, // OPT-6
-    KnownBinarySubscr = 32,// OPT-7
-    InlineIterators = 64,  // OPTIMIZE_ITERATORS; // OPT-9
-    HashedNames = 128,     // OPTIMIZE_HASHED_NAMES; // OPT-10
-    BuiltinMethods = 256,  // OPTIMIZE_BUILTIN_METHODS; // OPT-12
-    TypeSlotLookups = 512, //OPTIMIZE_TYPESLOT_LOOKUPS; // OPT-13
-    FunctionCalls = 1024,  // OPTIMIZE_FUNCTION_CALLS; // OPT-14
-    LoadAttr = 2056,       // OPTIMIZE_LOAD_ATTR; // OPT-15
-    Unboxing = 4092,       // OPTIMIZE_UNBOXING; // OPT-16
-    IsNone = 8184,         // OPTIMIZE_ISNONE; // OPT-17
-    IntegerUnboxingMultiply = 16368,
-};
+
 
 inline OptimizationFlags operator|(OptimizationFlags a, OptimizationFlags b) {
     return static_cast<OptimizationFlags>(static_cast<int>(a) | static_cast<int>(b));

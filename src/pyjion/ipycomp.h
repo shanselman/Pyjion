@@ -499,6 +499,8 @@ public:
 
     virtual void emit_bigint_shortvalue() = 0;
     virtual void emit_pylong_as_bigint() = 0;
+
+    virtual bool usesBigInts() = 0;
 };
 
 #endif

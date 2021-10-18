@@ -2482,10 +2482,18 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
 
     m_comp->emit_ret();
     auto code = m_comp->emit_compile();
-    if (code != nullptr)
-        return {code, Success, nullptr, optimizationsMade};
-    else
+    if (code != nullptr) {
+        if (m_comp->usesBigInts())
+            FLAG_OPT_USAGE(BigIntegers);
+        return {
+                .compiledCode = code,
+                .result = Success,
+                .instructionGraph = nullptr,
+                .optimizations = optimizationsMade,
+        };
+    } else {
         return {nullptr, CompilationJitFailure};
+    }
 }
 
 void AbstractInterpreter::testBoolAndBranch(Local value, bool isTrue, Label target) {

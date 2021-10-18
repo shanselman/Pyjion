@@ -122,12 +122,14 @@ PyJit_CheckFunctionResult(PyThreadState* tstate, PyObject* result, PyFrameObject
     return result;
 }
 
-static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
+static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionJittedCode* jitted) {
     if (Pyjit_EnterRecursiveCall("")) {
         return nullptr;
     }
 
-    auto* bigIntRegister = new PyjionBigIntRegister(profile != nullptr ? profile->getBigIntReserve() : 10);
+    PyjionBigIntRegister* bigIntRegister = nullptr;
+    if (jitted->j_optimizations & OptimizationFlags::BigIntegers)
+        bigIntRegister = new PyjionBigIntRegister(jitted->j_profile != nullptr ? jitted->j_profile->getBigIntReserve() : 10);
     PyTraceInfo trace_info;
     /* Mark trace_info as uninitialized */
     trace_info.code = nullptr;
@@ -141,13 +143,15 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
     frame->f_state = PY_FRAME_EXECUTING;
 
     try {
-        auto res = ((Py_EvalFunc) state)(nullptr, frame, tstate, profile, &trace_info, bigIntRegister);
+        auto res = ((Py_EvalFunc) state)(nullptr, frame, tstate, jitted->j_profile, &trace_info, bigIntRegister);
         tstate->cframe = trace_info.cframe.previous;
         tstate->cframe->use_tracing = trace_info.cframe.use_tracing;
         Pyjit_LeaveRecursiveCall();
-        if (profile != nullptr)
-            profile->setBigIntReserve(bigIntRegister->size());
-        delete bigIntRegister;
+        if (bigIntRegister != nullptr) {
+            if (jitted->j_profile != nullptr)
+                jitted->j_profile->setBigIntReserve(bigIntRegister->size());
+            delete bigIntRegister;
+        }
         return PyJit_CheckFunctionResult(tstate, res, frame);
     } catch (const std::exception& e) {
 #ifdef DEBUG_VERBOSE
@@ -270,7 +274,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
 #endif
 
     // Execute it now.
-    return PyJit_ExecuteJittedFrame((void*) state->j_addr, frame, tstate, state->j_profile);
+    return PyJit_ExecuteJittedFrame((void*) state->j_addr, frame, tstate, state);
 }
 
 PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject) {
@@ -315,7 +319,7 @@ PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
     if (jitted != nullptr && !throwflag) {
         if (jitted->j_addr != nullptr && (!g_pyjionSettings.pgc || jitted->j_pgc_status == Optimized)) {
             jitted->j_run_count++;
-            return PyJit_ExecuteJittedFrame((void*) jitted->j_addr, f, ts, jitted->j_profile);
+            return PyJit_ExecuteJittedFrame((void*) jitted->j_addr, f, ts, jitted);
         } else if (!jitted->j_failed && jitted->j_run_count++ >= jitted->j_specialization_threshold) {
             auto result = PyJit_ExecuteAndCompileFrame(jitted, f, ts, jitted->j_profile);
             jitted->j_pgc_status = nextPgcStatus(jitted->j_pgc_status);
