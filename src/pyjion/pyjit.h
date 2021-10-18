@@ -51,7 +51,7 @@
 
 using namespace std;
 
-class PyjionCodeProfile {
+class PyjionCodeProfile : public PyjionBase {
     unordered_map<size_t, unordered_map<size_t, PyTypeObject*>> stackTypes;
     unordered_map<size_t, unordered_map<size_t, AbstractValueKind>> stackKinds;
     size_t bigIntReserve = 10;

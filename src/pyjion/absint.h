@@ -38,6 +38,7 @@
 #include "stack.h"
 #include "exceptionhandling.h"
 #include "instructions.h"
+#include "base.h"
 
 using namespace std;
 
@@ -142,7 +143,7 @@ struct AbstractLocalInfo {
 // values of locals won't change between most opcodes (via CowVector).  When updating
 // a local we first check if the locals are currently shared, and if not simply update
 // them in place.  If they are shared then we will issue a copy.
-class InterpreterState {
+class InterpreterState : public PyjionBase {
 public:
     InterpreterStack mStack;
     CowVector<AbstractLocalInfo> mLocals;
@@ -264,7 +265,7 @@ public:
 class __declspec(dllexport) AbstractInterpreter {
 #pragma warning(disable : 4251)
 #else
-class AbstractInterpreter {
+class AbstractInterpreter : public PyjionBase {
 #endif
     // ** Results produced:
     // Tracks the interpreter state before each opcode

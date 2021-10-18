@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include "cowvector.h"
 #include "types.h"
+#include "base.h"
 
 #ifdef WINDOWS
 typedef SIZE_T size_t;
@@ -94,7 +95,7 @@ static bool isKnownType(AbstractValueKind kind) {
     return true;
 }
 
-class AbstractSource {
+class AbstractSource : public PyjionBase {
     vector<pair<py_opindex, size_t>> _consumers;
     bool single_use = false;
     py_opindex _producer;

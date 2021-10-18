@@ -52,7 +52,7 @@
 
 using namespace std;
 
-class LabelInfo {
+class LabelInfo : public PyjionBase {
 public:
     ssize_t m_location;
     vector<ssize_t> m_branchOffsets;
@@ -68,7 +68,7 @@ struct CorInfoTypeHash {
     }
 };
 
-class ILGenerator {
+class ILGenerator : public PyjionBase {
     vector<Parameter> m_params, m_locals;
     CorInfoType m_retType;
     BaseModule* m_module;
