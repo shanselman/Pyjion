@@ -244,6 +244,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     }
     if (res.compiledCode == nullptr || res.result != Success) {
         state->j_failed = true;
+        state->j_addr = nullptr;  // TODO : Raise specific warning when it used to compile and then it didnt the second time.
         return _PyEval_EvalFrameDefault(tstate, frame, 0);
     }
 
@@ -317,7 +318,7 @@ PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject) {
 PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
     auto jitted = PyJit_EnsureExtra((PyObject*) f->f_code);
     if (jitted != nullptr && !throwflag) {
-        if (jitted->j_addr != nullptr && (!g_pyjionSettings.pgc || jitted->j_pgc_status == Optimized)) {
+        if (jitted->j_addr != nullptr && !jitted->j_failed && (!g_pyjionSettings.pgc || jitted->j_pgc_status == Optimized)) {
             jitted->j_run_count++;
             return PyJit_ExecuteJittedFrame((void*) jitted->j_addr, f, ts, jitted);
         } else if (!jitted->j_failed && jitted->j_run_count++ >= jitted->j_specialization_threshold) {
