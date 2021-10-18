@@ -25,15 +25,33 @@ def test_function_calls(n=10000):
         pass
     for _ in range(n):
         f()
+        f()
+        f()
+        f()
+        f()
+        f()
+        f()
 
 
 def test_builtin_type_calls(n=10000):
     for _ in range(n):
         int(n)
+        int(n)
+        int(n)
+        int(n)
+        int(n)
+        int(n)
+        int(n)
 
 
 def test_builtin_func_calls(n=10000):
     for n in range(n):
+        sum((n, n))
+        sum((n, n))
+        sum((n, n))
+        sum((n, n))
+        sum((n, n))
+        sum((n, n))
         sum((n, n))
 
 
