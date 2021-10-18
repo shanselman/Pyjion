@@ -51,4 +51,4 @@ def benchmark(n=POINTS):
     return maximize(points)
 
 
-__benchmarks__ = [(benchmark, "float", {"level": 2, "pgc": True})]
+__benchmarks__ = [(benchmark, "float", {"level": 2, "pgc": True}, 5)]

@@ -3,9 +3,6 @@ The Computer Language Benchmarks Game
 http://benchmarksgame.alioth.debian.org/
 Contributed by Sokolov Yura, modified by Tupteq.
 """
-import pyjion
-import pyjion.dis
-import timeit
 
 DEFAULT_ARG = 9
 
@@ -53,4 +50,4 @@ def fannkuch(n=DEFAULT_ARG):
             return max_flips
 
 
-__benchmarks__ = [(fannkuch, "fannkuch", {"level": 2, "pgc": True})]
+__benchmarks__ = [(fannkuch, "fannkuch", {"level": 2, "pgc": True}, 5)]

@@ -5,8 +5,6 @@ Copyright (C) 2005 Carl Friedrich Bolz
 
 import math
 import random
-import pyjion
-import timeit
 
 DEFAULT_THICKNESS = 0.25
 DEFAULT_WIDTH = 256
@@ -263,5 +261,5 @@ def main():
     chaos.create_image_chaos(DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_ITERATIONS, "out.ppm", DEFAULT_RNG_SEED)
 
 
-__benchmarks__ = [(main, "chaos", {"level": 2, "pgc": True})]
+__benchmarks__ = [(main, "chaos", {"level": 2, "pgc": True}, 5)]
 

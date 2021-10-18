@@ -23,6 +23,7 @@ if __name__ == "__main__":
     table = Table(title=f"Pyjion Benchmark Suite, repeat={REPEAT}, number={TIMES}")
 
     table.add_column("Benchmark", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Repeat", style="magenta")
     table.add_column("Min", style="magenta")
     table.add_column("Max", style="magenta")
     table.add_column("Mean", style="magenta")
@@ -44,23 +45,22 @@ if __name__ == "__main__":
         i = __import__(f.stem, globals(), locals(), )
         if hasattr(i, "__benchmarks__"):
             for benchmark in i.__benchmarks__:
-                func, desc, settings = benchmark
+                func, desc, settings, repeat = benchmark
                 with cProfile.Profile() as pr:
-                    without_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
+                    without_result = timeit.repeat(func, repeat=repeat, number=repeat)
 
                 pr.dump_stats(profiles_out / f'{f.stem}_{desc}_without.pstat')
 
                 with cProfile.Profile() as pr:
                     pyjion.enable()
                     pyjion.config(**settings, graph=True)
-                    with_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
+                    with_result = timeit.repeat(func, repeat=repeat, number=repeat)
                     pyjion.disable()
                     pr.dump_stats(profiles_out / f'{f.stem}_{desc}_with.pstat')
 
                 with open(profiles_out / f'{f.stem}_{desc}.cil', 'w') as il:
                     with redirect_stdout(il):
                         pyjion.dis.dis(func)
-
 
                 with open(graphs_out / f'{f.stem}.dot', 'w') as dot:
                     for k, attrib in i.__dict__.items():
@@ -79,7 +79,7 @@ if __name__ == "__main__":
                     delta_repr = Text(f"{delta:.3f}%", style="green")
                 else:
                     delta_repr = Text(f"-{delta:.1f}%", style="red")
-                table.add_row(desc, "{:.3f}".format(min(without_result)), "{:.3f}".format(max(without_result)),
+                table.add_row(desc, str(repeat), "{:.3f}".format(min(without_result)), "{:.3f}".format(max(without_result)),
                               "{:.3f}".format(fmean(without_result)), "{:.3f}".format(min(with_result)),
                               "{:.3f}".format(max(with_result)), "{:.3f}".format(fmean(with_result)), delta_repr)
 
