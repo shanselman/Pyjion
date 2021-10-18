@@ -33,7 +33,7 @@
 class PyjionBase {
 public:
     void* operator new(size_t size) ;
-    void operator delete(void*);
+    void operator delete(void*) noexcept;
 };
 
 #endif // PYJION_BASE_H
