@@ -644,6 +644,10 @@ TEST_CASE("Test builtins") {
         auto t = EmissionTest("def f(): return bin(2**65)");
         CHECK(t.returns() == "'0b100000000000000000000000000000000000000000000000000000000000000000'");
     }
+    SECTION("call reversed() ") {
+        auto t = EmissionTest("def f(): return tuple(reversed((1,2,3,4)))");
+        CHECK(t.returns() == "(4, 3, 2, 1)");
+    }
 }
 
 TEST_CASE("Test type annotations") {

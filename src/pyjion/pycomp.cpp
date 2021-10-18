@@ -2329,16 +2329,54 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
         emit_load_local(argumentLocal);
         emit_null();// kwargs
         m_il.emit_call(METHOD_VECTORCALL);
-    } else if (functionType != &PyCFunction_Type ||
-        functionObject == nullptr ||
-        !PyCFunction_Check(functionObject)) {
-        // General object call
+    }  else if (func.Sources->isBuiltin() &&
+                functionType == &PyType_Type &&
+                functionObject != nullptr &&
+                (PyTypeObject*)functionObject != &PyType_Type) {
+        // builtin Type call
+        auto tp_new_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
+                                         vector<Parameter>{
+                                                 Parameter(CORINFO_TYPE_NATIVEINT),
+                                                 Parameter(CORINFO_TYPE_NATIVEINT),
+                                                 Parameter(CORINFO_TYPE_NATIVEINT)},
+                                         (void*) ((PyTypeObject*)functionObject)->tp_new);
+
         emit_load_local(functionLocal);
         emit_load_local(argumentLocal);
         emit_null();// kwargs
-        m_il.emit_call(METHOD_OBJECTCALL);
-    } else {
-        // Is a CFunction..
+        m_il.emit_call(tp_new_token);
+        if (((PyTypeObject*)functionObject)->tp_init != nullptr){
+            Local resultLocal = emit_define_local(LK_Pointer);
+            emit_store_local(resultLocal);
+            // has __init__
+            auto tp_init_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
+                                                   vector<Parameter>{
+                                                           Parameter(CORINFO_TYPE_NATIVEINT),
+                                                           Parameter(CORINFO_TYPE_NATIVEINT),
+                                                           Parameter(CORINFO_TYPE_NATIVEINT)},
+                                                   (void*) ((PyTypeObject*)functionObject)->tp_init);
+            emit_load_local(resultLocal);
+            emit_load_local(argumentLocal);
+            emit_null();// kwargs
+            m_il.emit_call(tp_init_token);
+            Label good = emit_define_label(), returnLabel = emit_define_label();
+            emit_int(0);
+            emit_branch(BranchGreaterThanEqual, good);
+
+            // Bad
+            emit_load_local(resultLocal);
+            decref();
+            emit_null();
+            emit_branch(BranchAlways, returnLabel);
+
+            emit_mark_label(good);
+            // Good, return new object
+            emit_load_and_free_local(resultLocal);
+            emit_mark_label(returnLabel);
+        }
+
+    } else if (functionType == &PyCFunction_Type && functionObject != nullptr){
+        // Is a CFunction...
         int flags = PyCFunction_GET_FLAGS(functionObject);
         if (!(flags & METH_VARARGS)) {
             emit_load_local(functionLocal);
@@ -2396,6 +2434,12 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
                 emit_mark_label(pass);
             }
         }
+    } else {
+        // General object call
+        emit_load_local(functionLocal);
+        emit_load_local(argumentLocal);
+        emit_null();// kwargs
+        m_il.emit_call(METHOD_OBJECTCALL);
     }
 
     emit_load_local(gstate);
