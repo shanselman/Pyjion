@@ -4,7 +4,10 @@ A benchmark suite for Pyjion
 import timeit
 import warnings
 
+from contextlib import redirect_stdout
+
 import pyjion
+import pyjion.dis
 import pathlib
 import sys
 from statistics import fmean
@@ -45,15 +48,19 @@ if __name__ == "__main__":
                 with cProfile.Profile() as pr:
                     without_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
 
-                pr.dump_stats(profiles_out / f'{f.stem}_without.pstat')
+                pr.dump_stats(profiles_out / f'{f.stem}_{desc}_without.pstat')
 
                 with cProfile.Profile() as pr:
                     pyjion.enable()
                     pyjion.config(**settings, graph=True)
                     with_result = timeit.repeat(func, repeat=REPEAT, number=TIMES)
                     pyjion.disable()
+                    pr.dump_stats(profiles_out / f'{f.stem}_{desc}_with.pstat')
 
-                pr.dump_stats(profiles_out / f'{f.stem}_with.pstat')
+                with open(profiles_out / f'{f.stem}_{desc}.cil', 'w') as il:
+                    with redirect_stdout(il):
+                        pyjion.dis.dis(func)
+
 
                 with open(graphs_out / f'{f.stem}.dot', 'w') as dot:
                     for k, attrib in i.__dict__.items():

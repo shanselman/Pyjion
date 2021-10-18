@@ -79,8 +79,7 @@ public:
         return m_methods[tokenId];
     }
 
-    virtual int AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr);
-
+    virtual int AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr, const char* label = "typeslot");
     virtual void RegisterSymbol(int32_t tokenId, const char* label);
     virtual SymbolTable GetSymbolTable();
 };

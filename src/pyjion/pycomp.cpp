@@ -1027,7 +1027,8 @@ void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj
                                                      vector<Parameter>{
                                                              Parameter(CORINFO_TYPE_NATIVEINT),
                                                              Parameter(CORINFO_TYPE_NATIVEINT)},
-                                                     (void*) obj.Value->pythonType()->tp_getattro);
+                                                     (void*) obj.Value->pythonType()->tp_getattro,
+                                                     "tp_getattro");
             emit_load_local(objLocal);
             m_il.ld_i(name);
             m_il.emit_call(getattro_token);
@@ -1039,7 +1040,8 @@ void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj
                                                 vector<Parameter>{
                                                         Parameter(CORINFO_TYPE_NATIVEINT),
                                                         Parameter(CORINFO_TYPE_NATIVEINT)},
-                                                (void*) obj.Value->pythonType()->tp_getattr);
+                                                (void*) obj.Value->pythonType()->tp_getattr,
+                                                "tp_getattr");
         emit_load_local(objLocal);
         m_il.ld_i((void*) PyUnicode_AsUTF8((PyObject*) name));
         m_il.emit_call(getattr_token);
@@ -2339,7 +2341,7 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
                                                  Parameter(CORINFO_TYPE_NATIVEINT),
                                                  Parameter(CORINFO_TYPE_NATIVEINT),
                                                  Parameter(CORINFO_TYPE_NATIVEINT)},
-                                         (void*) ((PyTypeObject*)functionObject)->tp_new);
+                                         (void*) ((PyTypeObject*)functionObject)->tp_new, "tp_new");
 
         emit_load_local(functionLocal);
         emit_load_local(argumentLocal);
@@ -2354,7 +2356,7 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
                                                            Parameter(CORINFO_TYPE_NATIVEINT),
                                                            Parameter(CORINFO_TYPE_NATIVEINT),
                                                            Parameter(CORINFO_TYPE_NATIVEINT)},
-                                                   (void*) ((PyTypeObject*)functionObject)->tp_init);
+                                                   (void*) ((PyTypeObject*)functionObject)->tp_init, "tp_init");
             emit_load_local(resultLocal);
             emit_load_local(argumentLocal);
             emit_null();// kwargs
@@ -2415,13 +2417,13 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
                                                           Parameter(CORINFO_TYPE_NATIVEINT), // Self
                                                           Parameter(CORINFO_TYPE_NATIVEINT), // Args-tuple
                                                           Parameter(CORINFO_TYPE_NATIVEINT)},// kwargs
-                                                  (void*) meth);
+                                                  (void*) meth, "method_call");
             } else {
                 builtinToken = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
                                                   vector<Parameter>{
                                                           Parameter(CORINFO_TYPE_NATIVEINT), // Self
                                                           Parameter(CORINFO_TYPE_NATIVEINT)},// Args-tuple
-                                                  (void*) meth);
+                                                  (void*) meth, "method_call");
             }
             m_il.emit_call(builtinToken);
 

@@ -182,7 +182,7 @@ public:
         if (mStack.empty())
             throw StackUnderflowException();
         auto existing = mStack[mStack.size() - 1 - stackPosition];
-        if (existing.hasSource() && existing.Sources->hasConstValue())
+        if (existing.hasSource() && (existing.Sources->hasConstValue() || existing.Sources->isBuiltin()))
             return existing;
         if (existing.hasValue() && !existing.Value->needsGuard() && existing.Value->known())
             return existing;

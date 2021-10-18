@@ -28,11 +28,11 @@
 
 #include <utility>
 
-int BaseModule::AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr) {
+int BaseModule::AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr, const char* label) {
     if (existingSlots.find(addr) == existingSlots.end()) {
         int token = METHOD_SLOT_SPACE + ++slotCursor;
         m_methods[token] = new JITMethod(this, returnType, std::move(params), addr, false);
-        RegisterSymbol(token, "typeslot");// TODO : Get the name of the type at least..
+        RegisterSymbol(token, label);
         return token;
     } else {
         return existingSlots[addr];
