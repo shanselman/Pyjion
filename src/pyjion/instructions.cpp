@@ -227,9 +227,10 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx) {
         bool storesCanBeEscaped = true;
         bool abstractTypesMatch = true;
         AbstractValueKind localAvk = AVK_Undefined;
-        bool hasStores = false;
+        bool hasStores = false, hasLoads = false;
         for (auto& instruction : this->instructions) {
             if (instruction.second.opcode == LOAD_FAST && instruction.second.oparg == localNumber) {
+                hasLoads = true;
                 // if load doesn't have output edge, dont trust this graph
                 auto loadEdges = getEdgesFrom(instruction.first);
                 if (loadEdges.size() != 1 || !supportsEscaping(loadEdges[0].kind)) {
@@ -255,7 +256,7 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx) {
                 }
             }
         }
-        if (loadsCanBeEscaped && storesCanBeEscaped && hasStores && abstractTypesMatch) {
+        if (loadsCanBeEscaped && storesCanBeEscaped && hasStores && hasLoads && abstractTypesMatch) {
             unboxedFastLocals.insert({localNumber, localAvk});
             for (auto& instruction : this->instructions) {
                 if (instruction.second.opcode == LOAD_FAST && instruction.second.oparg == localNumber) {
