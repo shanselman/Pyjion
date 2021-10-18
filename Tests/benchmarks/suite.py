@@ -76,12 +76,12 @@ if __name__ == "__main__":
 
                 delta = (abs(fmean(with_result) - fmean(without_result)) / fmean(without_result)) * 100.0
                 if fmean(with_result) < fmean(without_result):
-                    delta_repr = Text(f"{delta:.2f}%", style="green")
+                    delta_repr = Text(f"{delta:.3f}%", style="green")
                 else:
-                    delta_repr = Text(f"-{delta:.2f}%", style="red")
-                table.add_row(desc, "{:.2f}".format(min(without_result)), "{:.2f}".format(max(without_result)),
-                              "{:.2f}".format(fmean(without_result)), "{:.2f}".format(min(with_result)),
-                              "{:.2f}".format(max(with_result)), "{:.2f}".format(fmean(with_result)), delta_repr)
+                    delta_repr = Text(f"-{delta:.1f}%", style="red")
+                table.add_row(desc, "{:.3f}".format(min(without_result)), "{:.3f}".format(max(without_result)),
+                              "{:.3f}".format(fmean(without_result)), "{:.3f}".format(min(with_result)),
+                              "{:.3f}".format(max(with_result)), "{:.3f}".format(fmean(with_result)), delta_repr)
 
     console = Console()
     console.print(table)

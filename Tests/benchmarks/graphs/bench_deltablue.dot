@@ -510,7 +510,7 @@ digraph change {
 	OP46 [label="46 FOR_ITER (9)" color="black"];
 	OP46 -> OP48 [label="Jump (conditional)" color=orange];
 	OP46 -> OP66 [label="Jump (conditional)" color=orange];
-	OP48 [label="48 STORE_FAST ('i')" color="blue"];
+	OP48 [label="48 STORE_FAST ('i')" color="black"];
 	OP50 [label="50 LOAD_FAST ('new_value')" color="black"];
 	OP52 [label="52 LOAD_FAST ('v')" color="black"];
 	OP54 [label="54 STORE_ATTR (value)" color="black"];
@@ -547,7 +547,7 @@ digraph change {
 	OP40 -> OP42 [label="Const (int) -0" color=black];
 	OP42 -> OP44 [label="Local (range) -0" color=black];
 	OP44 -> OP46 [label="Intermediate (range iterator) -0" color=black];
-	OP46 -> OP48 [label="Intermediate (int) U0" color=red];
+	OP46 -> OP48 [label="Intermediate (int) -0" color=black];
 	OP50 -> OP54 [label="Local (int) -1" color=black];
 	OP52 -> OP54 [label="Local (Variable) -0" color=black];
 	OP56 -> OP58 [label="Local (Plan) -0" color=black];

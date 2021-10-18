@@ -8,7 +8,7 @@ digraph advance {
 	OP8 [label="8 FOR_ITER (158)" color="black"];
 	OP8 -> OP10 [label="Jump (conditional)" color=orange];
 	OP8 -> OP326 [label="Jump (conditional)" color=orange];
-	OP10 [label="10 STORE_FAST ('i')" color="blue"];
+	OP10 [label="10 STORE_FAST ('i')" color="black"];
 	OP12 [label="12 LOAD_FAST ('pairs')" color="black"];
 	OP14 [label="14 GET_ITER (0)" color="black"];
 	OP16 [label="16 FOR_ITER (112)" color="black"];
@@ -138,7 +138,7 @@ digraph advance {
 	OP254 [label="254 STORE_FAST ('vx')" color="blue"];
 	OP256 [label="256 STORE_FAST ('vy')" color="blue"];
 	OP258 [label="258 STORE_FAST ('vz')" color="blue"];
-	OP260 [label="260 STORE_FAST ('m')" color="blue"];
+	OP260 [label="260 STORE_FAST ('m')" color="black"];
 	OP262 [label="262 LOAD_FAST ('r')" color="black"];
 	OP264 [label="264 LOAD_CONST (0)" color="red"];
 	OP266 [label="266 DUP_TOP_TWO (0)" color="black"];
@@ -179,7 +179,7 @@ digraph advance {
 	OP2 -> OP4 [label="Local (int) -0" color=black];
 	OP4 -> OP6 [label="Local (range) -0" color=black];
 	OP6 -> OP8 [label="Intermediate (range iterator) -0" color=black];
-	OP8 -> OP10 [label="Intermediate (int) U0" color=red];
+	OP8 -> OP10 [label="Intermediate (int) -0" color=black];
 	OP12 -> OP14 [label="Local (list) -0" color=black];
 	OP14 -> OP16 [label="Intermediate (Any) -0" color=black];
 	OP16 -> OP18 [label="Intermediate (tuple) -0" color=black];
@@ -331,7 +331,7 @@ digraph advance {
 	OP252 -> OP254 [label="Intermediate (float) U0" color=red];
 	OP252 -> OP256 [label="Intermediate (float) U0" color=red];
 	OP252 -> OP258 [label="Intermediate (float) U0" color=red];
-	OP248 -> OP260 [label="Intermediate (float) U0" color=red];
+	OP248 -> OP260 [label="Intermediate (float) -0" color=black];
 	OP262 -> OP266 [label="Local (Any) -1" color=black];
 	OP264 -> OP266 [label="Const (int) -0" color=black];
 	OP266 -> OP268 [label="Intermediate (Any) -1" color=black];
