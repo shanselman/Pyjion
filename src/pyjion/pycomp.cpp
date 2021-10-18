@@ -71,6 +71,7 @@ void PythonCompiler::load_trace_info() {
 }
 
 void PythonCompiler::load_bigint_register() {
+    m_hasBigInts = true;
     m_il.ld_arg(5);
 }
 
@@ -2331,32 +2332,32 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
         emit_load_local(argumentLocal);
         emit_null();// kwargs
         m_il.emit_call(METHOD_VECTORCALL);
-    }  else if (func.Sources->isBuiltin() &&
-                functionType == &PyType_Type &&
-                functionObject != nullptr &&
-                (PyTypeObject*)functionObject != &PyType_Type) {
+    } else if (func.Sources->isBuiltin() &&
+               functionType == &PyType_Type &&
+               functionObject != nullptr &&
+               (PyTypeObject*) functionObject != &PyType_Type) {
         // builtin Type call
         auto tp_new_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
-                                         vector<Parameter>{
-                                                 Parameter(CORINFO_TYPE_NATIVEINT),
-                                                 Parameter(CORINFO_TYPE_NATIVEINT),
-                                                 Parameter(CORINFO_TYPE_NATIVEINT)},
-                                         (void*) ((PyTypeObject*)functionObject)->tp_new, "tp_new");
+                                               vector<Parameter>{
+                                                       Parameter(CORINFO_TYPE_NATIVEINT),
+                                                       Parameter(CORINFO_TYPE_NATIVEINT),
+                                                       Parameter(CORINFO_TYPE_NATIVEINT)},
+                                               (void*) ((PyTypeObject*) functionObject)->tp_new, "tp_new");
 
         emit_load_local(functionLocal);
         emit_load_local(argumentLocal);
         emit_null();// kwargs
         m_il.emit_call(tp_new_token);
-        if (((PyTypeObject*)functionObject)->tp_init != nullptr){
+        if (((PyTypeObject*) functionObject)->tp_init != nullptr) {
             Local resultLocal = emit_define_local(LK_Pointer);
             emit_store_local(resultLocal);
             // has __init__
             auto tp_init_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
-                                                   vector<Parameter>{
-                                                           Parameter(CORINFO_TYPE_NATIVEINT),
-                                                           Parameter(CORINFO_TYPE_NATIVEINT),
-                                                           Parameter(CORINFO_TYPE_NATIVEINT)},
-                                                   (void*) ((PyTypeObject*)functionObject)->tp_init, "tp_init");
+                                                    vector<Parameter>{
+                                                            Parameter(CORINFO_TYPE_NATIVEINT),
+                                                            Parameter(CORINFO_TYPE_NATIVEINT),
+                                                            Parameter(CORINFO_TYPE_NATIVEINT)},
+                                                    (void*) ((PyTypeObject*) functionObject)->tp_init, "tp_init");
             emit_load_local(resultLocal);
             emit_load_local(argumentLocal);
             emit_null();// kwargs
@@ -2377,7 +2378,7 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
             emit_mark_label(returnLabel);
         }
 
-    } else if (functionType == &PyCFunction_Type && functionObject != nullptr){
+    } else if (functionType == &PyCFunction_Type && functionObject != nullptr) {
         // Is a CFunction...
         int flags = PyCFunction_GET_FLAGS(functionObject);
         if (!(flags & METH_VARARGS)) {

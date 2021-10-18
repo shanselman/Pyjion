@@ -46,6 +46,7 @@ struct PyjionBigInt {
 
 class PyjionBigIntRegister : public PyjionBase {
     std::vector<PyjionBigInt*> ints;
+
 public:
     explicit PyjionBigIntRegister(size_t reserve = 0) {
         ints.reserve(reserve);
@@ -73,7 +74,7 @@ public:
         }
     }
 
-    size_t size(){
+    size_t size() {
         return ints.size();
     }
 };

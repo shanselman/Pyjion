@@ -32,4 +32,3 @@ void* PyjionBase::operator new(size_t size) {
 void PyjionBase::operator delete(void* x) noexcept {
     PyMem_Free(x);
 }
-

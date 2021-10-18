@@ -278,7 +278,7 @@ AbstractValue* BoolValue::binary(AbstractSource* selfSources, int op, AbstractVa
             case INPLACE_XOR:
                 return &Integer;
         }
-    }else if (other_kind == AVK_BigInteger) {
+    } else if (other_kind == AVK_BigInteger) {
         switch (op) {
             case BINARY_MODULO:
             case INPLACE_MODULO:

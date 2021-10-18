@@ -310,6 +310,7 @@ class PythonCompiler : public IPythonCompiler {
     Local m_lasti;
     Local m_instrCount;
     bool m_compileDebug;
+    bool m_hasBigInts = false;
 
 public:
     explicit PythonCompiler(PyCodeObject* code);
