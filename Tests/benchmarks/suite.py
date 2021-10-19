@@ -24,13 +24,13 @@ if __name__ == "__main__":
 
     table.add_column("Benchmark", justify="right", style="cyan", no_wrap=True)
     table.add_column("Repeat", style="magenta")
-    table.add_column("Min", style="magenta")
-    table.add_column("Max", style="magenta")
-    table.add_column("Mean", style="magenta")
-    table.add_column("Min (+)", style="blue")
-    table.add_column("Max (+)", style="blue")
-    table.add_column("Mean (+)", style="blue")
-    table.add_column("Delta", justify="right", style="green")
+    table.add_column("Min", style="magenta", width=10)
+    table.add_column("Max", style="magenta", width=10)
+    table.add_column("Mean", style="magenta", width=10)
+    table.add_column("Min (+)", style="blue", width=10)
+    table.add_column("Max (+)", style="blue", width=10)
+    table.add_column("Mean (+)", style="blue", width=10)
+    table.add_column("Delta", justify="right", style="green", width=10)
 
     graphs_out = pathlib.Path(__file__).parent / 'graphs'
     if not graphs_out.exists():
@@ -83,5 +83,5 @@ if __name__ == "__main__":
                               "{:.3f}".format(fmean(without_result)), "{:.3f}".format(min(with_result)),
                               "{:.3f}".format(max(with_result)), "{:.3f}".format(fmean(with_result)), delta_repr)
 
-    console = Console()
+    console = Console(width=150)
     console.print(table)

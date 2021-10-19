@@ -6,3 +6,4 @@ rich
 pyyaml
 numpy
 pytest>=6.2.5
+pandas
