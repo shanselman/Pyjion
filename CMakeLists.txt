@@ -275,7 +275,7 @@ endif()
 if (BUILD_TESTS)
     # Testing
     add_subdirectory(Tests/Catch)
-    set(TEST_SOURCES Tests/testing_util.cpp Tests/test_basics.cpp Tests/test_compiler.cpp Tests/Tests.cpp Tests/test_wrappers.cpp Tests/test_exceptions.cpp Tests/test_scopes.cpp Tests/test_tracing.cpp Tests/test_inference.cpp Tests/test_math.cpp Tests/test_pgc.cpp Tests/test_unpack.cpp Tests/test_class.cpp Tests/test_coro.cpp Tests/test_graph.cpp Tests/test_big_build.cpp Tests/test_ilgen.cpp Tests/test_with.cpp Tests/test_containers.cpp Tests/test_bigint.cpp)
+    set(TEST_SOURCES Tests/testing_util.cpp Tests/test_basics.cpp Tests/test_compiler.cpp Tests/Tests.cpp Tests/test_wrappers.cpp Tests/test_exceptions.cpp Tests/test_scopes.cpp Tests/test_tracing.cpp Tests/test_inference.cpp Tests/test_math.cpp Tests/test_pgc.cpp Tests/test_unpack.cpp Tests/test_class.cpp Tests/test_coro.cpp Tests/test_graph.cpp Tests/test_big_build.cpp Tests/test_ilgen.cpp Tests/test_with.cpp Tests/test_containers.cpp Tests/test_bigint.cpp Tests/test_globals.cpp)
 
     add_executable(unit_tests ${TEST_SOURCES} $<TARGET_OBJECTS:pyjionlib>)
     if (NOT WIN32)
