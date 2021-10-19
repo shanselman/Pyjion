@@ -51,42 +51,6 @@
 
 using namespace std;
 
-class PyjionCodeProfile {
-    unordered_map<size_t, unordered_map<size_t, PyTypeObject*>> stackTypes;
-    unordered_map<size_t, unordered_map<size_t, AbstractValueKind>> stackKinds;
-    size_t bigIntReserve = 10;
-public:
-    void record(size_t opcodePosition, size_t stackPosition, PyObject* obj);
-    PyTypeObject* getType(size_t opcodePosition, size_t stackPosition);
-    AbstractValueKind getKind(size_t opcodePosition, size_t stackPosition);
-    void setBigIntReserve(size_t i){
-        bigIntReserve = i;
-    }
-    size_t getBigIntReserve(){
-        return bigIntReserve;
-    }
-    ~PyjionCodeProfile();
-};
-
-void capturePgcStackValue(PyjionCodeProfile* profile, PyObject* value, size_t opcodePosition, size_t stackPosition);
-class PyjionJittedCode;
-
-bool JitInit(const wchar_t* jitpath);
-PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile);
-static inline PyObject* PyJit_CheckFunctionResult(PyThreadState *tstate, PyObject *result, PyFrameObject* frame);
-static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile);
-PyObject* PyJit_EvalFrame(PyThreadState*, PyFrameObject*, int);
-PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject);
-
-// This type isn't exported in the Python 3.10 API, so define it here.
-typedef struct {
-    PyCodeObject* code;       // The code object for the bounds. May be NULL.
-    PyCodeAddressRange bounds;// Only valid if code != NULL.
-    CFrame cframe;
-} PyTraceInfo;
-
-typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*, PyjionBigIntRegister*);
-
 enum OptimizationFlags {
     InlineIs = 1,          // OPT-1
     InlineDecref = 2,      // OPT-2
@@ -103,7 +67,47 @@ enum OptimizationFlags {
     Unboxing = 4092,       // OPTIMIZE_UNBOXING; // OPT-16
     IsNone = 8184,         // OPTIMIZE_ISNONE; // OPT-17
     IntegerUnboxingMultiply = 16368,
+    BigIntegers = 32736
 };
+
+class PyjionCodeProfile : public PyjionBase {
+    unordered_map<size_t, unordered_map<size_t, PyTypeObject*>> stackTypes;
+    unordered_map<size_t, unordered_map<size_t, AbstractValueKind>> stackKinds;
+    size_t bigIntReserve = 0;
+
+public:
+    void record(size_t opcodePosition, size_t stackPosition, PyObject* obj);
+    PyTypeObject* getType(size_t opcodePosition, size_t stackPosition);
+    AbstractValueKind getKind(size_t opcodePosition, size_t stackPosition);
+    void setBigIntReserve(size_t i) {
+        bigIntReserve = i;
+    }
+    size_t getBigIntReserve() {
+        return bigIntReserve;
+    }
+    ~PyjionCodeProfile();
+};
+
+void capturePgcStackValue(PyjionCodeProfile* profile, PyObject* value, size_t opcodePosition, size_t stackPosition);
+class PyjionJittedCode;
+
+bool JitInit(const wchar_t* jitpath);
+PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile);
+static inline PyObject* PyJit_CheckFunctionResult(PyThreadState* tstate, PyObject* result, PyFrameObject* frame);
+static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* frame, PyThreadState* tstate, PyjionJittedCode*);
+PyObject* PyJit_EvalFrame(PyThreadState*, PyFrameObject*, int);
+PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject);
+
+// This type isn't exported in the Python 3.10 API, so define it here.
+typedef struct {
+    PyCodeObject* code;       // The code object for the bounds. May be NULL.
+    PyCodeAddressRange bounds;// Only valid if code != NULL.
+    CFrame cframe;
+} PyTraceInfo;
+
+typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*, PyjionBigIntRegister*);
+
+
 
 inline OptimizationFlags operator|(OptimizationFlags a, OptimizationFlags b) {
     return static_cast<OptimizationFlags>(static_cast<int>(a) | static_cast<int>(b));

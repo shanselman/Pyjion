@@ -1617,42 +1617,6 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
     return v;
 }
 
-PyObject* PyJit_LoadGlobalHash(PyObject* ob, PyObject* name, Py_hash_t name_hash) {
-    PyObject* v;
-    if (!PyFrame_Check(ob)) {
-        printf("Hit critical error on load global hash. This is not a frame.");
-        abort();
-        return nullptr;
-    }
-    PyFrameObject* f = (PyFrameObject*) ob;
-    if (PyDict_CheckExact(f->f_globals) && PyDict_CheckExact(f->f_builtins)) {
-        v = _PyDict_GetItem_KnownHash((PyObject*) f->f_globals, name, name_hash);
-        if (v == nullptr) {
-            v = _PyDict_GetItem_KnownHash((PyObject*) f->f_builtins, name, name_hash);
-        }
-        if (v != nullptr) {
-            Py_INCREF(v);
-            return v;
-        }
-    }
-    /* Slow-path if globals or builtins is not a dict */
-    v = PyObject_GetItem(f->f_globals, name);
-    if (v == nullptr) {
-        v = PyObject_GetItem(f->f_builtins, name);
-        if (v == nullptr) {
-            if (PyErr_ExceptionMatches(PyExc_KeyError))
-                format_exc_check_arg(
-                        PyExc_NameError,
-                        NAME_ERROR_MSG, name);
-            return nullptr;
-        } else {
-            PyErr_Clear();
-        }
-    }
-
-    return v;
-}
-
 PyObject* PyJit_GetIter(PyObject* iterable) {
     auto res = PyObject_GetIter(iterable);
     Py_DECREF(iterable);

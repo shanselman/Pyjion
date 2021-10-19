@@ -48,6 +48,7 @@
 #include <Python.h>
 
 #include "exceptions.h"
+#include "base.h"
 
 #define METHOD_SLOT_SPACE 0x00100000
 
@@ -58,7 +59,7 @@ class Method;
 class BaseMethod;
 class CorClass;
 
-class Parameter {
+class Parameter : public PyjionBase {
 public:
     CorInfoType m_type;
     explicit Parameter(CorInfoType type) {
@@ -66,7 +67,7 @@ public:
     }
 };
 
-class BaseModule {
+class BaseModule : public PyjionBase {
     unordered_map<void*, int> existingSlots;
     int slotCursor = 0;
 
@@ -79,8 +80,7 @@ public:
         return m_methods[tokenId];
     }
 
-    virtual int AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr);
-
+    virtual int AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr, const char* label = "typeslot");
     virtual void RegisterSymbol(int32_t tokenId, const char* label);
     virtual SymbolTable GetSymbolTable();
 };
@@ -118,7 +118,7 @@ struct CallPoint {
     int32_t tokenId;
 };
 
-class BaseMethod {
+class BaseMethod : public PyjionBase {
 public:
     virtual void getCallInfo(CORINFO_CALL_INFO* pResult) = 0;
     virtual uint32_t getMethodAttrs() = 0;

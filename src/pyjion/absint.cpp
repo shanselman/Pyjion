@@ -242,6 +242,11 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
     deque<py_opindex> queue;
     queue.emplace_back(0);
     vector<const char*> utf8_names;
+
+    // Save the version tags of globals and builtins for cached LOAD_GLOBAL
+    mGlobalsVersion = ((PyDictObject*)globals)->ma_version_tag;
+    mBuiltinsVersion = ((PyDictObject*)builtins)->ma_version_tag;
+
     for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++)
         utf8_names.emplace_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
     // Keep a list of SETUP_FINALLY instructions and their offsets, to push the exception values onto the stack
@@ -525,6 +530,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                             PyErr_Clear();
                             // Neither. Maybe it'll appear at runtime!!
                             PUSH_INTERMEDIATE(&Any);
+                            lastResolvedGlobal[oparg] = nullptr;
                         } else {
                             // Builtin source
                             auto globalSource = addBuiltinSource(opcodeIndex, oparg, utf8_names[oparg], v);
@@ -534,6 +540,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                                     avk,
                                     globalSource);
                             lastState.push(value);
+                            lastResolvedGlobal[oparg] = v;
                         }
                     } else {
                         // global source
@@ -542,6 +549,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                                 &Any,
                                 globalSource);
                         lastState.push(value);
+                        lastResolvedGlobal[oparg] = v;
                     }
                     break;
                 }
@@ -1807,12 +1815,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 intErrorCheck("delete global failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 break;
             case LOAD_GLOBAL:
-                if (OPT_ENABLED(HashedNames)) {
-                    FLAG_OPT_USAGE(HashedNames);
-                    m_comp->emit_load_global_hashed(PyTuple_GetItem(mCode->co_names, oparg), nameHashes[oparg]);
-                } else {
-                    m_comp->emit_load_global(PyTuple_GetItem(mCode->co_names, oparg));
-                }
+                m_comp->emit_load_global(PyTuple_GetItem(mCode->co_names, oparg), lastResolvedGlobal[oparg], mGlobalsVersion, mBuiltinsVersion);
                 errorCheck("load global failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 incStack();
                 break;
@@ -1903,8 +1906,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 if (OPT_ENABLED(FunctionCalls) &&
                     stackInfo.size() >= (oparg + 1) &&
                     stackInfo.nth(oparg + 1).hasSource() &&
-                    stackInfo.nth(oparg + 1).hasValue() &&
-                    !mTracingEnabled) {
+                    stackInfo.nth(oparg + 1).hasValue() && !mTracingEnabled) {
                     FLAG_OPT_USAGE(FunctionCalls);
                     m_comp->emit_call_function_inline(oparg, stackInfo.nth(oparg + 1));
                     decStack(oparg + 1);// target + args(oparg)
@@ -2483,10 +2485,18 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
 
     m_comp->emit_ret();
     auto code = m_comp->emit_compile();
-    if (code != nullptr)
-        return {code, Success, nullptr, optimizationsMade};
-    else
+    if (code != nullptr) {
+        if (m_comp->usesBigInts())
+            FLAG_OPT_USAGE(BigIntegers);
+        return {
+                .compiledCode = code,
+                .result = Success,
+                .instructionGraph = nullptr,
+                .optimizations = optimizationsMade,
+        };
+    } else {
         return {nullptr, CompilationJitFailure};
+    }
 }
 
 void AbstractInterpreter::testBoolAndBranch(Local value, bool isTrue, Label target) {
@@ -2495,25 +2505,12 @@ void AbstractInterpreter::testBoolAndBranch(Local value, bool isTrue, Label targ
     m_comp->emit_branch(BranchEqual, target);
 }
 
-void AbstractInterpreter::updateIntermediateSources() {
-    for (auto& s : m_sources) {
-        if (s->isIntermediate()) {
-            auto interSource = reinterpret_cast<IntermediateSource*>(s);
-            if (interSource->markForSingleUse()) {
-                m_unboxableProducers[interSource->producer()] = true;
-            }
-        }
-    }
-}
-
 InstructionGraph* AbstractInterpreter::buildInstructionGraph(bool escapeLocals) {
     unordered_map<py_opindex, const InterpreterStack*> stacks;
     for (const auto& state : mStartStates) {
         stacks[state.first] = &state.second.mStack;
     }
-    auto* graph = new InstructionGraph(mCode, stacks, escapeLocals);
-    updateIntermediateSources();
-    return graph;
+    return new InstructionGraph(mCode, stacks, escapeLocals);
 }
 
 AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins, PyObject* globals, PyjionCodeProfile* profile, PgcStatus pgc_status) {
@@ -2528,10 +2525,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         if (g_pyjionSettings.graph) {
             result.instructionGraph = instructionGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));
 
-//            // This snippet is really useful from time to time. Keep it here commented out
-//            if (PyUnicode_CompareWithASCIIString(mCode->co_name, "test_float_conversion") == 0){
-//                printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
-//            }
+            //            // This snippet is really useful from time to time. Keep it here commented out
+            //            if (PyUnicode_CompareWithASCIIString(mCode->co_name, "test_float_conversion") == 0){
+            //                printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
+            //            }
 
 #ifdef DUMP_INSTRUCTION_GRAPHS
             printf("%s", PyUnicode_AsUTF8(result.instructionGraph));

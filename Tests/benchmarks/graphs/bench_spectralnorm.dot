@@ -43,7 +43,7 @@ digraph eval_times_u {
 	OP0 [label="0 LOAD_CLOSURE (0)" color="black"];
 	OP2 [label="2 LOAD_CLOSURE (1)" color="black"];
 	OP4 [label="4 BUILD_TUPLE (2)" color="black"];
-	OP6 [label="6 LOAD_CONST (<code object <listcomp> at 0x1096d3920, )" color="black"];
+	OP6 [label="6 LOAD_CONST (<code object <listcomp> at 0x110bcb5e0, )" color="black"];
 	OP8 [label="8 LOAD_CONST ('eval_times_u.<locals>.<listcomp>')" color="black"];
 	OP10 [label="10 MAKE_FUNCTION (8)" color="black"];
 	OP12 [label="12 LOAD_GLOBAL (range)" color="black"];
@@ -212,7 +212,7 @@ digraph bench_spectral_norm {
 	OP18 [label="18 FOR_ITER (10)" color="black"];
 	OP18 -> OP20 [label="Jump (conditional)" color=orange];
 	OP18 -> OP40 [label="Jump (conditional)" color=orange];
-	OP20 [label="20 STORE_FAST ('dummy')" color="blue"];
+	OP20 [label="20 STORE_FAST ('dummy')" color="black"];
 	OP22 [label="22 LOAD_GLOBAL (eval_AtA_times_u)" color="black"];
 	OP24 [label="24 LOAD_FAST ('u')" color="black"];
 	OP26 [label="26 CALL_FUNCTION (1)" color="black"];
@@ -262,7 +262,7 @@ digraph bench_spectral_norm {
 	OP12 -> OP14 [label="Const (int) -0" color=black];
 	OP14 -> OP16 [label="Local (range) -0" color=black];
 	OP16 -> OP18 [label="Intermediate (range iterator) -0" color=black];
-	OP18 -> OP20 [label="Intermediate (int) U0" color=red];
+	OP18 -> OP20 [label="Intermediate (int) -0" color=black];
 	OP22 -> OP26 [label="Global (Any) -1" color=black];
 	OP24 -> OP26 [label="Local (Any) -0" color=black];
 	OP26 -> OP28 [label="Local (Any) -0" color=black];

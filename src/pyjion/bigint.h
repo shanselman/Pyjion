@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <Python.h>
 #include <vector>
+#include "base.h"
 
 struct PyjionBigInt {
     int64_t shortVersion = -1;
@@ -43,8 +44,9 @@ struct PyjionBigInt {
 #define SIZEOF_BIGINT(n) ((sizeof(PyjionBigInt) - sizeof(PyjionBigInt::digits)) + (n * sizeof(digit)))
 
 
-class PyjionBigIntRegister {
+class PyjionBigIntRegister : public PyjionBase {
     std::vector<PyjionBigInt*> ints;
+
 public:
     explicit PyjionBigIntRegister(size_t reserve = 0) {
         ints.reserve(reserve);
@@ -72,7 +74,7 @@ public:
         }
     }
 
-    size_t size(){
+    size_t size() {
         return ints.size();
     }
 };

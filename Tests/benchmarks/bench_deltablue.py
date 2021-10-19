@@ -14,10 +14,6 @@ the layout & logic from the original. (Ugh.)
 .. _`V8's source code`: (https://github.com/v8/v8/blob/master/benchmarks/deltablue.js)
 """
 
-import pyjion
-import timeit
-
-
 # The JS variant implements "OrderedCollection", which basically completely
 # overlaps with ``list``. So we'll cheat. :D
 class OrderedCollection(list):
@@ -625,4 +621,4 @@ def delta_blue(n=100):
     projection_test(n)
 
 
-__benchmarks__ = [(delta_blue, "delta_blue", {"level": 2, "pgc": True})]
+__benchmarks__ = [(delta_blue, "delta_blue", {"level": 2, "pgc": True}, 10)]

@@ -23,26 +23,12 @@
 *
 */
 
+#include "base.h"
 
-#include "codemodel.h"
-
-#include <utility>
-
-int BaseModule::AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr, const char* label) {
-    if (existingSlots.find(addr) == existingSlots.end()) {
-        int token = METHOD_SLOT_SPACE + ++slotCursor;
-        m_methods[token] = new JITMethod(this, returnType, std::move(params), addr, false);
-        RegisterSymbol(token, label);
-        return token;
-    } else {
-        return existingSlots[addr];
-    }
+void* PyjionBase::operator new(size_t size) {
+    return PyMem_Malloc(size);
 }
 
-void BaseModule::RegisterSymbol(int32_t token, const char* label) {
-    symbolTable[token] = label;
-}
-
-SymbolTable BaseModule::GetSymbolTable() {
-    return symbolTable;
+void PyjionBase::operator delete(void* x) noexcept {
+    PyMem_Free(x);
 }

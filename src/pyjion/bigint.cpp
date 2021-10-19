@@ -45,49 +45,49 @@ PyjionBigInt* PyjionBigInt_FromPyLong(PyObject* pythonObject, PyjionBigIntRegist
     return result;
 }
 
-#define NB_OP(op) \
-    PyjionBigInt* result = nullptr; \
-    PyObject *leftTmp, *rightTmp, *pyResult; \
-    if (left->isShort && !right->isShort) { \
-        leftTmp = PyLong_FromLongLong(left->shortVersion); \
-        rightTmp = PyjionBigInt_AsPyLong(right); \
-    } else if (!left->isShort && right->isShort) { \
-        leftTmp = PyjionBigInt_AsPyLong(left); \
-        rightTmp = PyLong_FromLongLong(right->shortVersion); \
-    } else { \
-        leftTmp = PyjionBigInt_AsPyLong(left); \
-        rightTmp = PyjionBigInt_AsPyLong(right); \
-    } \
-    pyResult = PyLong_Type.tp_as_number->op(leftTmp, rightTmp);\
-    result = PyjionBigInt_FromPyLong(pyResult, bigIntRegister);\
-    Py_XDECREF(pyResult);\
-    Py_XDECREF(leftTmp);\
-    Py_XDECREF(rightTmp);\
-    return result;\
-
-#define NB_OP_LEFT(op) \
-    PyObject *leftTmp, *rightTmp, *pyResult; \
-    PyjionBigInt* result = nullptr; \
-    leftTmp = PyLong_FromLongLong(left); \
-    rightTmp = PyjionBigInt_AsPyLong(right); \
+#define NB_OP(op)                                               \
+    PyjionBigInt* result = nullptr;                             \
+    PyObject *leftTmp, *rightTmp, *pyResult;                    \
+    if (left->isShort && !right->isShort) {                     \
+        leftTmp = PyLong_FromLongLong(left->shortVersion);      \
+        rightTmp = PyjionBigInt_AsPyLong(right);                \
+    } else if (!left->isShort && right->isShort) {              \
+        leftTmp = PyjionBigInt_AsPyLong(left);                  \
+        rightTmp = PyLong_FromLongLong(right->shortVersion);    \
+    } else {                                                    \
+        leftTmp = PyjionBigInt_AsPyLong(left);                  \
+        rightTmp = PyjionBigInt_AsPyLong(right);                \
+    }                                                           \
     pyResult = PyLong_Type.tp_as_number->op(leftTmp, rightTmp); \
     result = PyjionBigInt_FromPyLong(pyResult, bigIntRegister); \
-    Py_XDECREF(pyResult); \
-    Py_XDECREF(leftTmp); \
-    Py_XDECREF(rightTmp); \
-    return result;     \
+    Py_XDECREF(pyResult);                                       \
+    Py_XDECREF(leftTmp);                                        \
+    Py_XDECREF(rightTmp);                                       \
+    return result;
 
-#define NB_OP_RIGHT(op) \
-    PyObject *leftTmp, *rightTmp, *pyResult; \
-    PyjionBigInt* result = nullptr; \
-    rightTmp = PyLong_FromLongLong(right); \
-    leftTmp = PyjionBigInt_AsPyLong(left); \
+#define NB_OP_LEFT(op)                                          \
+    PyObject *leftTmp, *rightTmp, *pyResult;                    \
+    PyjionBigInt* result = nullptr;                             \
+    leftTmp = PyLong_FromLongLong(left);                        \
+    rightTmp = PyjionBigInt_AsPyLong(right);                    \
     pyResult = PyLong_Type.tp_as_number->op(leftTmp, rightTmp); \
     result = PyjionBigInt_FromPyLong(pyResult, bigIntRegister); \
-    Py_XDECREF(pyResult); \
-    Py_XDECREF(leftTmp); \
-    Py_XDECREF(rightTmp); \
-    return result; \
+    Py_XDECREF(pyResult);                                       \
+    Py_XDECREF(leftTmp);                                        \
+    Py_XDECREF(rightTmp);                                       \
+    return result;
+
+#define NB_OP_RIGHT(op)                                         \
+    PyObject *leftTmp, *rightTmp, *pyResult;                    \
+    PyjionBigInt* result = nullptr;                             \
+    rightTmp = PyLong_FromLongLong(right);                      \
+    leftTmp = PyjionBigInt_AsPyLong(left);                      \
+    pyResult = PyLong_Type.tp_as_number->op(leftTmp, rightTmp); \
+    result = PyjionBigInt_FromPyLong(pyResult, bigIntRegister); \
+    Py_XDECREF(pyResult);                                       \
+    Py_XDECREF(leftTmp);                                        \
+    Py_XDECREF(rightTmp);                                       \
+    return result;
 
 PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort && right->isShort) {
@@ -96,16 +96,16 @@ PyjionBigInt* PyjionBigInt_Add(PyjionBigInt* left, PyjionBigInt* right, PyjionBi
     NB_OP(nb_add);
 }
 
-PyjionBigInt* PyjionBigInt_AddInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister){
-    if(right->isShort){
+PyjionBigInt* PyjionBigInt_AddInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
+    if (right->isShort) {
         return PyjionBigInt_FromInt64(left + right->shortVersion, bigIntRegister);
     } else {
         NB_OP_LEFT(nb_add);
     }
 }
 
-PyjionBigInt* PyjionBigInt_AddInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister){
-    if(left->isShort){
+PyjionBigInt* PyjionBigInt_AddInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister) {
+    if (left->isShort) {
         return PyjionBigInt_FromInt64(left->shortVersion + right, bigIntRegister);
     } else {
         NB_OP_RIGHT(nb_add);
@@ -119,16 +119,16 @@ PyjionBigInt* PyjionBigInt_Sub(PyjionBigInt* left, PyjionBigInt* right, PyjionBi
     NB_OP(nb_subtract);
 }
 
-PyjionBigInt* PyjionBigInt_SubInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister){
-    if(right->isShort){
+PyjionBigInt* PyjionBigInt_SubInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
+    if (right->isShort) {
         return PyjionBigInt_FromInt64(left - right->shortVersion, bigIntRegister);
     } else {
         NB_OP_LEFT(nb_subtract);
     }
 }
 
-PyjionBigInt* PyjionBigInt_SubInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister){
-    if(left->isShort){
+PyjionBigInt* PyjionBigInt_SubInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister) {
+    if (left->isShort) {
         return PyjionBigInt_FromInt64(left->shortVersion - right, bigIntRegister);
     } else {
         NB_OP_RIGHT(nb_subtract);
@@ -201,16 +201,16 @@ PyjionBigInt* PyjionBigInt_Mod(PyjionBigInt* left, PyjionBigInt* right, PyjionBi
     NB_OP(nb_remainder);
 }
 
-PyjionBigInt* PyjionBigInt_ModInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister){
-    if(right->isShort){
+PyjionBigInt* PyjionBigInt_ModInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
+    if (right->isShort) {
         return PyjionBigInt_FromInt64(PyJit_LongMod(left, right->shortVersion), bigIntRegister);
     } else {
         NB_OP_LEFT(nb_remainder);
     }
 }
 
-PyjionBigInt* PyjionBigInt_ModInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister){
-    if(left->isShort){
+PyjionBigInt* PyjionBigInt_ModInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister) {
+    if (left->isShort) {
         return PyjionBigInt_FromInt64(PyJit_LongMod(left->shortVersion, right), bigIntRegister);
     } else {
         NB_OP_RIGHT(nb_remainder);
@@ -257,7 +257,7 @@ PyjionBigInt* PyjionBigInt_MultiplyInt64Left(int64_t left, PyjionBigInt* right, 
     NB_OP_LEFT(nb_multiply);
 }
 
-PyjionBigInt* PyjionBigInt_MultiplyInt64Right( PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister) {
+PyjionBigInt* PyjionBigInt_MultiplyInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister) {
     if (left->isShort) {
         auto x = left->shortVersion * right;
         if (left->shortVersion != 0 && x / left->shortVersion != right) {
@@ -380,16 +380,16 @@ PyjionBigInt* PyjionBigInt_FloorDivide(PyjionBigInt* left, PyjionBigInt* right, 
     NB_OP(nb_floor_divide);
 }
 
-PyjionBigInt* PyjionBigInt_FloorDivideInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister){
-    if(right->isShort){
+PyjionBigInt* PyjionBigInt_FloorDivideInt64Left(int64_t left, PyjionBigInt* right, PyjionBigIntRegister* bigIntRegister) {
+    if (right->isShort) {
         return PyjionBigInt_FromInt64(PyJit_LongFloorDivide(left, right->shortVersion), bigIntRegister);
     } else {
         NB_OP_LEFT(nb_floor_divide);
     }
 }
 
-PyjionBigInt* PyjionBigInt_FloorDivideInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister){
-    if(left->isShort){
+PyjionBigInt* PyjionBigInt_FloorDivideInt64Right(PyjionBigInt* left, int64_t right, PyjionBigIntRegister* bigIntRegister) {
+    if (left->isShort) {
         return PyjionBigInt_FromInt64(PyJit_LongFloorDivide(left->shortVersion, right), bigIntRegister);
     } else {
         NB_OP_RIGHT(nb_floor_divide);
@@ -482,12 +482,24 @@ int32_t PyjionBigInt_RichCompare(PyjionBigInt* left, PyjionBigInt* right, uint32
         sign = leftTmp->negative ? -diff : diff;
     }
     switch (op) {
-        case Py_EQ: if (sign == 0) return 1; return 0;
-        case Py_NE: if (sign != 0) return 1; return 0;
-        case Py_LT: if (sign < 0) return 1; return 0;
-        case Py_GT: if (sign > 0) return 1; return 0;
-        case Py_LE: if (sign <= 0) return 1; return 0;
-        case Py_GE: if (sign >= 0) return 1; return 0;
+        case Py_EQ:
+            if (sign == 0) return 1;
+            return 0;
+        case Py_NE:
+            if (sign != 0) return 1;
+            return 0;
+        case Py_LT:
+            if (sign < 0) return 1;
+            return 0;
+        case Py_GT:
+            if (sign > 0) return 1;
+            return 0;
+        case Py_LE:
+            if (sign <= 0) return 1;
+            return 0;
+        case Py_GE:
+            if (sign >= 0) return 1;
+            return 0;
         default:
             Py_UNREACHABLE();
     }
@@ -541,18 +553,30 @@ int32_t PyjionBigInt_RichCompareInt64Left(int64_t left, PyjionBigInt* right, uin
         sign = leftTmp->negative ? -diff : diff;
     }
     switch (op) {
-        case Py_EQ: if (sign == 0) return 1; return 0;
-        case Py_NE: if (sign != 0) return 1; return 0;
-        case Py_LT: if (sign < 0) return 1; return 0;
-        case Py_GT: if (sign > 0) return 1; return 0;
-        case Py_LE: if (sign <= 0) return 1; return 0;
-        case Py_GE: if (sign >= 0) return 1; return 0;
+        case Py_EQ:
+            if (sign == 0) return 1;
+            return 0;
+        case Py_NE:
+            if (sign != 0) return 1;
+            return 0;
+        case Py_LT:
+            if (sign < 0) return 1;
+            return 0;
+        case Py_GT:
+            if (sign > 0) return 1;
+            return 0;
+        case Py_LE:
+            if (sign <= 0) return 1;
+            return 0;
+        case Py_GE:
+            if (sign >= 0) return 1;
+            return 0;
         default:
             Py_UNREACHABLE();
     }
 }
 
-int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t op, PyjionBigIntRegister* bigIntRegister){
+int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, uint32_t op, PyjionBigIntRegister* bigIntRegister) {
     int result = -1;
     PyjionBigInt *leftTmp = nullptr, *rightTmp = nullptr;
 
@@ -600,20 +624,32 @@ int32_t PyjionBigInt_RichCompareInt64Right(PyjionBigInt* left, int64_t right, ui
         sign = leftTmp->negative ? -diff : diff;
     }
     switch (op) {
-        case Py_EQ: if (sign == 0) return 1; return 0;
-        case Py_NE: if (sign != 0) return 1; return 0;
-        case Py_LT: if (sign < 0) return 1; return 0;
-        case Py_GT: if (sign > 0) return 1; return 0;
-        case Py_LE: if (sign <= 0) return 1; return 0;
-        case Py_GE: if (sign >= 0) return 1; return 0;
+        case Py_EQ:
+            if (sign == 0) return 1;
+            return 0;
+        case Py_NE:
+            if (sign != 0) return 1;
+            return 0;
+        case Py_LT:
+            if (sign < 0) return 1;
+            return 0;
+        case Py_GT:
+            if (sign > 0) return 1;
+            return 0;
+        case Py_LE:
+            if (sign <= 0) return 1;
+            return 0;
+        case Py_GE:
+            if (sign >= 0) return 1;
+            return 0;
         default:
             Py_UNREACHABLE();
     }
 }
 
-double PyjionBigInt_AsDouble(PyjionBigInt*i) {
-    if (i->isShort){
-        return (double)i->shortVersion;
+double PyjionBigInt_AsDouble(PyjionBigInt* i) {
+    if (i->isShort) {
+        return (double) i->shortVersion;
     } else {
         auto l = PyjionBigInt_AsPyLong(i);
         double result = PyLong_AsDouble(l);
@@ -622,22 +658,21 @@ double PyjionBigInt_AsDouble(PyjionBigInt*i) {
     }
 }
 
-PyjionBigInt* PyjionBigInt_FromLongLong(int64_t ival, PyjionBigIntRegister* bigIntRegister){
+PyjionBigInt* PyjionBigInt_FromLongLong(int64_t ival, PyjionBigIntRegister* bigIntRegister) {
     // From PyLong_FromLongLong
-    PyjionBigInt*v;
+    PyjionBigInt* v;
     uint64_t abs_ival;
-    uint64_t t;  /* unsigned so >> doesn't propagate sign bit */
+    uint64_t t; /* unsigned so >> doesn't propagate sign bit */
     int ndigits = 0;
     int negative = 0;
 
     if (ival < 0) {
         /* avoid signed overflow on negation;  see comments
            in PyLong_FromLong above. */
-        abs_ival = (uint64_t)(-1-ival) + 1;
+        abs_ival = (uint64_t) (-1 - ival) + 1;
         negative = 1;
-    }
-    else {
-        abs_ival = (uint64_t)ival;
+    } else {
+        abs_ival = (uint64_t) ival;
     }
 
     /* Count the number of Python digits.
@@ -650,11 +685,11 @@ PyjionBigInt* PyjionBigInt_FromLongLong(int64_t ival, PyjionBigIntRegister* bigI
         t >>= PyLong_SHIFT;
     }
     v = bigIntRegister->addLong(ndigits);
-    digit *p = v->digits;
+    digit* p = v->digits;
     v->negative = negative;
     t = abs_ival;
     while (t) {
-        *p++ = (digit)(t & PyLong_MASK);
+        *p++ = (digit) (t & PyLong_MASK);
         t >>= PyLong_SHIFT;
     }
     return v;

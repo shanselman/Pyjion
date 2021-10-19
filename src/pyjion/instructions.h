@@ -96,7 +96,7 @@ struct Edge {
 
 typedef unordered_map<py_opindex, Edge> EdgeMap;
 
-class InstructionGraph {
+class InstructionGraph : public PyjionBase {
 private:
     PyCodeObject* code;
     bool invalid = false;

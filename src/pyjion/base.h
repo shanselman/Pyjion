@@ -23,26 +23,17 @@
 *
 */
 
+#include <Python.h>
 
-#include "codemodel.h"
+#ifndef PYJION_BASE_H
+#define PYJION_BASE_H
 
-#include <utility>
+/* Uses Python's memory heap for allocation */
 
-int BaseModule::AddMethod(CorInfoType returnType, std::vector<Parameter> params, void* addr, const char* label) {
-    if (existingSlots.find(addr) == existingSlots.end()) {
-        int token = METHOD_SLOT_SPACE + ++slotCursor;
-        m_methods[token] = new JITMethod(this, returnType, std::move(params), addr, false);
-        RegisterSymbol(token, label);
-        return token;
-    } else {
-        return existingSlots[addr];
-    }
-}
+class PyjionBase {
+public:
+    void* operator new(size_t size);
+    void operator delete(void*) noexcept;
+};
 
-void BaseModule::RegisterSymbol(int32_t token, const char* label) {
-    symbolTable[token] = label;
-}
-
-SymbolTable BaseModule::GetSymbolTable() {
-    return symbolTable;
-}
+#endif// PYJION_BASE_H
