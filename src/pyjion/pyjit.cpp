@@ -127,9 +127,6 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
         return nullptr;
     }
 
-    PyjionBigIntRegister* bigIntRegister = nullptr;
-    if (jitted->j_optimizations & OptimizationFlags::BigIntegers)
-        bigIntRegister = new PyjionBigIntRegister(jitted->j_profile != nullptr ? jitted->j_profile->getBigIntReserve() : 10);
     PyTraceInfo trace_info;
     /* Mark trace_info as uninitialized */
     trace_info.code = nullptr;
@@ -143,15 +140,10 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
     frame->f_state = PY_FRAME_EXECUTING;
 
     try {
-        auto res = ((Py_EvalFunc) state)(nullptr, frame, tstate, jitted->j_profile, &trace_info, bigIntRegister);
+        auto res = ((Py_EvalFunc) state)(nullptr, frame, tstate, jitted->j_profile, &trace_info);
         tstate->cframe = trace_info.cframe.previous;
         tstate->cframe->use_tracing = trace_info.cframe.use_tracing;
         Pyjit_LeaveRecursiveCall();
-        if (bigIntRegister != nullptr) {
-            if (jitted->j_profile != nullptr)
-                jitted->j_profile->setBigIntReserve(bigIntRegister->size());
-            delete bigIntRegister;
-        }
         return PyJit_CheckFunctionResult(tstate, res, frame);
     } catch (const std::exception& e) {
 #ifdef DEBUG_VERBOSE
@@ -159,7 +151,6 @@ static inline PyObject* PyJit_ExecuteJittedFrame(void* state, PyFrameObject* fra
 #endif
         PyErr_SetString(PyExc_RuntimeError, e.what());
         Pyjit_LeaveRecursiveCall();
-        delete bigIntRegister;
         return nullptr;
     }
 }

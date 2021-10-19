@@ -48,8 +48,6 @@ StackEntryKind avkAsStackEntryKind(AbstractValueKind k) {
             return STACK_KIND_VALUE_FLOAT;
         case AVK_Bool:
             return STACK_KIND_VALUE_INT;
-        case AVK_BigInteger:
-            return STACK_KIND_VALUE_BIGINT;
         default:
             return STACK_KIND_OBJECT;
     }
@@ -63,8 +61,6 @@ StackEntryKind lkAsStackEntryKind(LocalKind k) {
             return STACK_KIND_VALUE_INT;
         case LK_Float:
             return STACK_KIND_VALUE_FLOAT;
-        case LK_BigInt:
-            return STACK_KIND_VALUE_BIGINT;
         default:
             return STACK_KIND_OBJECT;
     }
@@ -78,8 +74,6 @@ LocalKind stackEntryKindAsLocalKind(StackEntryKind k) {
             return LK_Int;
         case STACK_KIND_VALUE_FLOAT:
             return LK_Float;
-        case STACK_KIND_VALUE_BIGINT:
-            return LK_BigInt;
         default:
             return LK_Pointer;
     }

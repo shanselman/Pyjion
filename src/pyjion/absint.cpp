@@ -1056,6 +1056,7 @@ AbstractValue* AbstractInterpreter::toAbstract(PyObject* obj) {
             if (Py_TYPE(PyTuple_GET_ITEM(obj, i)) != t)
                 return &Tuple;
         }
+        // TODO: Emit TupleOfInteger if all values are within range of int64 (Integer::isBig)
         auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)));
         switch (abstractType) {
             case AVK_String:
@@ -1466,9 +1467,6 @@ void AbstractInterpreter::incStack(size_t size, LocalKind kind) {
             break;
         case LK_Bool:
             m_stack.inc(size, STACK_KIND_VALUE_INT);
-            break;
-        case LK_BigInt:
-            m_stack.inc(size, STACK_KIND_VALUE_BIGINT);
             break;
         default:
             m_stack.inc(size, STACK_KIND_OBJECT);
@@ -2486,8 +2484,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
     m_comp->emit_ret();
     auto code = m_comp->emit_compile();
     if (code != nullptr) {
-        if (m_comp->usesBigInts())
-            FLAG_OPT_USAGE(BigIntegers);
         return {
                 .compiledCode = code,
                 .result = Success,
@@ -2591,14 +2587,8 @@ void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcod
             break;
         case AVK_BigInteger:
         case AVK_Integer:
-            if (IntegerValue::isBig(constValue)) {
-                m_comp->emit_ptr(constValue);
-                m_comp->emit_pylong_as_bigint();
-                incStack(1, STACK_KIND_VALUE_BIGINT);
-            } else {
-                m_comp->emit_long_long(PyLong_AsLongLong(constValue));
-                incStack(1, STACK_KIND_VALUE_INT);
-            }
+            m_comp->emit_long_long(PyLong_AsLongLong(constValue));
+            incStack(1, STACK_KIND_VALUE_INT);
             break;
         case AVK_Bool:
             if (constValue == Py_True)
@@ -2607,6 +2597,8 @@ void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcod
                 m_comp->emit_int(0);
             incStack(1, STACK_KIND_VALUE_INT);
             break;
+        default:
+            throw UnexpectedValueException();
     }
 }
 
@@ -2788,10 +2780,6 @@ void AbstractInterpreter::unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, 
                 break;
             case AVK_Bool:
             case AVK_Integer:
-                m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
-                break;
-            case AVK_BigInteger:
-                m_comp->emit_bigint_shortvalue();
                 m_comp->emit_branch(isTrue ? BranchTrue : BranchFalse, target);
                 break;
         }

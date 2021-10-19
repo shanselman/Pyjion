@@ -101,12 +101,3 @@ TEST_CASE("Test power function"){
         CHECK(PyJit_LongPow(2, 65) == 0);
     }
 }
-
-TEST_CASE("Test PyjionBigInt_FromLongLong function"){
-    auto smallNumbers = GENERATE(0, 1, -1, 255, 10000, -10000, 10000000, -10000000);
-    auto reg = new PyjionBigIntRegister();
-    SECTION("Test overflow"){
-        CHECK(PyjionBigInt_FromLongLong(smallNumbers, reg)->asLong() == smallNumbers);
-    }
-    delete reg;
-}

@@ -47,7 +47,6 @@
 #include <Python.h>
 #include "codemodel.h"
 #include "absvalue.h"
-#include "bigint.h"
 
 using namespace std;
 
@@ -73,18 +72,11 @@ enum OptimizationFlags {
 class PyjionCodeProfile : public PyjionBase {
     unordered_map<size_t, unordered_map<size_t, PyTypeObject*>> stackTypes;
     unordered_map<size_t, unordered_map<size_t, AbstractValueKind>> stackKinds;
-    size_t bigIntReserve = 0;
 
 public:
     void record(size_t opcodePosition, size_t stackPosition, PyObject* obj);
     PyTypeObject* getType(size_t opcodePosition, size_t stackPosition);
     AbstractValueKind getKind(size_t opcodePosition, size_t stackPosition);
-    void setBigIntReserve(size_t i) {
-        bigIntReserve = i;
-    }
-    size_t getBigIntReserve() {
-        return bigIntReserve;
-    }
     ~PyjionCodeProfile();
 };
 
@@ -105,7 +97,7 @@ typedef struct {
     CFrame cframe;
 } PyTraceInfo;
 
-typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*, PyjionBigIntRegister*);
+typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*);
 
 
 
