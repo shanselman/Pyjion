@@ -669,4 +669,9 @@ TEST_CASE("Test type annotations") {
                 "def f():\n    class C:\n      property: int = 0\n    return C");
         CHECK(t.returns() == "<class 'C'>");
     }
+    SECTION("test class definition with annotations called") {
+        auto t = EmissionTest(
+                "def f():\n    class C:\n      property: int = 0\n    return C().property");
+        CHECK(t.returns() == "0");
+    }
 }

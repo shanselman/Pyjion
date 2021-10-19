@@ -2331,7 +2331,19 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
         emit_load_local(functionLocal);
         emit_load_local(argumentLocal);
         emit_null();// kwargs
-        m_il.emit_call(METHOD_VECTORCALL);
+        if (func.Value->needsGuard()) {
+            emit_load_local(functionLocal); // Check it hasn't been swapped for something else.
+            LD_FIELDI(PyObject, ob_type);
+            emit_ptr(functionType);
+            emit_branch(BranchNotEqual, fallback);
+            m_il.emit_call(METHOD_VECTORCALL);
+            emit_branch(BranchAlways, pass);
+            emit_mark_label(fallback);
+            m_il.emit_call(METHOD_OBJECTCALL);
+            emit_mark_label(pass);
+        } else {
+            m_il.emit_call(METHOD_VECTORCALL);
+        }
     } else if (func.Sources->isBuiltin() &&
                functionType == &PyType_Type &&
                functionObject != nullptr &&
