@@ -97,7 +97,6 @@ static bool isKnownType(AbstractValueKind kind) {
 
 class AbstractSource : public PyjionBase {
     vector<pair<py_opindex, size_t>> _consumers;
-    bool single_use = false;
     py_opindex _producer;
 
 public:
@@ -127,17 +126,6 @@ public:
                 return _consumer.second;
         };
         return -1;
-    }
-
-    bool markForSingleUse() {
-        if (_consumers.size() == 1 || _consumers.empty()) {
-            single_use = true;
-        }
-        return single_use;
-    }
-
-    bool singleUse() const {
-        return single_use;
     }
 
     py_opindex producer() const {

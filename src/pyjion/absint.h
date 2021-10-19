@@ -308,7 +308,6 @@ class AbstractInterpreter : public PyjionBase {
     // Tracks the state of the stack when we perform a branch.  We copy the existing state to the map and
     // reload it when we begin processing at the stack.
     unordered_map<py_opindex, ValueStack> m_offsetStack;
-
     unordered_map<Py_ssize_t, Py_ssize_t> nameHashes;
 
     // Set of labels used for when we need to raise an error but have values on the stack
@@ -323,7 +322,6 @@ class AbstractInterpreter : public PyjionBase {
     Label m_retLabel;
     Local m_retValue;
     unordered_map<py_opindex, bool> m_assignmentState;
-    unordered_map<py_opindex, bool> m_unboxableProducers;
     unordered_map<py_opindex, Label> m_yieldOffsets;
 
 #pragma warning(default : 4251)
@@ -390,47 +388,32 @@ private:
     void invalidFloatErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
     void invalidIntErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
     void intErrorCheck(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0);
-
     vector<Label>& getRaiseAndFreeLabels(size_t blockId);
     void ensureRaiseAndFreeLocals(size_t localCount);
-
     void ensureLabels(vector<Label>& labels, size_t count);
-
     void branchRaise(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0, bool force = false, bool trace = true);
     void raiseOnNegativeOne(py_opindex curByte);
-
     void unwindEh(ExceptionHandler* fromHandler, ExceptionHandler* toHandler = nullptr);
-
     ExceptionHandler* currentHandler();
-
     void markOffsetLabel(py_opindex index);
     void jumpAbsolute(py_opindex index, py_opindex from);
-
     void decStack(size_t size = 1);
     void incStack(size_t size = 1, StackEntryKind kind = STACK_KIND_OBJECT);
     void incStack(size_t size, LocalKind kind);
-
     AbstactInterpreterCompileResult compileWorker(PgcStatus status, InstructionGraph* graph);
-
     void loadConst(py_oparg constIndex, py_opindex opcodeIndex);
     void loadUnboxedConst(py_oparg constIndex, py_opindex opcodeIndex);
-
     void returnValue(py_opindex opcodeIndex);
-
     void storeFastUnboxed(py_oparg local);
     void loadFast(py_oparg local, py_opindex opcodeIndex);
     void loadFastUnboxed(py_oparg local, py_opindex opcodeIndex);
     void loadFastWorker(py_oparg local, bool checkUnbound, py_opindex curByte);
-
     void popExcept();
-
     void jumpIfOrPop(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
     void popJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset);
     void unboxedPopJumpIf(bool isTrue, py_opindex opcodeIndex, py_oparg offset, AbstractValueWithSources sources);
     void jumpIfNotExact(py_opindex opcodeIndex, py_oparg jumpTo);
     void testBoolAndBranch(Local value, bool isTrue, Label target);
-
-    void updateIntermediateSources();
     void escapeEdges(const vector<Edge>& edges, py_opindex curByte);
     void yieldJumps();
 };

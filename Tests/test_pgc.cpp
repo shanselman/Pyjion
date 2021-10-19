@@ -142,13 +142,13 @@ TEST_CASE("test UNPACK_SEQUENCE PGC") {
 TEST_CASE("test CALL_FUNCTION PGC") {
     SECTION("test callable type object") {
         auto t = PgcProfilingTest(
-                "def f():\n  return int('2000')");
+                "def f():\n  int('1000')\n  int('2000')\n  int('3000')\n  return int('4000')\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
-        CHECK(t.returns() == "2000");
+        CHECK(t.returns() == "4000");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
         CHECK(t.profileEquals(4, 0, &PyUnicode_Type));
         CHECK(t.profileEquals(4, 1, &PyType_Type));
-        CHECK(t.returns() == "2000");
+        CHECK(t.returns() == "4000");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
 

@@ -2502,25 +2502,12 @@ void AbstractInterpreter::testBoolAndBranch(Local value, bool isTrue, Label targ
     m_comp->emit_branch(BranchEqual, target);
 }
 
-void AbstractInterpreter::updateIntermediateSources() {
-    for (auto& s : m_sources) {
-        if (s->isIntermediate()) {
-            auto interSource = reinterpret_cast<IntermediateSource*>(s);
-            if (interSource->markForSingleUse()) {
-                m_unboxableProducers[interSource->producer()] = true;
-            }
-        }
-    }
-}
-
 InstructionGraph* AbstractInterpreter::buildInstructionGraph(bool escapeLocals) {
     unordered_map<py_opindex, const InterpreterStack*> stacks;
     for (const auto& state : mStartStates) {
         stacks[state.first] = &state.second.mStack;
     }
-    auto* graph = new InstructionGraph(mCode, stacks, escapeLocals);
-    updateIntermediateSources();
-    return graph;
+    return new InstructionGraph(mCode, stacks, escapeLocals);
 }
 
 AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins, PyObject* globals, PyjionCodeProfile* profile, PgcStatus pgc_status) {
