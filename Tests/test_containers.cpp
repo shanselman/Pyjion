@@ -34,9 +34,9 @@ TEST_CASE("Test container types with static item types") {
                               "  return a + b + c","assert_int_tuple");
 
         t.assertInstruction(6, UNPACK_SEQUENCE, 3, false);// == should be unboxed, len is know
-        t.assertInstruction(8, STORE_FAST, 1, true);// == should be unboxed, len is know
-        t.assertInstruction(10, STORE_FAST, 2, true);// == should be unboxed, len is know
-        t.assertInstruction(12, STORE_FAST, 3, true);// == should be unboxed, len is know
+        t.assertInstruction(8, STORE_FAST, 1, false);// == should be unboxed, len is know
+        t.assertInstruction(10, STORE_FAST, 2, false);// == should be unboxed, len is know
+        t.assertInstruction(12, STORE_FAST, 3, false);// == should be unboxed, len is know
     }
     SECTION("Tuple of floats") {
         auto t = InstructionGraphTest("def f():\n"

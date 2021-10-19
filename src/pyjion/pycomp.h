@@ -247,35 +247,6 @@
 #define METHOD_SUBSCR_LIST_SLICE_STEPPED     0x0007000A
 #define METHOD_SUBSCR_LIST_SLICE_REVERSED    0x0007000B
 
-#define METHOD_PYLONG_AS_BIGINT              0x00080001
-#define METHOD_LONG_AS_BIGINT                0x00080002
-#define METHOD_BIGINT_AS_PYLONG              0x00080003
-#define METHOD_BIGINT_ADD                    0x00080004
-#define METHOD_BIGINT_SUB                    0x00080005
-#define METHOD_BIGINT_TRUEDIVIDE             0x00080006
-#define METHOD_BIGINT_MOD                    0x00080007
-#define METHOD_BIGINT_MULTIPLY               0x00080008
-#define METHOD_BIGINT_POWER                  0x00080009
-#define METHOD_BIGINT_FLOORDIVIDE            0x0008000A
-#define METHOD_BIGINT_RICHCOMPARE            0x0008000B
-#define METHOD_BIGINT_AS_DOUBLE              0x0008000C
-#define METHOD_BIGINT_ADD_INT_LEFT           0x0008000D
-#define METHOD_BIGINT_ADD_INT_RIGHT          0x0008000E
-#define METHOD_BIGINT_SUB_INT_LEFT           0x0008000F
-#define METHOD_BIGINT_SUB_INT_RIGHT          0x00080010
-#define METHOD_BIGINT_TRUEDIVIDE_INT_LEFT    0x00080011
-#define METHOD_BIGINT_TRUEDIVIDE_INT_RIGHT   0x00080012
-#define METHOD_BIGINT_MOD_INT_LEFT           0x00080013
-#define METHOD_BIGINT_MOD_INT_RIGHT          0x00080014
-#define METHOD_BIGINT_MULTIPLY_INT_LEFT      0x00080015
-#define METHOD_BIGINT_MULTIPLY_INT_RIGHT     0x00080016
-#define METHOD_BIGINT_POWER_INT_LEFT         0x00080017
-#define METHOD_BIGINT_POWER_INT_RIGHT        0x00080018
-#define METHOD_BIGINT_FLOORDIVIDE_INT_LEFT   0x00080019
-#define METHOD_BIGINT_FLOORDIVIDE_INT_RIGHT  0x0008001A
-#define METHOD_BIGINT_RICHCOMPARE_INT_LEFT   0x0008001B
-#define METHOD_BIGINT_RICHCOMPARE_INT_RIGHT  0x0008001C
-
 #define INTRINSIC_TEST                       0x10000001
 
 #define LD_FIELDA(type, field)                      \
@@ -307,7 +278,6 @@ class PythonCompiler : public IPythonCompiler {
     Local m_lasti;
     Local m_instrCount;
     bool m_compileDebug;
-    bool m_hasBigInts = false;
 
 public:
     explicit PythonCompiler(PyCodeObject* code);
@@ -455,9 +425,6 @@ public:
 
     LocalKind emit_binary_float(uint16_t opcode) override;
     LocalKind emit_binary_int(uint16_t opcode) override;
-    LocalKind emit_binary_bigint(uint16_t opcode) override;
-    LocalKind emit_binary_bigint_int_left(uint16_t opcode) override;
-    LocalKind emit_binary_bigint_int_right(uint16_t opcode) override;
     void emit_binary_object(uint16_t opcode) override;
     void emit_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
     LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
@@ -477,9 +444,6 @@ public:
     void emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) override;
     void emit_compare_floats(uint16_t compareType) override;
     void emit_compare_ints(uint16_t compareType) override;
-    void emit_compare_bigints(uint16_t compareType) override;
-    void emit_compare_bigints_int_left(uint16_t compareType) override;
-    void emit_compare_bigints_int_right(uint16_t compareType) override;
 
     void emit_store_fast(py_oparg local) override;
     void emit_unbound_local_check() override;
@@ -560,18 +524,11 @@ public:
     void emit_load_from_frame_value_stack(uint32_t idx) override;
     void emit_dec_frame_stackdepth(uint32_t by) override;
     void emit_set_frame_stackdepth(uint32_t to) override;
-    void emit_bigint_shortvalue() override;
-    void emit_pylong_as_bigint() override;
-
-    bool usesBigInts() override {
-        return m_hasBigInts;
-    }
 private:
     void load_frame();
     void load_tstate();
     void load_profile();
     void load_trace_info();
-    void load_bigint_register();
     void load_local(py_oparg oparg);
     void decref(bool noopt = false);
     CorInfoType to_clr_type(LocalKind kind);

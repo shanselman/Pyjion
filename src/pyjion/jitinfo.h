@@ -44,7 +44,6 @@
 #include "cee.h"
 #include "ipycomp.h"
 #include "exceptions.h"
-#include "bigint.h"
 
 #ifndef WINDOWS
 #include <sys/mman.h>

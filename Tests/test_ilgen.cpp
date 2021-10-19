@@ -36,7 +36,6 @@
 #include <jitinfo.h>
 #include <ilgen.h>
 #include <pycomp.h>
-#include <bigint.h>
 
 extern BaseModule g_module;
 extern ICorJitCompiler* g_jit;
@@ -45,8 +44,6 @@ typedef int32_t (*Returns_int32)();
 typedef uint32_t (*Returns_uint32)();
 typedef int64_t (*Returns_int64)();
 typedef double (*Returns_double)();
-typedef PyjionBigInt* (*Returns_bigint)();
-
 
 TEST_CASE("Test numerics") {
     SECTION("test ld_i4 emitter") {
@@ -267,30 +264,5 @@ TEST_CASE("Test valuetype"){
         CHECK(result == 2.0);
         auto symbols = jitInfo->get_symbol_table();
         CHECK(!symbols.empty());
-    }
-}
-
-TEST_CASE("Test bigintegers"){
-    SECTION("test simple integer assignment type") {
-        PyObject* testLong = PyLong_FromLong(1337);
-        PyjionBigIntRegister* reg = new PyjionBigIntRegister();
-        auto test_module = new UserModule(g_module);
-        auto gen = new ILGenerator(
-                test_module,
-                CORINFO_TYPE_PTR,
-                std::vector<Parameter>{});
-        gen->ld_i(testLong);
-        gen->ld_i(reg);
-        gen->emit_call(METHOD_PYLONG_AS_BIGINT);
-        gen->ret();
-        auto* jitInfo = new CorJitInfo("test_module", "test_call", test_module, true);
-        JITMethod method = gen->compile(jitInfo, g_jit, 100);
-        REQUIRE(method.m_addr != nullptr);
-        auto result = ((Returns_bigint) method.getAddr())();
-        CHECK(result->asLong() == 1337);
-        auto symbols = jitInfo->get_symbol_table();
-        CHECK(!symbols.empty());
-        delete gen;
-        delete test_module;
     }
 }

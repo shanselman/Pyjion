@@ -90,8 +90,6 @@ bool supportsEscaping(AbstractValueKind kind) {
             return true;
         case AVK_Bool:
             return true;
-        case AVK_BigInteger:
-            return true;
         default:
             return false;
     }

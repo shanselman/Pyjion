@@ -391,9 +391,6 @@ public:
     // Performans a binary operation for values on the stack which are unboxed floating points
     virtual LocalKind emit_binary_float(uint16_t opcode) = 0;
     virtual LocalKind emit_binary_int(uint16_t opcode) = 0;
-    virtual LocalKind emit_binary_bigint(uint16_t opcode) = 0;
-    virtual LocalKind emit_binary_bigint_int_left(uint16_t opcode) = 0;
-    virtual LocalKind emit_binary_bigint_int_right(uint16_t opcode) = 0;
     // Performs a binary operation for values on the stack which are boxed objects
     virtual void emit_binary_object(uint16_t opcode) = 0;
     virtual void emit_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) = 0;
@@ -415,10 +412,6 @@ public:
     virtual void emit_compare_object(uint16_t compareType) = 0;
     virtual void emit_compare_floats(uint16_t compareType) = 0;
     virtual void emit_compare_ints(uint16_t compareType) = 0;
-    virtual void emit_compare_bigints(uint16_t compareType) = 0;
-    virtual void emit_compare_bigints_int_left(uint16_t compareType) = 0;
-    virtual void emit_compare_bigints_int_right(uint16_t compareType) = 0;
-
     virtual void emit_compare_unboxed(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) = 0;
     // Performs a comparison for values on the stack which are objects, keeping a boxed Python object as the result.
     virtual void emit_compare_known_object(uint16_t compareType, AbstractValueWithSources lhs, AbstractValueWithSources rhs) = 0;
@@ -494,11 +487,6 @@ public:
     virtual void emit_load_from_frame_value_stack(uint32_t idx) = 0;
     virtual void emit_dec_frame_stackdepth(uint32_t by) = 0;
     virtual void emit_set_frame_stackdepth(uint32_t to) = 0;
-
-    virtual void emit_bigint_shortvalue() = 0;
-    virtual void emit_pylong_as_bigint() = 0;
-
-    virtual bool usesBigInts() = 0;
 };
 
 #endif
