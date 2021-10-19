@@ -648,6 +648,14 @@ TEST_CASE("Test builtins") {
         auto t = EmissionTest("def f(): return tuple(reversed((1,2,3,4)))");
         CHECK(t.returns() == "(4, 3, 2, 1)");
     }
+    SECTION("call bytearray() ") {
+        auto t = EmissionTest("def f(): return bytearray((1,2,3,4))");
+        CHECK(t.returns() == "bytearray(b'\\x01\\x02\\x03\\x04')");
+    }
+    SECTION("call bytearray() with dud data ") {
+        auto t = EmissionTest("def f(): return bytearray(None)");
+        CHECK(t.raises() == PyExc_TypeError);
+    }
 }
 
 TEST_CASE("Test type annotations") {

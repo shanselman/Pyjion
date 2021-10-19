@@ -2350,6 +2350,11 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
         m_il.emit_call(tp_new_token);
         if (((PyTypeObject*) functionObject)->tp_init != nullptr) {
             Local resultLocal = emit_define_local(LK_Pointer);
+            Label good = emit_define_label(), returnLabel = emit_define_label();
+
+            emit_dup();
+            emit_branch(BranchFalse, returnLabel);
+
             emit_store_local(resultLocal);
             // has __init__
             auto tp_init_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
@@ -2362,9 +2367,9 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
             emit_load_local(argumentLocal);
             emit_null();// kwargs
             m_il.emit_call(tp_init_token);
-            Label good = emit_define_label(), returnLabel = emit_define_label();
+
             emit_int(0);
-            emit_branch(BranchGreaterThanEqual, good);
+            emit_branch(BranchEqual, good);
 
             // Bad
             emit_load_local(resultLocal);
