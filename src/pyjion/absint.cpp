@@ -242,6 +242,11 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
     deque<py_opindex> queue;
     queue.emplace_back(0);
     vector<const char*> utf8_names;
+
+    // Save the version tags of globals and builtins for cached LOAD_GLOBAL
+    mGlobalsVersion = ((PyDictObject*)globals)->ma_version_tag;
+    mBuiltinsVersion = ((PyDictObject*)builtins)->ma_version_tag;
+
     for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++)
         utf8_names.emplace_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
     // Keep a list of SETUP_FINALLY instructions and their offsets, to push the exception values onto the stack
@@ -525,6 +530,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                             PyErr_Clear();
                             // Neither. Maybe it'll appear at runtime!!
                             PUSH_INTERMEDIATE(&Any);
+                            lastResolvedGlobal[oparg] = nullptr;
                         } else {
                             // Builtin source
                             auto globalSource = addBuiltinSource(opcodeIndex, oparg, utf8_names[oparg], v);
@@ -534,6 +540,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                                     avk,
                                     globalSource);
                             lastState.push(value);
+                            lastResolvedGlobal[oparg] = v;
                         }
                     } else {
                         // global source
@@ -542,6 +549,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                                 &Any,
                                 globalSource);
                         lastState.push(value);
+                        lastResolvedGlobal[oparg] = v;
                     }
                     break;
                 }
@@ -1807,12 +1815,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 intErrorCheck("delete global failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 break;
             case LOAD_GLOBAL:
-                if (OPT_ENABLED(HashedNames)) {
-                    FLAG_OPT_USAGE(HashedNames);
-                    m_comp->emit_load_global_hashed(PyTuple_GetItem(mCode->co_names, oparg), nameHashes[oparg]);
-                } else {
-                    m_comp->emit_load_global(PyTuple_GetItem(mCode->co_names, oparg));
-                }
+                m_comp->emit_load_global(PyTuple_GetItem(mCode->co_names, oparg), lastResolvedGlobal[oparg], mGlobalsVersion, mBuiltinsVersion);
                 errorCheck("load global failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 incStack();
                 break;

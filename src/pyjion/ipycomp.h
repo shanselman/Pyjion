@@ -230,9 +230,7 @@ public:
     virtual void emit_delete_attr(PyObject* name) = 0;
 
     // Loads/stores/deletes a global variable
-    virtual void emit_load_global(PyObject* name) = 0;
-    virtual void emit_load_global_hashed(PyObject* name, Py_hash_t name_hash) = 0;
-
+    virtual void emit_load_global(PyObject* name, PyObject* last, uint64_t globals_ver, uint64_t builtins_ver) = 0;
     virtual void emit_store_global(PyObject* name) = 0;
     virtual void emit_delete_global(PyObject* name) = 0;
 

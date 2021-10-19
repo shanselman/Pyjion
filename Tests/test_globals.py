@@ -11,4 +11,3 @@ def test_import():
     assert _f() == 2
     inf = pyjion.info(_f)
     assert inf.compiled
-    assert inf.optimizations & pyjion.OptimizationFlags.HashedNames

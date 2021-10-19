@@ -278,7 +278,8 @@ class AbstractInterpreter : public PyjionBase {
     bool mTracingEnabled;
     bool mProfilingEnabled;
     Local mTracingLastInstr;
-
+    uint64_t mGlobalsVersion;
+    uint64_t mBuiltinsVersion;
 
     // ** Data consumed during analysis:
     // Tracks the entry point for each POP_BLOCK opcode, so we can restore our
@@ -308,7 +309,8 @@ class AbstractInterpreter : public PyjionBase {
     // Tracks the state of the stack when we perform a branch.  We copy the existing state to the map and
     // reload it when we begin processing at the stack.
     unordered_map<py_opindex, ValueStack> m_offsetStack;
-    unordered_map<Py_ssize_t, Py_ssize_t> nameHashes;
+    unordered_map<py_oparg, Py_ssize_t> nameHashes;
+    unordered_map<py_oparg, PyObject*> lastResolvedGlobal;
 
     // Set of labels used for when we need to raise an error but have values on the stack
     // that need to be freed.  We have one set of labels which fall through to each other

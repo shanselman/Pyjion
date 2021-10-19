@@ -1083,17 +1083,39 @@ void PythonCompiler::emit_delete_global(PyObject* name) {
     m_il.emit_call(METHOD_DELETEGLOBAL_TOKEN);
 }
 
-void PythonCompiler::emit_load_global(PyObject* name) {
+void PythonCompiler::emit_load_global(PyObject* name, PyObject* last, uint64_t globals_ver, uint64_t builtins_ver) {
+    if (last == nullptr){
+        // Nothing was found at compile time, just look it up now.
+        load_frame();
+        m_il.ld_i(name);
+        m_il.emit_call(METHOD_LOADGLOBAL_TOKEN);
+        return ;
+    }
+    Label lookup = emit_define_label(), end = emit_define_label();
+    // Compare frame->f_globals->ma_version_tag with version at compile-time
+    load_frame();
+    LD_FIELDI(PyFrameObject, f_globals);
+    LD_FIELDI(PyDictObject, ma_version_tag);
+    m_il.ld_i8(globals_ver);
+    emit_branch(BranchNotEqual, lookup);
+    // Compare frame->f_builtins->ma_version_tag with version at compile-time
+    load_frame();
+    LD_FIELDI(PyFrameObject, f_builtins);
+    LD_FIELDI(PyDictObject, ma_version_tag);
+    m_il.ld_i8(builtins_ver);
+    emit_branch(BranchNotEqual, lookup);
+
+    // Use cached version
+    emit_ptr(last);
+    emit_dup();
+    emit_incref();
+
+    emit_branch(BranchAlways, end);
+    emit_mark_label(lookup);
     load_frame();
     m_il.ld_i(name);
     m_il.emit_call(METHOD_LOADGLOBAL_TOKEN);
-}
-
-void PythonCompiler::emit_load_global_hashed(PyObject* name, Py_hash_t name_hash) {
-    load_frame();
-    m_il.ld_i(name);
-    emit_sizet(name_hash);
-    m_il.emit_call(METHOD_LOADGLOBAL_HASH);
+    emit_mark_label(end);
 }
 
 void PythonCompiler::emit_delete_fast(py_oparg index) {
@@ -2895,7 +2917,6 @@ GLOBAL_METHOD(METHOD_OBJECTCALL, &PyObject_Call, CORINFO_TYPE_NATIVEINT, Paramet
 GLOBAL_METHOD(METHOD_STOREGLOBAL_TOKEN, &PyJit_StoreGlobal, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DELETEGLOBAL_TOKEN, &PyJit_DeleteGlobal, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_LOADGLOBAL_TOKEN, &PyJit_LoadGlobal, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_LOADGLOBAL_HASH, &PyJit_LoadGlobalHash, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_LOADATTR_TOKEN, &PyJit_LoadAttr, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_GENERIC_GETATTR, &PyObject_GenericGetAttr, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));

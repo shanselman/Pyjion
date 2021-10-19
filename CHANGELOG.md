@@ -3,6 +3,10 @@
 * Pyjion has an unboxed Big Integer type to match behaviour of PyLong. Type is immutable and carries an int64 short version for fast comparisons
 * Fix a bug on `pyjion.config()` crashing when called with invalid arguments (#401)
 * Update to .NET 6 RC2
+* LOAD_GLOBAL is faster when neither globals or builtins have changed since compiling, by caching the object address.
+* Calls to Python functions are now routed through Vector Call (faster)
+* Improved performance of calling builtin types, like int(), str(), etc.
+* Calls to C Functions are faster
 
 ## 1.0.0 (rc4)
 

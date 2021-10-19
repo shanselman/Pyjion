@@ -139,11 +139,8 @@
 #define METHOD_SETUP_ANNOTATIONS             0x00000078
 #define METHOD_DEALLOC_OBJECT                0x00000079
 #define METHOD_LOAD_CLOSURE                  0x0000007A
-// Unused                                        0x0000007B
-// Unused                                        0x0000007C
-#define METHOD_LOADNAME_HASH                 0x0000007D
-#define METHOD_LOADGLOBAL_HASH               0x0000007E
-#define METHOD_PENDING_CALLS                 0x0000007F
+#define METHOD_LOADNAME_HASH                 0x0000007B
+#define METHOD_PENDING_CALLS                 0x0000007C
 
 // call helpers
 #define METHOD_CALL_0_TOKEN                  0x00010000
@@ -355,8 +352,7 @@ public:
     void emit_load_attr(PyObject* name, AbstractValueWithSources obj) override;
     void emit_store_global(PyObject* name) override;
     void emit_delete_global(PyObject* name) override;
-    void emit_load_global(PyObject* name) override;
-    void emit_load_global_hashed(PyObject* name, Py_hash_t name_hash) override;
+    void emit_load_global(PyObject* name, PyObject* last, uint64_t globals_ver, uint64_t builtins_ver) override;
 
     void emit_new_tuple(py_oparg size) override;
     void emit_tuple_store(py_oparg size) override;
