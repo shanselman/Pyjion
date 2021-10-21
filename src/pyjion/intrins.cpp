@@ -2775,7 +2775,7 @@ long long PyJit_LongAsLongLong(PyObject* vv) {
     if (result == -1 && PyErr_Occurred()) {
         PyErr_Clear();
         PyErr_Format(PyExc_OverflowError,
-                     "Pyjion failed to unbox the integer %s because it is too large.",
+                     "Pyjion failed to unbox the integer %s because it is too large. Try disabling PGC pyjion.config(pgc=False) to avoid hitting this error.",
                      PyUnicode_AsUTF8(PyObject_Repr(vv)));
 
         return MAXLONG;
@@ -2786,7 +2786,7 @@ long long PyJit_LongAsLongLong(PyObject* vv) {
 void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
     assert(PyjionUnboxingError != nullptr);
     PyErr_Format(PyjionUnboxingError,
-                 "Pyjion PGC expected %s, but %s is a %s.",
+                 "Pyjion PGC expected %s, but %s is a %s. Try disabling PGC pyjion.config(pgc=False) to avoid hitting this error.",
                  expected,
                  PyUnicode_AsUTF8(PyObject_Repr(obj)),
                  obj->ob_type->tp_name);
