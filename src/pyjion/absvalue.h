@@ -787,6 +787,6 @@ extern TupleOfValue<AVK_Float> TupleOfFloat;
 extern TupleOfValue<AVK_String> TupleOfString;
 
 AbstractValue* avkToAbstractValue(AbstractValueKind);
-AbstractValueKind GetAbstractType(PyTypeObject* type);
+AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value = nullptr);
 PyTypeObject* GetPyType(AbstractValueKind type);
 #endif

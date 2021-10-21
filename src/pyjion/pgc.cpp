@@ -54,7 +54,7 @@ void PyjionCodeProfile::record(size_t opcodePosition, size_t stackPosition, PyOb
         this->stackTypes[opcodePosition][stackPosition] = Py_TYPE(value);
         Py_INCREF(Py_TYPE(value));
     }
-    this->stackKinds[opcodePosition][stackPosition] = GetAbstractType(Py_TYPE(value));
+    this->stackKinds[opcodePosition][stackPosition] = GetAbstractType(Py_TYPE(value), value);
 }
 
 PyTypeObject* PyjionCodeProfile::getType(size_t opcodePosition, size_t stackPosition) {
