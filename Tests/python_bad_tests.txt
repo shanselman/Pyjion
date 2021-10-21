@@ -22,3 +22,5 @@ test_sys_settrace
 test_traceback
 
 test__xxsubinterpreters
+
+test_bigmem

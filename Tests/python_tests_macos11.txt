@@ -10,7 +10,6 @@ test_dict
 test_builtin
 test_exceptions
 test_types
-test_unittest
 test_doctest
 test_doctest2
 test_support
@@ -43,7 +42,7 @@ test_base64
 test_baseexception
 test_bdb
 test_bigaddrspace
-test_bigmem
+##test_bigmem
 test_binascii
 test_binhex
 test_binop
@@ -400,6 +399,7 @@ test_unicode_file
 test_unicode_file_functions
 test_unicode_identifiers
 test_unicodedata
+test_unittest
 test_univnewlines
 test_unpack
 test_unpack_ex
