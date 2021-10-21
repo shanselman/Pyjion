@@ -1,18 +1,20 @@
-def test_floats(n=10000):
+def test_floats(n=100000):
+    """ Test float/integer arithmetic """
     for y in range(n):
         x = 0.1
         z = y * y + x - y
         x *= z
 
 
-def test_ints(n=10000):
+def test_ints(n=100000):
+    """ Test integer arithmetic """
     for y in range(n):
         x = 2
         z = y * y + x - y
         x *= z
 
 
-def test_bigints(n=10000):
+def test_bigints(n=100000):
     for _ in range(n):
         x = 200_100_100_100_100_100_100_100_100
         y = 100_100_100_100_100_100_100_100_100

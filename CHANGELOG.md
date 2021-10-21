@@ -6,6 +6,8 @@
 * Calls to Python functions are now routed through Vector Call (faster)
 * Improved performance of calling builtin types, like int(), str(), etc.
 * Calls to C Functions are faster
+* Added an OptimisticIntegers optimization to level 2 to inspect integer values and unbox them if they're small
+* Abstract value profiler will assert tuples of constant values (e.g. float, int) based on value
 
 ## 1.0.0 (rc4)
 
