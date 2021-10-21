@@ -195,7 +195,7 @@ AbstractInterpreterResult AbstractInterpreter::preprocess() {
 void AbstractInterpreter::setLocalType(size_t index, PyObject* val) {
     auto& lastState = mStartStates[0];
     if (val != nullptr) {
-        auto localInfo = AbstractLocalInfo(new ArgumentValue(Py_TYPE(val), val, GetAbstractType(Py_TYPE(val))));
+        auto localInfo = AbstractLocalInfo(new ArgumentValue(Py_TYPE(val), val, GetAbstractType(Py_TYPE(val), val)));
         localInfo.ValueInfo.Sources = newSource(new LocalSource(index));
         lastState.replaceLocal(index, localInfo);
     }
@@ -1056,8 +1056,7 @@ AbstractValue* AbstractInterpreter::toAbstract(PyObject* obj) {
             if (Py_TYPE(PyTuple_GET_ITEM(obj, i)) != t)
                 return &Tuple;
         }
-        // TODO: Emit TupleOfInteger if all values are within range of int64 (Integer::isBig)
-        auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)));
+        auto abstractType = GetAbstractType(Py_TYPE(PyTuple_GET_ITEM(obj, 0)), PyTuple_GET_ITEM(obj, 0));
         switch (abstractType) {
             case AVK_String:
                 return &TupleOfString;
@@ -2579,7 +2578,7 @@ void AbstractInterpreter::loadConst(py_oparg constIndex, py_opindex opcodeIndex)
 
 void AbstractInterpreter::loadUnboxedConst(py_oparg constIndex, py_opindex opcodeIndex) {
     auto constValue = PyTuple_GetItem(mCode->co_consts, constIndex);
-    auto abstractT = GetAbstractType(constValue->ob_type);
+    auto abstractT = GetAbstractType(constValue->ob_type, constValue);
     switch (abstractT) {
         case AVK_Float:
             m_comp->emit_float(PyFloat_AS_DOUBLE(constValue));

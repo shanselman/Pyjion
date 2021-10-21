@@ -66,7 +66,7 @@ enum OptimizationFlags {
     Unboxing = 4092,       // OPTIMIZE_UNBOXING; // OPT-16
     IsNone = 8184,         // OPTIMIZE_ISNONE; // OPT-17
     IntegerUnboxingMultiply = 16368,
-    BigIntegers = 32736
+    OptimisticIntegers = 32736
 };
 
 class PyjionCodeProfile : public PyjionBase {

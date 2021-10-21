@@ -1506,10 +1506,14 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind) {
     }
 }
 
-AbstractValueKind GetAbstractType(PyTypeObject* type) {
+AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
     if (type == nullptr) {
         return AVK_Any;
     } else if (type == &PyLong_Type) {
+        if (OPT_ENABLED(OptimisticIntegers) && value != nullptr){
+            if (!IntegerValue::isBig(value))
+                return AVK_Integer;
+        }
         return AVK_BigInteger;
     } else if (type == &PyFloat_Type) {
         return AVK_Float;
@@ -1660,7 +1664,7 @@ PyTypeObject* VolatileValue::pythonType() {
 }
 
 AbstractValueKind VolatileValue::kind() {
-    return GetAbstractType(this->_type);
+    return GetAbstractType(this->_type, this->lastValue());
 }
 
 AbstractValueKind PgcValue::kind() {

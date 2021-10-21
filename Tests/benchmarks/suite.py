@@ -78,19 +78,19 @@ if __name__ == "__main__":
                 delta_max = (abs(max(with_result) - max(without_result)) / max(without_result)) * 100.0
 
                 if min(with_result) < min(without_result):
-                    fdelta_min = Text(f"{min(with_result):.2f} ({delta_min:.1f}%)", style="green")
+                    fdelta_min = Text(f"{min(with_result):.3f} ({delta_min:.1f}%)", style="green")
                 else:
-                    fdelta_min = Text(f"{min(with_result):.2f} (-{delta_min:.1f}%)", style="red")
+                    fdelta_min = Text(f"{min(with_result):.3f} (-{delta_min:.1f}%)", style="red")
 
                 if max(with_result) < max(without_result):
-                    fdelta_max = Text(f"{max(with_result):.2f} ({delta_max:.3f}%)", style="green")
+                    fdelta_max = Text(f"{max(with_result):.3f} ({delta_max:.1f}%)", style="green")
                 else:
-                    fdelta_max = Text(f"{max(with_result):.2f} (-{delta_max:.1f}%)", style="red")
+                    fdelta_max = Text(f"{max(with_result):.3f} (-{delta_max:.1f}%)", style="red")
 
                 if fmean(with_result) < fmean(without_result):
-                    fdelta_mean = Text(f"{fmean(with_result):.2f} ({delta_mean:.1f}%)", style="green")
+                    fdelta_mean = Text(f"{fmean(with_result):.3f} ({delta_mean:.1f}%)", style="green")
                 else:
-                    fdelta_mean = Text(f"{fmean(with_result):.2f} (-{delta_mean:.1f}%)", style="red")
+                    fdelta_mean = Text(f"{fmean(with_result):.3f} (-{delta_mean:.1f}%)", style="red")
 
                 table.add_row(desc,
                               str(repeat),

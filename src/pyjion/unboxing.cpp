@@ -60,7 +60,7 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
         case BINARY_POWER:
         case INPLACE_POWER:
             for (auto& t : edgesIn) {
-                if (t == AVK_Integer)
+                if (t == AVK_Integer) // Dont try to unboxed a power function on a 64-bit int
                     return false;
             }
             return true;

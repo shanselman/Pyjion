@@ -63,6 +63,7 @@ void setOptimizationLevel(unsigned short level) {
     SET_OPT(Unboxing, level, 1);
     SET_OPT(IsNone, level, 1);
     SET_OPT(IntegerUnboxingMultiply, level, 2);
+    SET_OPT(OptimisticIntegers, level, 2);
 }
 
 PyjionJittedCode::~PyjionJittedCode() {
