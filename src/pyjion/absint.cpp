@@ -2660,7 +2660,7 @@ void AbstractInterpreter::forIterUnboxed(py_opindex loopIndex) {
     m_comp->emit_ptr((void*) SIG_STOP_ITER);
     m_comp->emit_branch(BranchNotEqual, next);
     /* End next iter branch */
-
+    m_comp->emit_debug_msg("Finished iter");
     /* Start stop iter branch */
     m_comp->emit_pop();                                          // Pop the 0xff StopIter value
     m_comp->emit_pop_top();                                      // POP and DECREF iter
