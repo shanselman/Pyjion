@@ -667,9 +667,9 @@ TEST_CASE("Test range function") {
         auto t = EmissionTest(
                 "def f():\n"
                 "  x = 0\n"
-                "  for i in range(10000):\n"
+                "  for i in range(100000):\n"
                 "    x = i\n"
                 "  return x\n");
-        CHECK(t.returns() == "9999");
+        CHECK(t.returns() == "99999");
     }
 }
