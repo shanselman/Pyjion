@@ -663,4 +663,13 @@ TEST_CASE("Test range function") {
                 "  return x\n");
         CHECK(t.returns() == "[2, 4]");
     }
+    SECTION("test big range", "[slow]"){
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = []\n"
+                "  for i in range(100000):\n"
+                "    x.append(i)\n"
+                "  return len(x)\n");
+        CHECK(t.returns() == "100000");
+    }
 }

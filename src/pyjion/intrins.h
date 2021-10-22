@@ -52,8 +52,8 @@ typedef SSIZE_T ssize_t;
     "free variable '%.200s' referenced before assignment" \
     " in enclosing scope"
 
-#define SIG_STOP_ITER  0xff
-#define SIG_ITER_ERROR 0xfe
+#define SIG_STOP_ITER  0xffffffff
+#define SIG_ITER_ERROR 0xfefefefe
 
 typedef struct {
     PyObject_HEAD

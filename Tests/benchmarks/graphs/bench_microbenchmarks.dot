@@ -145,7 +145,7 @@ digraph test_bigints {
 digraph test_function_calls { 
 	node [shape=box];
 	FRAME [label=FRAME];
-	OP0 [label="0 LOAD_CONST (<code object f at 0x1108ef100, file "/Us)" color="black"];
+	OP0 [label="0 LOAD_CONST (<code object f at 0x108db7100, file "/Us)" color="black"];
 	OP2 [label="2 LOAD_CONST ('test_function_calls.<locals>.f')" color="black"];
 	OP4 [label="4 MAKE_FUNCTION (0)" color="black"];
 	OP6 [label="6 STORE_FAST ('f')" color="black"];
@@ -156,7 +156,7 @@ digraph test_function_calls {
 	OP16 [label="16 FOR_ITER (23)" color="blue"];
 	OP16 -> OP18 [label="Jump (conditional)" color=orange];
 	OP16 -> OP64 [label="Jump (conditional)" color=orange];
-	OP18 [label="18 STORE_FAST ('_')" color="black"];
+	OP18 [label="18 STORE_FAST ('i')" color="black"];
 	OP20 [label="20 LOAD_FAST ('f')" color="black"];
 	OP22 [label="22 CALL_FUNCTION (0)" color="black"];
 	OP24 [label="24 POP_TOP (0)" color="black"];
