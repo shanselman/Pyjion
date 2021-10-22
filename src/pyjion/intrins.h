@@ -31,6 +31,7 @@
 #include <vector>
 #include "types.h"
 #include "pyjit.h"
+#include "objects/unboxedrangeobject.h"
 
 #ifdef WINDOWS
 typedef SIZE_T size_t;
@@ -50,6 +51,9 @@ typedef SSIZE_T ssize_t;
 #define UNBOUNDFREE_ERROR_MSG                             \
     "free variable '%.200s' referenced before assignment" \
     " in enclosing scope"
+
+#define SIG_STOP_ITER 0xff
+#define SIG_ITER_ERROR 0xfe
 
 typedef struct {
     PyObject_HEAD
@@ -251,6 +255,7 @@ int PyJit_DeleteGlobal(PyFrameObject* f, PyObject* name);
 PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name);
 
 PyObject* PyJit_GetIter(PyObject* iterable);
+PyObject* PyJit_GetUnboxedIter(PyObject* iterable);
 
 PyObject* PyJit_IterNext(PyObject* iter);
 

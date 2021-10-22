@@ -417,7 +417,8 @@ void PythonCompiler::emit_unpack_generic(py_oparg size, AbstractValueWithSources
         emit_for_next();
 
         m_il.dup();
-        emit_branch(BranchTrue, successOrStopIter);
+        emit_int(SIG_ITER_ERROR);
+        emit_branch(BranchNotEqual, successOrStopIter);
         // Failure
         emit_int(1);
         emit_store_local(result);
@@ -426,7 +427,7 @@ void PythonCompiler::emit_unpack_generic(py_oparg size, AbstractValueWithSources
         emit_mark_label(successOrStopIter);
         // Either success or received stopiter (0xff)
         m_il.dup();
-        emit_ptr((void*) 0xff);
+        emit_ptr((void*) SIG_STOP_ITER);
         emit_branch(BranchNotEqual, endbranch);
         m_il.pop();
         emit_null();
@@ -489,7 +490,8 @@ void PythonCompiler::emit_unpack_sequence_ex(size_t leftSize, size_t rightSize, 
         emit_for_next();
 
         m_il.dup();
-        emit_branch(BranchTrue, successOrStopIter);
+        emit_int(SIG_ITER_ERROR);
+        emit_branch(BranchNotEqual, successOrStopIter);
         // Failure
         emit_int(1);
         emit_store_local(result);
@@ -499,7 +501,7 @@ void PythonCompiler::emit_unpack_sequence_ex(size_t leftSize, size_t rightSize, 
         emit_mark_label(successOrStopIter);
         // Either success or received stopiter (0xff)
         m_il.dup();
-        emit_ptr((void*) 0xff);
+        emit_ptr((void*) SIG_STOP_ITER);
         emit_branch(BranchNotEqual, endbranch);
         m_il.pop();
         emit_null();
@@ -1847,6 +1849,10 @@ void PythonCompiler::emit_getiter() {
     m_il.emit_call(METHOD_GETITER_TOKEN);
 }
 
+void PythonCompiler::emit_getiter_unboxed() {
+    m_il.emit_call(METHOD_GET_UNBOXED_ITER_TOKEN);
+}
+
 Label PythonCompiler::emit_define_label() {
     return m_il.define_label();
 }
@@ -2380,6 +2386,9 @@ void PythonCompiler::emit_box(AbstractValueKind kind) {
         case AVK_Integer:
             m_il.emit_call(METHOD_PYLONG_FROM_LONGLONG);
             break;
+        case AVK_Range:
+        case AVK_RangeIterator:
+            break; // Do nothing. They're already Python objects.
         default:
             throw UnexpectedValueException();
     }
@@ -2714,6 +2723,7 @@ GLOBAL_METHOD(METHOD_STORENAME_TOKEN, &PyJit_StoreName, CORINFO_TYPE_INT, Parame
 GLOBAL_METHOD(METHOD_DELETENAME_TOKEN, &PyJit_DeleteName, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_GETITER_TOKEN, &PyJit_GetIter, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_GET_UNBOXED_ITER_TOKEN, &PyJit_GetUnboxedIter, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_ITERNEXT_TOKEN, &PyJit_IterNext, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_DECREF_TOKEN, &PyJit_DecRef, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));

@@ -125,6 +125,7 @@
 #define METHOD_NUMBER_AS_SSIZET              0x00000056
 #define METHOD_PYLONG_AS_LONGLONG            0x00000057
 #define METHOD_PYLONG_FROM_LONGLONG          0x00000058
+#define METHOD_GET_UNBOXED_ITER_TOKEN        0x00000059
 
 #define METHOD_EXTENDLIST_TOKEN              0x0000006C
 #define METHOD_LISTTOTUPLE_TOKEN             0x0000006D
@@ -420,6 +421,7 @@ public:
 
     void emit_print_expr() override;
     void emit_getiter() override;
+    void emit_getiter_unboxed() override;
     void emit_for_next() override;
     void emit_for_next(AbstractValueWithSources) override;
 

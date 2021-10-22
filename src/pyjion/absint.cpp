@@ -2079,7 +2079,11 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case GET_ITER: {
-                m_comp->emit_getiter();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_getiter_unboxed();
+                } else {
+                    m_comp->emit_getiter();
+                }
                 decStack();
                 errorCheck("get iter failed", "", op.index);
                 incStack();
@@ -2620,7 +2624,15 @@ void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources
         m_comp->emit_for_next(*iterator);
 
     /* Check for null on the stack, indicating error (not stopiter) */
-    errorCheck("failed to fetch iter");
+    auto noErr = m_comp->emit_define_label();
+    m_comp->emit_dup();
+    m_comp->emit_store_local(mErrorCheckLocal);
+    m_comp->emit_ptr((void*) SIG_ITER_ERROR);
+    m_comp->emit_branch(BranchNotEqual, noErr);
+
+    branchRaise("failed to fetch iter", "", 0);
+    m_comp->emit_mark_label(noErr);
+    m_comp->emit_load_local(mErrorCheckLocal);
 
     incStack(1);// value
 
@@ -2628,7 +2640,7 @@ void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources
 
     /* Start next iter branch */
     m_comp->emit_dup();
-    m_comp->emit_ptr((void*) 0xff);
+    m_comp->emit_ptr((void*) SIG_STOP_ITER);
     m_comp->emit_branch(BranchNotEqual, next);
     /* End next iter branch */
 

@@ -121,7 +121,7 @@ void InstructionGraph::fixInstructions() {
         if (!allEdgesEscapable)
             continue;
 
-        // Check that all inbound edges can be escaped.
+        // Check that all outbound edges can be escaped.
         bool allOutputsEscapable = true;
         for (auto& edgeOut : getEdgesFrom(instruction.first)) {
             if (!supportsEscaping(edgeOut.kind))
@@ -144,6 +144,8 @@ void InstructionGraph::deoptimizeInstructions() {
         if (!instruction.second.escape)
             continue;
         if (instruction.second.opcode == LOAD_FAST || instruction.second.opcode == STORE_FAST || instruction.second.opcode == DELETE_FAST)
+            continue;// handled in fixLocals();
+        if (instruction.second.opcode == FOR_ITER)
             continue;// handled in fixLocals();
 
         auto edgesIn = getEdges(instruction.first);
