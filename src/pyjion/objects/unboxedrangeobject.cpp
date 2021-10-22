@@ -24,6 +24,7 @@
 */
 
 #include "unboxedrangeobject.h"
+#include "../intrins.h"
 
 /*********************** range Iterator **************************/
 
@@ -39,7 +40,7 @@ pyjion_rangeiter_next(pyjion_rangeiterobject *r)
         /* cast to unsigned to avoid possible signed overflow
            in intermediate calculations. */
         return reinterpret_cast<PyObject*>((r->start + (unsigned long) (r->index++) * r->step));
-    return (PyObject*)0xff;
+    return (PyObject*)SIG_STOP_ITER;
 }
 
 static PyObject *
