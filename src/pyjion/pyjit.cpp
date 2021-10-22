@@ -236,7 +236,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     }
     if (res.compiledCode == nullptr || res.result != Success) {
         state->j_failed = true;
-        state->j_addr = nullptr;  // TODO : Raise specific warning when it used to compile and then it didnt the second time.
+        state->j_addr = nullptr;// TODO : Raise specific warning when it used to compile and then it didnt the second time.
         return _PyEval_EvalFrameDefault(tstate, frame, 0);
     }
 

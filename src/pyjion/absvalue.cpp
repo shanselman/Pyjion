@@ -52,6 +52,7 @@ MethodValue Method;
 CodeObjectValue CodeObject;
 EnumeratorValue Enumerator;
 RangeIteratorValue RangeIterator;
+UnboxedRangeIteratorValue UnboxedRangeIterator;
 RangeValue Range;
 MemoryViewValue MemoryView;
 ClassMethodValue ClassMethod;
@@ -1408,10 +1409,14 @@ const char* CodeObjectValue::describe() {
 // Iterators
 
 AbstractValue* RangeValue::iter(AbstractSource* selfSources) {
-    return &RangeIterator;
+    return &UnboxedRangeIterator;
 }
 
 AbstractValue* RangeIteratorValue::next(AbstractSource* selfSources) {
+    return &Integer;
+}
+
+AbstractValue* UnboxedRangeIteratorValue::next(AbstractSource* selfSources) {
     return &Integer;
 }
 
@@ -1481,6 +1486,8 @@ AbstractValue* avkToAbstractValue(AbstractValueKind kind) {
             return &Range;
         case AVK_RangeIterator:
             return &RangeIterator;
+        case AVK_UnboxedRangeIterator:
+            return &UnboxedRangeIterator;
         case AVK_MemoryView:
             return &MemoryView;
         case AVK_Classmethod:
@@ -1510,7 +1517,7 @@ AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
     if (type == nullptr) {
         return AVK_Any;
     } else if (type == &PyLong_Type) {
-        if (OPT_ENABLED(OptimisticIntegers) && value != nullptr){
+        if (OPT_ENABLED(OptimisticIntegers) && value != nullptr) {
             if (!IntegerValue::isBig(value))
                 return AVK_Integer;
         }
@@ -1559,6 +1566,8 @@ AbstractValueKind GetAbstractType(PyTypeObject* type, PyObject* value) {
         return AVK_Range;
     } else if (type == &PyRangeIter_Type) {
         return AVK_RangeIterator;
+    } else if (type == &PyjionRangeIter_Type) {
+        return AVK_UnboxedRangeIterator;
     } else if (type == &PyMemoryView_Type) {
         return AVK_MemoryView;
     } else if (type == &PyClassMethod_Type) {

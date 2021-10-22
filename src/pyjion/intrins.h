@@ -52,7 +52,7 @@ typedef SSIZE_T ssize_t;
     "free variable '%.200s' referenced before assignment" \
     " in enclosing scope"
 
-#define SIG_STOP_ITER 0xff
+#define SIG_STOP_ITER  0xff
 #define SIG_ITER_ERROR 0xfe
 
 typedef struct {
@@ -258,6 +258,7 @@ PyObject* PyJit_GetIter(PyObject* iterable);
 PyObject* PyJit_GetUnboxedIter(PyObject* iterable);
 
 PyObject* PyJit_IterNext(PyObject* iter);
+PyObject* PyJit_IterNextUnboxed(PyObject* iter);
 
 PyObject* PyJit_PyTuple_New(int32_t len);
 

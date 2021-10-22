@@ -380,7 +380,7 @@ private:
 
     Label getOffsetLabel(py_opindex jumpTo);
     void forIter(py_opindex loopIndex);
-    void forIter(py_opindex loopIndex, AbstractValueWithSources* iterator);
+    void forIterUnboxed(py_opindex loopIndex);
 
     void yieldValue(py_opindex idx, size_t stackSize, InstructionGraph* graph);
 

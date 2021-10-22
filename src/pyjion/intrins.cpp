@@ -1618,8 +1618,8 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
 }
 
 PyObject* PyJit_GetUnboxedIter(PyObject* iterable) {
-    if (PyRange_Check(iterable)){
-        auto *r = (py_rangeobject *)iterable;
+    if (PyRange_Check(iterable)) {
+        auto* r = (py_rangeobject*) iterable;
         auto it = PyObject_New(pyjion_rangeiterobject, &PyjionRangeIter_Type);
         if (it == nullptr)
             return nullptr;
@@ -1628,7 +1628,7 @@ PyObject* PyJit_GetUnboxedIter(PyObject* iterable) {
         it->step = PyLong_AsLongLong(r->step);
         it->len = PyLong_AsLongLong(r->length);
         it->index = 0;
-        return (PyObject *)it;
+        return (PyObject*) it;
     } else {
         PyErr_SetString(PyExc_TypeError, "Iterable is not a range iterator. Cannot unbox.");
         return nullptr;
@@ -1644,7 +1644,7 @@ PyObject* PyJit_GetIter(PyObject* iterable) {
 PyObject* PyJit_IterNext(PyObject* iter) {
     if (iter == nullptr) {
         if (PyErr_Occurred())
-            return (PyObject*) SIG_ITER_ERROR; // this shouldn't happen!
+            return (PyObject*) SIG_ITER_ERROR;// this shouldn't happen!
         PyErr_Format(PyExc_TypeError,
                      "Unable to iterate, iterator is null.");
         return (PyObject*) SIG_ITER_ERROR;
@@ -1653,10 +1653,8 @@ PyObject* PyJit_IterNext(PyObject* iter) {
                      "Unable to iterate, %s is not iterable.",
                      PyObject_Repr(iter));
         return (PyObject*) SIG_ITER_ERROR;
-    } else if (PyjionRangeIter_Check(iter)){
-        return (*iter->ob_type->tp_iternext)(iter);
     }
-
+    assert(!PyjionRangeIter_Check(iter));
 #ifdef GIL
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1677,6 +1675,14 @@ PyObject* PyJit_IterNext(PyObject* iter) {
         }
     }
     return res;
+}
+
+PyObject* PyJit_IterNextUnboxed(PyObject* iter) {
+    if (PyjionRangeIter_Check(iter)) {
+        return (*iter->ob_type->tp_iternext)(iter);
+    } else {
+        // Err..
+    }
 }
 
 PyObject* PyJit_CellGet(PyFrameObject* frame, int32_t index) {

@@ -33,19 +33,17 @@
    in the normal case, but possible for any numeric value.
 */
 
-static PyObject *
-pyjion_rangeiter_next(pyjion_rangeiterobject *r)
-{
+static PyObject*
+pyjion_rangeiter_next(pyjion_rangeiterobject* r) {
     if (r->index < r->len)
         /* cast to unsigned to avoid possible signed overflow
            in intermediate calculations. */
         return reinterpret_cast<PyObject*>((r->start + (unsigned long) (r->index++) * r->step));
-    return (PyObject*)SIG_STOP_ITER;
+    return (PyObject*) SIG_STOP_ITER;
 }
 
-static PyObject *
-pyjion_rangeiter_len(pyjion_rangeiterobject *r, PyObject *Py_UNUSED(ignored))
-{
+static PyObject*
+pyjion_rangeiter_len(pyjion_rangeiterobject* r, PyObject* Py_UNUSED(ignored)) {
     return PyLong_FromLong(r->len - r->index);
 }
 
@@ -54,40 +52,39 @@ PyDoc_STRVAR(length_hint_doc,
 
 
 static PyMethodDef pyjion_rangeiter_methods[] = {
-        {"__length_hint__", (PyCFunction)pyjion_rangeiter_len, METH_NOARGS,
+        {"__length_hint__", (PyCFunction) pyjion_rangeiter_len, METH_NOARGS,
          length_hint_doc},
-        {nullptr,              nullptr}           /* sentinel */
+        {nullptr, nullptr} /* sentinel */
 };
 
 PyTypeObject PyjionRangeIter_Type = {
-        PyVarObject_HEAD_INIT(&PyType_Type, 0)
-                "pyjion_range_iterator",        /* tp_name */
-        sizeof(pyjion_rangeiterobject),         /* tp_basicsize */
-        0,                                      /* tp_itemsize */
+        PyVarObject_HEAD_INIT(&PyType_Type, 0) "pyjion_range_iterator", /* tp_name */
+        sizeof(pyjion_rangeiterobject),                                 /* tp_basicsize */
+        0,                                                              /* tp_itemsize */
         /* methods */
-        (destructor)PyObject_Del,               /* tp_dealloc */
-        0,                                      /* tp_vectorcall_offset */
-        0,                                      /* tp_getattr */
-        0,                                      /* tp_setattr */
-        0,                                      /* tp_as_async */
-        0,                                      /* tp_repr */
-        0,                                      /* tp_as_number */
-        0,                                      /* tp_as_sequence */
-        0,                                      /* tp_as_mapping */
-        0,                                      /* tp_hash */
-        0,                                      /* tp_call */
-        0,                                      /* tp_str */
-        PyObject_GenericGetAttr,                /* tp_getattro */
-        0,                                      /* tp_setattro */
-        0,                                      /* tp_as_buffer */
-        Py_TPFLAGS_DEFAULT,                     /* tp_flags */
-        0,                                      /* tp_doc */
-        0,                                      /* tp_traverse */
-        0,                                      /* tp_clear */
-        0,                                      /* tp_richcompare */
-        0,                                      /* tp_weaklistoffset */
-        PyObject_SelfIter,                      /* tp_iter */
-        (iternextfunc)pyjion_rangeiter_next,           /* tp_iternext */
-        pyjion_rangeiter_methods,                      /* tp_methods */
-        0,                                      /* tp_members */
+        (destructor) PyObject_Del,            /* tp_dealloc */
+        0,                                    /* tp_vectorcall_offset */
+        0,                                    /* tp_getattr */
+        0,                                    /* tp_setattr */
+        0,                                    /* tp_as_async */
+        0,                                    /* tp_repr */
+        0,                                    /* tp_as_number */
+        0,                                    /* tp_as_sequence */
+        0,                                    /* tp_as_mapping */
+        0,                                    /* tp_hash */
+        0,                                    /* tp_call */
+        0,                                    /* tp_str */
+        PyObject_GenericGetAttr,              /* tp_getattro */
+        0,                                    /* tp_setattro */
+        0,                                    /* tp_as_buffer */
+        Py_TPFLAGS_DEFAULT,                   /* tp_flags */
+        0,                                    /* tp_doc */
+        0,                                    /* tp_traverse */
+        0,                                    /* tp_clear */
+        0,                                    /* tp_richcompare */
+        0,                                    /* tp_weaklistoffset */
+        PyObject_SelfIter,                    /* tp_iter */
+        (iternextfunc) pyjion_rangeiter_next, /* tp_iternext */
+        pyjion_rangeiter_methods,             /* tp_methods */
+        0,                                    /* tp_members */
 };

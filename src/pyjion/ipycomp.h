@@ -375,7 +375,7 @@ public:
     virtual void emit_getiter() = 0;
     virtual void emit_getiter_unboxed() = 0;
     virtual void emit_for_next() = 0;
-    virtual void emit_for_next(AbstractValueWithSources) = 0;
+    virtual void emit_for_next_unboxed() = 0;
 
     /*****************************************************
      * Operators */

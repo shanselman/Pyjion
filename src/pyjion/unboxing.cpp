@@ -62,7 +62,7 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
         case BINARY_POWER:
         case INPLACE_POWER:
             for (auto& t : edgesIn) {
-                if (t == AVK_Integer) // Dont try to unboxed a power function on a 64-bit int
+                if (t == AVK_Integer)// Dont try to unboxed a power function on a 64-bit int
                     return false;
             }
             return true;
@@ -84,7 +84,7 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
             return false;
         case FOR_ITER:
             for (auto& t : edgesIn) {
-                if (t == AVK_RangeIterator)
+                if (t == AVK_UnboxedRangeIterator)
                     return true;
             }
             return false;
@@ -93,12 +93,12 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
     }
 }
 
-bool supportsEscaping(AbstractValueKind kind) { // TODO: Allow filter for the specific opcode.
+bool supportsEscaping(AbstractValueKind kind) {// TODO: Allow filter for the specific opcode.
     switch (kind) {
         case AVK_Float:// NOLINT(bugprone-branch-clone)
         case AVK_Integer:
         case AVK_Bool:
-        case AVK_RangeIterator:
+        case AVK_UnboxedRangeIterator:
         case AVK_Range:
             return true;
         default:

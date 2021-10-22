@@ -31,20 +31,20 @@
 typedef struct {
     // Copy of the Python type as its not exported.
     PyObject_HEAD
-    PyObject *start;
-    PyObject *stop;
-    PyObject *step;
-    PyObject *length;
+            PyObject* start;
+    PyObject* stop;
+    PyObject* step;
+    PyObject* length;
 } py_rangeobject;
 
 typedef struct {
     PyObject_HEAD
-    int64_t   index;
-    int64_t    start;
-    int64_t    step;
-    int64_t    len;
+            int64_t index;
+    int64_t start;
+    int64_t step;
+    int64_t len;
 } pyjion_rangeiterobject;
 
 PyAPI_DATA(PyTypeObject) PyjionRangeIter_Type;
 #define PyjionRangeIter_Check(op) Py_IS_TYPE(op, &PyjionRangeIter_Type)
-#endif //PYJION_UNBOXEDRANGEOBJECT_H
+#endif//PYJION_UNBOXEDRANGEOBJECT_H

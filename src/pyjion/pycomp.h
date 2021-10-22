@@ -114,18 +114,21 @@
 #define METHOD_PYERR_CLEAR                   0x00000044
 #define METHOD_PY_IMPORTFROM                 0x00000045
 #define METHOD_PY_IMPORTSTAR                 0x00000046
+#define METHOD_GET_UNBOXED_ITER              0x00000047
+#define METHOD_FORITER_UNBOXED               0x00000048
 #define METHOD_IS                            0x00000049
 #define METHOD_ISNOT                         0x0000004A
 #define METHOD_IS_BOOL                       0x0000004B
 #define METHOD_ISNOT_BOOL                    0x0000004C
 #define METHOD_HANDLE_EXCEPTION              0x0000004D
+#define METHOD_FORITER                       0x0000004E
+
 #define METHOD_FLOAT_FROM_DOUBLE             0x00000053
 #define METHOD_BOOL_FROM_LONG                0x00000054
 #define METHOD_PYERR_SETSTRING               0x00000055
 #define METHOD_NUMBER_AS_SSIZET              0x00000056
 #define METHOD_PYLONG_AS_LONGLONG            0x00000057
 #define METHOD_PYLONG_FROM_LONGLONG          0x00000058
-#define METHOD_GET_UNBOXED_ITER_TOKEN        0x00000059
 
 #define METHOD_EXTENDLIST_TOKEN              0x0000006C
 #define METHOD_LISTTOTUPLE_TOKEN             0x0000006D
@@ -216,8 +219,6 @@
 #define METHOD_PROFILE_FRAME_EXIT            0x00030015
 #define METHOD_PGC_PROBE                     0x00030016
 #define METHOD_PGC_GUARD_EXCEPTION           0x00030017
-
-#define METHOD_ITERNEXT_TOKEN                0x00040000
 
 #define METHOD_FLOAT_POWER_TOKEN             0x00050000
 #define METHOD_FLOAT_FLOOR_TOKEN             0x00050001
@@ -423,7 +424,7 @@ public:
     void emit_getiter() override;
     void emit_getiter_unboxed() override;
     void emit_for_next() override;
-    void emit_for_next(AbstractValueWithSources) override;
+    void emit_for_next_unboxed() override;
 
     LocalKind emit_binary_float(uint16_t opcode) override;
     LocalKind emit_binary_int(uint16_t opcode) override;
@@ -526,6 +527,7 @@ public:
     void emit_load_from_frame_value_stack(uint32_t idx) override;
     void emit_dec_frame_stackdepth(uint32_t by) override;
     void emit_set_frame_stackdepth(uint32_t to) override;
+
 private:
     void load_frame();
     void load_tstate();

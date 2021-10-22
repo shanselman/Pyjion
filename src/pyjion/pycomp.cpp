@@ -1080,12 +1080,12 @@ void PythonCompiler::emit_delete_global(PyObject* name) {
 }
 
 void PythonCompiler::emit_load_global(PyObject* name, PyObject* last, uint64_t globals_ver, uint64_t builtins_ver) {
-    if (last == nullptr){
+    if (last == nullptr) {
         // Nothing was found at compile time, just look it up now.
         load_frame();
         m_il.ld_i(name);
         m_il.emit_call(METHOD_LOADGLOBAL_TOKEN);
-        return ;
+        return;
     }
     Label lookup = emit_define_label(), end = emit_define_label();
     // Compare frame->f_globals->ma_version_tag with version at compile-time
@@ -1850,7 +1850,7 @@ void PythonCompiler::emit_getiter() {
 }
 
 void PythonCompiler::emit_getiter_unboxed() {
-    m_il.emit_call(METHOD_GET_UNBOXED_ITER_TOKEN);
+    m_il.emit_call(METHOD_GET_UNBOXED_ITER);
 }
 
 Label PythonCompiler::emit_define_label() {
@@ -1880,19 +1880,11 @@ void PythonCompiler::emit_mark_label(Label label) {
 }
 
 void PythonCompiler::emit_for_next() {
-    m_il.emit_call(METHOD_ITERNEXT_TOKEN);
+    m_il.emit_call(METHOD_FORITER);
 }
 
-void PythonCompiler::emit_for_next(AbstractValueWithSources iterator) {
-    /*
-     * Stack will have 1 value, the iterator object created by GET_ITER.
-     * Function should leave a 64-bit ptr on the stack:
-     *  - NULL (error occurred)
-     *  - 0xff (StopIter/ iterator exhausted)
-     *  - PyObject* (next item in iteration)
-     */
-    // TODO : Implement a guard-safe iterator
-    return emit_for_next();
+void PythonCompiler::emit_for_next_unboxed() {
+    m_il.emit_call(METHOD_FORITER_UNBOXED);
 }
 
 void PythonCompiler::emit_debug_msg(const char* msg) {
@@ -2207,7 +2199,7 @@ void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWit
         emit_load_local(argumentLocal);
         emit_null();// kwargs
         if (func.Value->needsGuard()) {
-            emit_load_local(functionLocal); // Check it hasn't been swapped for something else.
+            emit_load_local(functionLocal);// Check it hasn't been swapped for something else.
             LD_FIELDI(PyObject, ob_type);
             emit_ptr(functionType);
             emit_branch(BranchNotEqual, fallback);
@@ -2387,8 +2379,8 @@ void PythonCompiler::emit_box(AbstractValueKind kind) {
             m_il.emit_call(METHOD_PYLONG_FROM_LONGLONG);
             break;
         case AVK_Range:
-        case AVK_RangeIterator:
-            break; // Do nothing. They're already Python objects.
+        case AVK_UnboxedRangeIterator:
+            break;// Do nothing. They're already Python objects.
         default:
             throw UnexpectedValueException();
     }
@@ -2723,8 +2715,9 @@ GLOBAL_METHOD(METHOD_STORENAME_TOKEN, &PyJit_StoreName, CORINFO_TYPE_INT, Parame
 GLOBAL_METHOD(METHOD_DELETENAME_TOKEN, &PyJit_DeleteName, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_GETITER_TOKEN, &PyJit_GetIter, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_GET_UNBOXED_ITER_TOKEN, &PyJit_GetUnboxedIter, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_ITERNEXT_TOKEN, &PyJit_IterNext, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_GET_UNBOXED_ITER, &PyJit_GetUnboxedIter, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_FORITER, &PyJit_IterNext, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_FORITER_UNBOXED, &PyJit_IterNextUnboxed, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_DECREF_TOKEN, &PyJit_DecRef, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT));
 
