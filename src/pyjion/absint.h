@@ -376,7 +376,7 @@ private:
     void extendList(py_oparg argCnt);
     void buildSet(py_oparg argCnt);
     void buildMap(py_oparg argCnt);
-    void emitPgcProbes(py_opindex pos, size_t size);
+    void emitPgcProbes(py_opindex pos, size_t size, const vector<Edge>& edges);
 
     Label getOffsetLabel(py_opindex jumpTo);
     void forIter(py_opindex loopIndex);

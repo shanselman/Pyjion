@@ -320,6 +320,19 @@ TEST_CASE("Test PGC integer logic") {
         CHECK(t.returns() == "19408");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     };
+    SECTION("test unboxed locals in coroutine") {
+        auto t = PgcProfilingTest(
+                "def f():\n"
+                "  def coro():\n"
+                "    for i in range(10):\n"
+                "      yield i\n"
+                "  return list(coro())\n");
+        CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
+        CHECK(t.returns() == "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
+        CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
+        CHECK(t.returns() == "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]");
+        CHECK(t.pgcStatus() == PgcStatus::Optimized);
+    };
 }
 TEST_CASE("Test range iter yielding unboxed values") {
     SECTION("test unboxed backward range in for iter") {

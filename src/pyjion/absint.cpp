@@ -1510,9 +1510,9 @@ void AbstractInterpreter::escapeEdges(const vector<Edge>& edges, py_opindex curB
     m_comp->emit_mark_label(noError);
 }
 
-void AbstractInterpreter::emitPgcProbes(py_opindex curByte, size_t stackSize) {
-    vector<Local> stack;
-    stack.resize(stackSize);
+void AbstractInterpreter::emitPgcProbes(py_opindex curByte, size_t stackSize, const vector<Edge>& edges) {
+    vector<Local> stack = vector<Local>(stackSize);
+    assert(edges.size() >= stackSize);
     Local hasProbedFlag = m_comp->emit_define_local(LK_Bool);
     auto hasProbed = m_comp->emit_define_label();
 
@@ -1523,7 +1523,8 @@ void AbstractInterpreter::emitPgcProbes(py_opindex curByte, size_t stackSize) {
         stack[i] = m_comp->emit_define_local(stackEntryKindAsLocalKind(m_stack.peek(i)));
         m_comp->emit_store_local(stack[i]);
         if (m_stack.peek(i) == STACK_KIND_OBJECT) {
-            m_comp->emit_pgc_profile_capture(stack[i], curByte, i);
+            if (edges[i].escaped == NoEscape || edges[i].escaped == Unbox)
+                m_comp->emit_pgc_profile_capture(stack[i], curByte, i);
         }
     }
     m_comp->emit_int(1);
@@ -1677,7 +1678,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
 
         auto edges = graph->getEdges(curByte);
         if (g_pyjionSettings.pgc && pgcProbeRequired(curByte, pgc_status) && !(CAN_UNBOX() && op.escape)) {
-            emitPgcProbes(curByte, pgcProbeSize(curByte));
+            emitPgcProbes(curByte, pgcProbeSize(curByte), edges);
         }
 
         if (CAN_UNBOX()) {
