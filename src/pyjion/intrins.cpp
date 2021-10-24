@@ -1654,7 +1654,9 @@ PyObject* PyJit_IterNext(PyObject* iter) {
                      PyObject_Repr(iter));
         return (PyObject*) SIG_ITER_ERROR;
     }
+#ifdef DEBUG
     assert(!PyjionRangeIter_Check(iter));
+#endif
 #ifdef GIL
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1680,8 +1682,15 @@ PyObject* PyJit_IterNext(PyObject* iter) {
 PyObject* PyJit_IterNextUnboxed(PyObject* iter) {
     if (PyjionRangeIter_Check(iter)) {
         return (*iter->ob_type->tp_iternext)(iter);
+    } else if (iter->ob_type == &PyRangeIter_Type) {
+        auto next = (*iter->ob_type->tp_iternext)(iter);
+        if (next == nullptr){
+            return (PyObject*) SIG_STOP_ITER;
+        }
+        return (PyObject*)PyLong_AsLongLong(next); // Unbox the value
     } else {
-        // Err..
+        // Err.. I'm outta ideas
+        assert(false);
     }
 }
 

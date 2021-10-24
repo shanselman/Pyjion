@@ -27,6 +27,7 @@ def test_dis(capsys):
     assert "ldarg.1" in captured.out
 
 
+@pytest.mark.graph
 def test_dis_with_offsets(capsys):
     def test_f():
         numbers = (1, 2, 3, 4)
