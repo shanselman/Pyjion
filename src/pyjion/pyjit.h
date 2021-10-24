@@ -100,7 +100,6 @@ typedef struct {
 typedef PyObject* (*Py_EvalFunc)(PyjionJittedCode*, struct _frame*, PyThreadState*, PyjionCodeProfile*, PyTraceInfo*);
 
 
-
 inline OptimizationFlags operator|(OptimizationFlags a, OptimizationFlags b) {
     return static_cast<OptimizationFlags>(static_cast<int>(a) | static_cast<int>(b));
 }

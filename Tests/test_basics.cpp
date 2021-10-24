@@ -616,3 +616,60 @@ TEST_CASE("Test type annotations") {
         CHECK(t.returns() == "0");
     }
 }
+
+TEST_CASE("Test range function") {
+    SECTION("test basic range") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = []\n"
+                "  for i in range(3):\n"
+                "    x.append(i)\n"
+                "  return x\n");
+        CHECK(t.returns() == "[0, 1, 2]");
+    }
+    SECTION("test stop range") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = []\n"
+                "  for i in range(0, 3):\n"
+                "    x.append(i)\n"
+                "  return x\n");
+        CHECK(t.returns() == "[0, 1, 2]");
+    }
+    SECTION("test start range") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = []\n"
+                "  for i in range(1,3):\n"
+                "    x.append(i)\n"
+                "  return x\n");
+        CHECK(t.returns() == "[1, 2]");
+    }
+    SECTION("test step range") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = []\n"
+                "  for i in range(0,4,2):\n"
+                "    x.append(i)\n"
+                "  return x\n");
+        CHECK(t.returns() == "[0, 2]");
+    }
+    SECTION("test start stop step range") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = []\n"
+                "  for i in range(2,6,2):\n"
+                "    x.append(i)\n"
+                "  return x\n");
+        CHECK(t.returns() == "[2, 4]");
+    }
+    SECTION("test big range", "[slow]"){
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = 0\n"
+                "  for i in range(100000):\n"
+                "    x = i\n"
+                "  return x\n");
+        CHECK(t.returns() == "99999");
+    }
+}

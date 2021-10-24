@@ -23,9 +23,11 @@ def test_bigints(n=100000):
 
 
 def test_function_calls(n=10000):
+
     def f():
         pass
-    for _ in range(n):
+
+    for i in range(n):
         f()
         f()
         f()

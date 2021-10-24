@@ -34,6 +34,7 @@
 #include "cowvector.h"
 #include "types.h"
 #include "base.h"
+#include "objects/unboxedrangeobject.h"
 
 #ifdef WINDOWS
 typedef SIZE_T size_t;
@@ -83,6 +84,7 @@ enum AbstractValueKind {
     AVK_Staticmethod = 33,
     AVK_Super = 34,
     AVK_Zip = 35,
+    AVK_UnboxedRangeIterator = 36,
 };
 
 static bool isKnownType(AbstractValueKind kind) {
@@ -604,6 +606,16 @@ class RangeIteratorValue : public AbstractValue {
     AbstractValue* next(AbstractSource* selfSources) override;
 };
 
+class UnboxedRangeIteratorValue : public AbstractValue {
+    AbstractValueKind kind() override {
+        return AVK_UnboxedRangeIterator;
+    }
+    const char* describe() override {
+        return "unboxed range iterator";
+    }
+    AbstractValue* next(AbstractSource* selfSources) override;
+};
+
 class MemoryViewValue : public AbstractValue {
     AbstractValueKind kind() override {
         return AVK_MemoryView;
@@ -768,6 +780,7 @@ extern MethodValue Method;
 extern CodeObjectValue CodeObject;
 extern EnumeratorValue Enumerator;
 extern RangeIteratorValue RangeIterator;
+extern UnboxedRangeIteratorValue UnboxedRangeIterator;
 extern RangeValue Range;
 extern MemoryViewValue MemoryView;
 extern ClassMethodValue ClassMethod;

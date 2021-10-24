@@ -4,8 +4,8 @@ digraph advance {
 	OP0 [label="0 LOAD_GLOBAL (range)" color="black"];
 	OP2 [label="2 LOAD_FAST ('n')" color="black"];
 	OP4 [label="4 CALL_FUNCTION (1)" color="black"];
-	OP6 [label="6 GET_ITER (0)" color="black"];
-	OP8 [label="8 FOR_ITER (158)" color="black"];
+	OP6 [label="6 GET_ITER (0)" color="blue"];
+	OP8 [label="8 FOR_ITER (158)" color="blue"];
 	OP8 -> OP10 [label="Jump (conditional)" color=orange];
 	OP8 -> OP326 [label="Jump (conditional)" color=orange];
 	OP10 [label="10 STORE_FAST ('i')" color="black"];
@@ -177,9 +177,9 @@ digraph advance {
 	OP328 [label="328 RETURN_VALUE (0)" color="black"];
 	OP0 -> OP4 [label="Builtin (type) -1" color=black];
 	OP2 -> OP4 [label="Local (int) -0" color=black];
-	OP4 -> OP6 [label="Local (range) -0" color=black];
-	OP6 -> OP8 [label="Intermediate (range iterator) -0" color=black];
-	OP8 -> OP10 [label="Intermediate (int) -0" color=black];
+	OP4 -> OP6 [label="Local (range) U0" color=red];
+	OP6 -> OP8 [label="Intermediate (unboxed range iterator) UN0" color=purple];
+	OP8 -> OP10 [label="Intermediate (int) B0" color=green];
 	OP12 -> OP14 [label="Local (list) -0" color=black];
 	OP14 -> OP16 [label="Intermediate (Any) -0" color=black];
 	OP16 -> OP18 [label="Intermediate (tuple) -0" color=black];

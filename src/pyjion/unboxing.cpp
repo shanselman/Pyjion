@@ -49,6 +49,8 @@ bool supportsUnboxing(py_opcode opcode) {
         case STORE_FAST:
         case LOAD_FAST:
         case DELETE_FAST:
+        case GET_ITER:
+        case FOR_ITER:
             return true;
         default:
             return false;
@@ -60,11 +62,10 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
         case BINARY_POWER:
         case INPLACE_POWER:
             for (auto& t : edgesIn) {
-                if (t == AVK_Integer) // Dont try to unboxed a power function on a 64-bit int
+                if (t == AVK_Integer)// Dont try to unboxed a power function on a 64-bit int
                     return false;
             }
             return true;
-
 
         case INPLACE_MULTIPLY:
         case BINARY_MULTIPLY:
@@ -77,18 +78,28 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
                 }
                 return true;
             }
+        case GET_ITER:
+            if (edgesIn.size() == 1 && edgesIn[0] == AVK_Range)
+                return true;
+            return false;
+        case FOR_ITER:
+            for (auto& t : edgesIn) {
+                if (t == AVK_UnboxedRangeIterator)
+                    return true;
+            }
+            return false;
         default:
             return true;
     }
 }
 
-bool supportsEscaping(AbstractValueKind kind) {
+bool supportsEscaping(AbstractValueKind kind) {// TODO: Allow filter for the specific opcode.
     switch (kind) {
         case AVK_Float:// NOLINT(bugprone-branch-clone)
-            return true;
         case AVK_Integer:
-            return true;
         case AVK_Bool:
+        case AVK_UnboxedRangeIterator:
+        case AVK_Range:
             return true;
         default:
             return false;

@@ -45,7 +45,7 @@ digraph permutations {
 	OP78 [label="78 LOAD_GLOBAL (tuple)" color="black"];
 	OP80 [label="80 LOAD_CLOSURE (0)" color="black"];
 	OP82 [label="82 BUILD_TUPLE (1)" color="black"];
-	OP84 [label="84 LOAD_CONST (<code object <genexpr> at 0x110450380, f)" color="black"];
+	OP84 [label="84 LOAD_CONST (<code object <genexpr> at 0x104f70380, f)" color="black"];
 	OP86 [label="86 LOAD_CONST ('permutations.<locals>.<genexpr>')" color="black"];
 	OP88 [label="88 MAKE_FUNCTION (8)" color="black"];
 	OP90 [label="90 LOAD_FAST ('indices')" color="black"];
@@ -138,7 +138,7 @@ digraph permutations {
 	OP250 [label="250 LOAD_GLOBAL (tuple)" color="black"];
 	OP252 [label="252 LOAD_CLOSURE (0)" color="black"];
 	OP254 [label="254 BUILD_TUPLE (1)" color="black"];
-	OP256 [label="256 LOAD_CONST (<code object <genexpr> at 0x110450520, f)" color="black"];
+	OP256 [label="256 LOAD_CONST (<code object <genexpr> at 0x104f70520, f)" color="black"];
 	OP258 [label="258 LOAD_CONST ('permutations.<locals>.<genexpr>')" color="black"];
 	OP260 [label="260 MAKE_FUNCTION (8)" color="black"];
 	OP262 [label="262 LOAD_FAST ('indices')" color="black"];
@@ -321,11 +321,11 @@ digraph n_queens {
 	OP26 [label="26 LOAD_GLOBAL (set)" color="black"];
 	OP28 [label="28 LOAD_CLOSURE (0)" color="black"];
 	OP30 [label="30 BUILD_TUPLE (1)" color="black"];
-	OP32 [label="32 LOAD_CONST (<code object <genexpr> at 0x1104506c0, f)" color="black"];
+	OP32 [label="32 LOAD_CONST (<code object <genexpr> at 0x104f706c0, f)" color="black"];
 	OP34 [label="34 LOAD_CONST ('n_queens.<locals>.<genexpr>')" color="black"];
 	OP36 [label="36 MAKE_FUNCTION (8)" color="black"];
 	OP38 [label="38 LOAD_FAST ('cols')" color="black"];
-	OP40 [label="40 GET_ITER (0)" color="black"];
+	OP40 [label="40 GET_ITER (0)" color="red"];
 	OP42 [label="42 CALL_FUNCTION (1)" color="black"];
 	OP44 [label="44 CALL_FUNCTION (1)" color="black"];
 	OP46 [label="46 CALL_FUNCTION (1)" color="black"];
@@ -339,11 +339,11 @@ digraph n_queens {
 	OP58 [label="58 LOAD_GLOBAL (set)" color="black"];
 	OP60 [label="60 LOAD_CLOSURE (0)" color="black"];
 	OP62 [label="62 BUILD_TUPLE (1)" color="black"];
-	OP64 [label="64 LOAD_CONST (<code object <genexpr> at 0x110450790, f)" color="black"];
+	OP64 [label="64 LOAD_CONST (<code object <genexpr> at 0x104f70790, f)" color="black"];
 	OP66 [label="66 LOAD_CONST ('n_queens.<locals>.<genexpr>')" color="black"];
 	OP68 [label="68 MAKE_FUNCTION (8)" color="black"];
 	OP70 [label="70 LOAD_FAST ('cols')" color="black"];
-	OP72 [label="72 GET_ITER (0)" color="black"];
+	OP72 [label="72 GET_ITER (0)" color="red"];
 	OP74 [label="74 CALL_FUNCTION (1)" color="black"];
 	OP76 [label="76 CALL_FUNCTION (1)" color="black"];
 	OP78 [label="78 CALL_FUNCTION (1)" color="black"];
@@ -377,7 +377,7 @@ digraph n_queens {
 	OP34 -> OP36 [label="Const (str) -0" color=black];
 	OP38 -> OP40 [label="Local (range) -0" color=black];
 	OP36 -> OP42 [label="Intermediate (function) -1" color=black];
-	OP40 -> OP42 [label="Intermediate (range iterator) -0" color=black];
+	OP40 -> OP42 [label="Intermediate (unboxed range iterator) -0" color=black];
 	OP26 -> OP44 [label="Builtin (type) -1" color=black];
 	OP42 -> OP44 [label="Local (Any) -0" color=black];
 	OP24 -> OP46 [label="Builtin (function) -1" color=black];
@@ -395,7 +395,7 @@ digraph n_queens {
 	OP66 -> OP68 [label="Const (str) -0" color=black];
 	OP70 -> OP72 [label="Local (range) -0" color=black];
 	OP68 -> OP74 [label="Intermediate (function) -1" color=black];
-	OP72 -> OP74 [label="Intermediate (range iterator) -0" color=black];
+	OP72 -> OP74 [label="Intermediate (unboxed range iterator) -0" color=black];
 	OP58 -> OP76 [label="Builtin (type) -1" color=black];
 	OP74 -> OP76 [label="Local (Any) -0" color=black];
 	OP56 -> OP78 [label="Builtin (function) -1" color=black];

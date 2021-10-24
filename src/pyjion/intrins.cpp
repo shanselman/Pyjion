@@ -1617,6 +1617,24 @@ PyObject* PyJit_LoadGlobal(PyFrameObject* f, PyObject* name) {
     return v;
 }
 
+PyObject* PyJit_GetUnboxedIter(PyObject* iterable) {
+    if (PyRange_Check(iterable)) {
+        auto* r = (py_rangeobject*) iterable;
+        auto it = PyObject_New(pyjion_rangeiterobject, &PyjionRangeIter_Type);
+        if (it == nullptr)
+            return nullptr;
+
+        it->start = PyLong_AsLongLong(r->start);
+        it->step = PyLong_AsLongLong(r->step);
+        it->len = PyLong_AsLongLong(r->length);
+        it->index = 0;
+        return (PyObject*) it;
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Iterable is not a range iterator. Cannot unbox.");
+        return nullptr;
+    }
+}
+
 PyObject* PyJit_GetIter(PyObject* iterable) {
     auto res = PyObject_GetIter(iterable);
     Py_DECREF(iterable);
@@ -1626,17 +1644,19 @@ PyObject* PyJit_GetIter(PyObject* iterable) {
 PyObject* PyJit_IterNext(PyObject* iter) {
     if (iter == nullptr) {
         if (PyErr_Occurred())
-            return nullptr;// this shouldn't happen.
+            return (PyObject*) SIG_ITER_ERROR;// this shouldn't happen!
         PyErr_Format(PyExc_TypeError,
                      "Unable to iterate, iterator is null.");
-        return nullptr;
+        return (PyObject*) SIG_ITER_ERROR;
     } else if (!PyIter_Check(iter)) {
         PyErr_Format(PyExc_TypeError,
                      "Unable to iterate, %s is not iterable.",
                      PyObject_Repr(iter));
-        return nullptr;
+        return (PyObject*) SIG_ITER_ERROR;
     }
-
+#ifdef DEBUG
+    assert(!PyjionRangeIter_Check(iter));
+#endif
 #ifdef GIL
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
@@ -1648,15 +1668,30 @@ PyObject* PyJit_IterNext(PyObject* iter) {
     if (res == nullptr) {
         if (PyErr_Occurred()) {
             if (!PyErr_ExceptionMatches(PyExc_StopIteration)) {
-                return nullptr;
+                return (PyObject*) SIG_ITER_ERROR;
             }
             PyErr_Clear();
-            return (PyObject*) (0xff);
+            return (PyObject*) SIG_STOP_ITER;
         } else {
-            return (PyObject*) (0xff);
+            return (PyObject*) SIG_STOP_ITER;
         }
     }
     return res;
+}
+
+PyObject* PyJit_IterNextUnboxed(PyObject* iter) {
+    if (PyjionRangeIter_Check(iter)) {
+        return (*iter->ob_type->tp_iternext)(iter);
+    } else if (iter->ob_type == &PyRangeIter_Type) {
+        auto next = (*iter->ob_type->tp_iternext)(iter);
+        if (next == nullptr){
+            return (PyObject*) SIG_STOP_ITER;
+        }
+        return (PyObject*)PyLong_AsLongLong(next); // Unbox the value
+    } else {
+        // Err.. I'm outta ideas
+        assert(false);
+    }
 }
 
 PyObject* PyJit_CellGet(PyFrameObject* frame, int32_t index) {

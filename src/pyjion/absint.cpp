@@ -244,8 +244,8 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
     vector<const char*> utf8_names;
 
     // Save the version tags of globals and builtins for cached LOAD_GLOBAL
-    mGlobalsVersion = ((PyDictObject*)globals)->ma_version_tag;
-    mBuiltinsVersion = ((PyDictObject*)builtins)->ma_version_tag;
+    mGlobalsVersion = ((PyDictObject*) globals)->ma_version_tag;
+    mBuiltinsVersion = ((PyDictObject*) builtins)->ma_version_tag;
 
     for (Py_ssize_t i = 0; i < PyTuple_Size(mCode->co_names); i++)
         utf8_names.emplace_back(PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, i)));
@@ -1510,9 +1510,9 @@ void AbstractInterpreter::escapeEdges(const vector<Edge>& edges, py_opindex curB
     m_comp->emit_mark_label(noError);
 }
 
-void AbstractInterpreter::emitPgcProbes(py_opindex curByte, size_t stackSize) {
-    vector<Local> stack;
-    stack.resize(stackSize);
+void AbstractInterpreter::emitPgcProbes(py_opindex curByte, size_t stackSize, const vector<Edge>& edges) {
+    vector<Local> stack = vector<Local>(stackSize);
+    assert(edges.size() >= stackSize);
     Local hasProbedFlag = m_comp->emit_define_local(LK_Bool);
     auto hasProbed = m_comp->emit_define_label();
 
@@ -1523,7 +1523,8 @@ void AbstractInterpreter::emitPgcProbes(py_opindex curByte, size_t stackSize) {
         stack[i] = m_comp->emit_define_local(stackEntryKindAsLocalKind(m_stack.peek(i)));
         m_comp->emit_store_local(stack[i]);
         if (m_stack.peek(i) == STACK_KIND_OBJECT) {
-            m_comp->emit_pgc_profile_capture(stack[i], curByte, i);
+            if (edges[i].escaped == NoEscape || edges[i].escaped == Unbox)
+                m_comp->emit_pgc_profile_capture(stack[i], curByte, i);
         }
     }
     m_comp->emit_int(1);
@@ -1677,7 +1678,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
 
         auto edges = graph->getEdges(curByte);
         if (g_pyjionSettings.pgc && pgcProbeRequired(curByte, pgc_status) && !(CAN_UNBOX() && op.escape)) {
-            emitPgcProbes(curByte, pgcProbeSize(curByte));
+            emitPgcProbes(curByte, pgcProbeSize(curByte), edges);
         }
 
         if (CAN_UNBOX()) {
@@ -2079,7 +2080,11 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case GET_ITER: {
-                m_comp->emit_getiter();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_getiter_unboxed();
+                } else {
+                    m_comp->emit_getiter();
+                }
                 decStack();
                 errorCheck("get iter failed", "", op.index);
                 incStack();
@@ -2088,16 +2093,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             case FOR_ITER: {
                 auto postIterStack = ValueStack(m_stack);
                 postIterStack.dec(1);// pop iter when stopiter happens
-                if (OPT_ENABLED(InlineIterators) && !stackInfo.empty()) {
-                    FLAG_OPT_USAGE(InlineIterators);
-
-                    auto iterator = stackInfo.top();
-                    forIter(
-                            op.jumpsTo,
-                            &iterator);
+                if (CAN_UNBOX() && op.escape) {
+                    forIterUnboxed(op.jumpsTo);
                 } else {
-                    forIter(
-                            op.jumpsTo);
+                    forIter(op.jumpsTo);
                 }
                 m_offsetStack[op.jumpsTo] = postIterStack;
                 break;
@@ -2609,18 +2608,23 @@ void AbstractInterpreter::returnValue(py_opindex opcodeIndex) {
     decStack();
 }
 
-void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources* iterator) {
+void AbstractInterpreter::forIter(py_opindex loopIndex) {
     // dup the iter so that it stays on the stack for the next iteration
     m_comp->emit_dup();// ..., iter -> iter, iter, ...
 
     // emits NULL on error, 0xff on StopIter and ptr on next
-    if (iterator == nullptr)
-        m_comp->emit_for_next();// ..., iter, iter -> iter, iter(), ...
-    else
-        m_comp->emit_for_next(*iterator);
+    m_comp->emit_for_next();// ..., iter, iter -> iter, iter(), ...
 
-    /* Check for null on the stack, indicating error (not stopiter) */
-    errorCheck("failed to fetch iter");
+    /* Check for SIG_ITER_ERROR on the stack, indicating error (not stopiter) */
+    auto noErr = m_comp->emit_define_label();
+    m_comp->emit_dup();
+    m_comp->emit_store_local(mErrorCheckLocal);
+    m_comp->emit_ptr((void*) SIG_ITER_ERROR);
+    m_comp->emit_branch(BranchNotEqual, noErr);
+
+    branchRaise("failed to fetch iter", "", 0);
+    m_comp->emit_mark_label(noErr);
+    m_comp->emit_load_local(mErrorCheckLocal);
 
     incStack(1);// value
 
@@ -2628,7 +2632,7 @@ void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources
 
     /* Start next iter branch */
     m_comp->emit_dup();
-    m_comp->emit_ptr((void*) 0xff);
+    m_comp->emit_ptr((void*) SIG_STOP_ITER);
     m_comp->emit_branch(BranchNotEqual, next);
     /* End next iter branch */
 
@@ -2641,8 +2645,30 @@ void AbstractInterpreter::forIter(py_opindex loopIndex, AbstractValueWithSources
     m_comp->emit_mark_label(next);
 }
 
-void AbstractInterpreter::forIter(py_opindex loopIndex) {
-    forIter(loopIndex, nullptr);
+void AbstractInterpreter::forIterUnboxed(py_opindex loopIndex) {
+    // dup the iter so that it stays on the stack for the next iteration
+    m_comp->emit_dup();// ..., iter -> iter, iter, ...
+
+    // emits NULL on error, 0xff on StopIter and ptr on next
+    m_comp->emit_for_next_unboxed();// ..., iter, iter -> iter, iter(), ...
+
+    incStack(1);// value
+
+    auto next = m_comp->emit_define_label();
+
+    /* Start next iter branch */
+    m_comp->emit_dup();
+    m_comp->emit_ptr((void*) SIG_STOP_ITER);
+    m_comp->emit_branch(BranchNotEqual, next);
+    /* End next iter branch */
+    m_comp->emit_debug_msg("Finished iter");
+    /* Start stop iter branch */
+    m_comp->emit_pop();                                          // Pop the 0xff StopIter value
+    m_comp->emit_pop_top();                                      // POP and DECREF iter
+    m_comp->emit_branch(BranchAlways, getOffsetLabel(loopIndex));// Goto: post-stack
+    /* End stop iter error branch */
+
+    m_comp->emit_mark_label(next);
 }
 
 void AbstractInterpreter::loadFast(py_oparg local, py_opindex opcodeIndex) {
