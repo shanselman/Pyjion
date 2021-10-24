@@ -201,7 +201,6 @@ public:
     }
 
     void freeMem(PVOID code) {
-        // TODO: Validate memory free for CorJitInfo
         PyMem_Free(code);
     }
 
