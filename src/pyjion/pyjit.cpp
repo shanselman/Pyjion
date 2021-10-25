@@ -193,7 +193,6 @@ bool JitInit(const wchar_t* path) {
 #else
     jitStartup(&g_jitHost);
 #endif
-
     g_jit = getJit();
 
     if (PyType_Ready(&PyJitMethodLocation_Type) < 0)
