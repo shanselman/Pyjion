@@ -152,7 +152,7 @@ else()
     message(STATUS "Enabling x86")
 endif()
 
-include_directories(CoreCLR/src/coreclr/inc CoreCLR/src/coreclr/jit pe-parse/pe-parser-library/include)
+include_directories(CoreCLR/src/coreclr/inc CoreCLR/src/coreclr/jit CoreCLR/src/coreclr/vm pe-parse/pe-parser-library/include)
 
 if (UNIX)
     if(DEFINED ENV{DOTNET_ROOT})
