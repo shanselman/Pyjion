@@ -28,8 +28,9 @@
 
 TEST_CASE("Test basic loader") {
     SECTION("Test builtin R2R image") {
-        PEDecoder decoder = PEDecoder("/usr/local/share/dotnet/sdk/6.0.100-rc.2.21505.57/System.CommandLine.dll");
+        PEDecoder decoder = PEDecoder("/usr/local/share/dotnet/shared/Microsoft.NETCore.App/6.0.0-rc.2.21480.5/System.Console.dll");
         CHECK(decoder.GetCorHeader()->Flags & COMIMAGE_FLAGS_IL_LIBRARY);
-        CHECK(decoder.GetReadyToRunHeader());
+        CHECK(decoder.GetReadyToRunHeader()->MajorVersion == 5);
+        printf("Assembly Module is %s", decoder.GetModuleName().c_str());
     }
 }

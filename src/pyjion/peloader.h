@@ -47,6 +47,7 @@
 
 #ifndef PYJION_PELOADER_H
 #define PYJION_PELOADER_H
+#define ALIGN4BYTE(val) (((val) + 3) & ~0x3)
 
 using namespace std;
 
@@ -56,33 +57,95 @@ enum class AddressType {
     VirtualAddress
 };
 
+struct ECMA_STORAGE_HEADER {
+    uint32_t      lSignature;             // "Magic" signature.
+    uint16_t      iMajorVer;              // Major file version.
+    uint16_t      iMinorVer;              // Minor file version.
+    uint32_t      iExtraData;             // Offset to next structure of information
+    uint32_t      iVersionString;         // Length of version string
+    BYTE          pVersion[0];            // Version string
 
-int printExps(void *N,
-              const peparse::VA &funcAddr,
-              const std::string &mod,
-              const std::string &func);
+};
+struct ECMA_STORAGE_HEADER2 {
+    BYTE fFlags;// STGHDR_xxx flags.
+    BYTE pad;
+    uint16_t iStreams;// How many streams are there.
+};
 
-int printImports(void *N,
-                 const peparse::VA &impAddr,
-                 const std::string &modName,
-                 const std::string &symName) ;
+struct ECMA_STREAM_HEADER {
+    uint32_t offset;     // Memory offset to start of this stream from start of the metadata root
+    uint32_t size;       // Size of this stream in bytes, shall be a multiple of 4.
+    char     name[32];   // Stream name
+};
 
-int printSymbols(void *N,
-                 const std::string &strName,
-                 const uint32_t &value,
-                 const int16_t &sectionNumber,
-                 const uint16_t &type,
-                 const uint8_t &storageClass,
-                 const uint8_t &numberOfAuxSymbols) ;
+struct HOME_TABLE_HEADER { // Header for #~
+    uint32_t Reserved1; // Reserved, always 0
+    BYTE MajorVersion; // Major version of table schemata, always 1
+    BYTE MinorVersion; // Minor version of table schemata, always 0
+    BYTE HeapOffsetSizes; // Bit vector for heap sizes.
+    BYTE Reserved2; // Reserved, always 1
+    bitset<64> MaskValid; // Bit vector of present tables, let n be the number of bits that are 1.
+    bitset<64> MaskSorted; // Bit vector of present tables, let n be the number of bits that are 1.
+};
 
+enum MetaDataTable
+{
+    Module = 0x00,
+    TypeRef = 0x01,
+    TypeDef = 0x02,
+    FieldPtr = 0x03,
+    Field = 0x04,
+    MethodPtr = 0x05,
+    Method = 0x06,
+    ParamPtr = 0x07,
+    Param = 0x08,
+    InterfaceImpl = 0x09,
+    MemberRef = 0x0A,
+    Constant = 0x0B,
+    CustomAttribute = 0x0C,
+    FieldMarshal = 0x0D,
+    DeclSecurity = 0x0E,
+    ClassLayout = 0x0F,
+    FieldLayout = 0x10,
+    StandAloneSig = 0x11,
+    EventMap = 0x12,
+    EventPtr = 0x13,
+    Event = 0x14,
+    PropertyMap = 0x15,
+    PropertyPtr = 0x16,
+    Property = 0x17,
+    MethodSemantics = 0x18,
+    MethodImpl = 0x19,
+    ModuleRef = 0x1A,
+    TypeSpec= 0x1B,
+    ImplMap= 0x1C,
+    FieldRVA= 0x1D,
+    ENCLog= 0x1E,
+    ENCMap= 0x1F,
+    Assembly= 0x20,
+    AssemblyProcessor= 0x21,
+    AssemblyOS= 0x22,
+    AssemblyRef= 0x23,
+    AssemblyRefProcessor= 0x24,
+    AssemblyRefOS= 0x25,
+    File= 0x26,
+    ExportedType= 0x27,
+    ManifestResource= 0x28,
+    NestedClass= 0x29,
+    GenericParam= 0x2A,
+    MethodSpec= 0x2B,
+    GenericParamConstraint= 0x2C,
+};
 
-int printRsrc(void *N, const peparse::resource &r);
+struct ModuleTableRow {
+    uint16_t Generation;
+    uint16_t Name;
+    uint16_t Mvid;
+    uint16_t EncId;
+    uint16_t EncBaseId;
+};
 
-int printSecs(void *N,
-              const peparse::VA &secBase,
-              const std::string &secName,
-              const peparse::image_section_header &s,
-              const peparse::bounded_buffer *data);
+static const MetaDataTable AllMetaDataTables[] = { Module, TypeRef, TypeDef, FieldPtr, Field, MethodPtr, Method, ParamPtr, Param, InterfaceImpl, MemberRef, Constant, CustomAttribute, FieldMarshal, DeclSecurity, ClassLayout, FieldLayout, StandAloneSig, EventMap, EventPtr, Event, PropertyMap, PropertyPtr, Property, MethodSemantics, MethodImpl, ModuleRef, TypeSpec, ImplMap, FieldRVA, ENCLog, ENCMap, Assembly, AssemblyProcessor, AssemblyOS, AssemblyRef, AssemblyRefProcessor, AssemblyRefOS, File, ExportedType, ManifestResource, NestedClass, GenericParam, MethodSpec, GenericParamConstraint };
 
 bool convertAddress(peparse::parsed_pe* pe,
                     std::uint64_t address,
@@ -114,103 +177,13 @@ private:
     vector<READYTORUN_IMPORT_SECTION> allImportSections;
     vector<RUNTIME_FUNCTION> allRuntimeFunctions;
     NativeFormat::NativeArray m_methodDefEntryPoints;
+    vector<ECMA_STREAM_HEADER> streamHeaders;
+    map<MetaDataTable, uint32_t> metaDataTableSizes;
+    vector<ModuleTableRow> moduleTable;
+    std::string stringHeap;
 
 public:
-    PEDecoder(const char* filePath) {
-        errno = 0;
-        pe = peparse::ParsePEFromFile(filePath);
-        if (!pe) {
-            // TODO: Get PE Err.
-            throw InvalidImageException("Failed to load image. Invalid DLL?");
-        }
-        vector<uint8_t> data;// TODO pre-alloc for known size.
-        if (GetDataDirectoryEntry(pe, peparse::data_directory_kind::DIR_COM_DESCRIPTOR, data)) {
-            memcpy(&corHeader, data.data(), sizeof(IMAGE_COR20_HEADER));
-        } else {
-            throw InvalidImageException("Failed to load image. Not a .NET DLL");
-        }
-        NativeFormat::NativeReader m_nativeReader = NativeFormat::NativeReader((PTR_CBYTE) pe->fileBuffer->buf, pe->peHeader.nt.OptionalHeader64.SizeOfImage);
-
-        uint64_t offsetOfManagedHeader;
-        if (convertAddress(pe, corHeader.ManagedNativeHeader.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offsetOfManagedHeader)) {
-            memcpy(&r2rHeader, pe->fileBuffer->buf + offsetOfManagedHeader, sizeof(READYTORUN_HEADER));
-            READYTORUN_SECTION sections[r2rHeader.CoreHeader.NumberOfSections];
-
-            for (size_t i = 0; i < r2rHeader.CoreHeader.NumberOfSections; i++) {
-                memcpy(&sections[i], pe->fileBuffer->buf + offsetOfManagedHeader + sizeof(READYTORUN_HEADER) + (i * sizeof(READYTORUN_SECTION)), sizeof(READYTORUN_HEADER));
-                switch (sections[i].Type) {
-                    case ReadyToRunSectionType::CompilerIdentifier: {
-                        uint64_t offsetOfCompilerIdentifier;
-                        if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offsetOfCompilerIdentifier)) {
-                            throw InvalidImageException("Failed to load image. Corrupt section table.");
-                        }
-                        strncpy(compilerIdentifier, reinterpret_cast<const char*>(pe->fileBuffer->buf + offsetOfCompilerIdentifier), sections[i].Section.Size <= COMPILER_ID_SIZE ? sections[i].Section.Size : COMPILER_ID_SIZE);
-                    } break;
-                    case ReadyToRunSectionType::ImportSections: {
-                        READYTORUN_IMPORT_SECTION importSections[sections[i].Section.Size / sizeof(READYTORUN_IMPORT_SECTION)];
-                        uint64_t offset;
-                        if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offset)) {
-                            throw InvalidImageException("Failed to load image. Corrupt section table.");
-                        }
-                        memcpy(importSections, pe->fileBuffer->buf + offset, sections[i].Section.Size);
-                        // Map import sections.
-                        for(int j = 0; j < sections[i].Section.Size / sizeof(READYTORUN_IMPORT_SECTION); j++){
-                            allImportSections.push_back(importSections[j]);
-                        }
-                    } break;
-                    case ReadyToRunSectionType::RuntimeFunctions: {
-                        RUNTIME_FUNCTION runtimeFunctions[sections[i].Section.Size / sizeof(RUNTIME_FUNCTION)];
-                        uint64_t offset;
-                        if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offset)) {
-                            throw InvalidImageException("Failed to load image. Corrupt section table.");
-                        }
-                        memcpy(runtimeFunctions, pe->fileBuffer->buf + offset, sections[i].Section.Size);
-                        // Map import sections.
-                        for(int j = 0; j < sections[i].Section.Size / sizeof(RUNTIME_FUNCTION); j++){
-                            allRuntimeFunctions.push_back(runtimeFunctions[j]);
-                        }
-                    } break;
-                    case ReadyToRunSectionType::MethodDefEntryPoints: {
-                        uint64_t offset;
-                        if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offset)) {
-                            throw InvalidImageException("Failed to load image. Corrupt section table.");
-                        }
-                        m_methodDefEntryPoints = NativeFormat::NativeArray(&m_nativeReader, offset);
-                    }
-                        break;
-                }
-            }
-        } else {
-            throw InvalidImageException("Failed to load image. Corrupt section table.");
-        }
-
-        // Run import sections to get fixups and signatures..
-
-        for (auto & section : allImportSections){
-            if (section.Signatures) {
-                uint64_t sigOffset;
-                if (!convertAddress(pe, section.Signatures, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, sigOffset)) {
-                    throw InvalidImageException("Failed to load image. Corrupt section table.");
-                }
-
-                uint64_t fixupsOffset;
-                if (!convertAddress(pe, section.Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, fixupsOffset)) {
-                    throw InvalidImageException("Failed to load image. Corrupt section table.");
-                }
-
-                PVOID *pFixups = (PVOID *)(DWORD *)(pe->fileBuffer->buf + fixupsOffset);
-                DWORD nFixups = section.Section.Size / sizeof(void*);
-                DWORD * signatures = (DWORD *)(pe->fileBuffer->buf + sigOffset);
-                for (DWORD i = 0; i < nFixups; i++)
-                {
-                    uint64_t pOffset;
-                    convertAddress(pe, signatures[i], AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, pOffset);
-                    PBYTE pSig = (PBYTE)(pe->fileBuffer->buf + pOffset);
-                    //printf("0x%02X - %d\n", pSig[0], pSig[1]);
-                }
-            }
-        }
-    }
+    PEDecoder(const char* filePath);
     ~PEDecoder() {
         peparse::DestructParsedPE(pe);
     }
@@ -225,6 +198,22 @@ public:
 
     READYTORUN_HEADER* GetReadyToRunHeader() {
         return &r2rHeader;
+    }
+
+    std::string GetString(uint64_t offset){ // TODO : Optimize
+        uint64_t i = offset;
+        std::string result;
+        while (stringHeap[i] != '\0'){
+            result.push_back(stringHeap[i]);
+            i++;
+        }
+        return result;
+    }
+
+    std::string GetModuleName(){
+        if (moduleTable.size() != 1)
+            return "";
+        return GetString(moduleTable[0].Name);
     }
 };
 

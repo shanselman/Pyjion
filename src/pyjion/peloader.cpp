@@ -25,6 +25,173 @@
 
 #include "peloader.h"
 
+PEDecoder::PEDecoder(const char* filePath) {
+    pe = peparse::ParsePEFromFile(filePath);
+    if (!pe) {
+        throw InvalidImageException(peparse::GetPEErrString().c_str());
+    }
+    vector<uint8_t> data = vector<uint8_t>(sizeof(IMAGE_COR20_HEADER));
+    if (GetDataDirectoryEntry(pe, peparse::data_directory_kind::DIR_COM_DESCRIPTOR, data)) {
+        memcpy(&corHeader, data.data(), sizeof(IMAGE_COR20_HEADER));
+    } else {
+        throw InvalidImageException("Failed to load image. Not a .NET DLL");
+    }
+    NativeFormat::NativeReader m_nativeReader = NativeFormat::NativeReader((PTR_CBYTE) pe->fileBuffer->buf, pe->peHeader.nt.OptionalHeader64.SizeOfImage);
+
+    uint64_t offsetOfManagedHeader;
+    if (convertAddress(pe, corHeader.ManagedNativeHeader.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offsetOfManagedHeader) && offsetOfManagedHeader) {
+        memcpy(&r2rHeader, pe->fileBuffer->buf + offsetOfManagedHeader, sizeof(READYTORUN_HEADER));
+        READYTORUN_SECTION sections[r2rHeader.CoreHeader.NumberOfSections];
+
+        for (size_t i = 0; i < r2rHeader.CoreHeader.NumberOfSections; i++) {
+            memcpy(&sections[i], pe->fileBuffer->buf + offsetOfManagedHeader + sizeof(READYTORUN_HEADER) + (i * sizeof(READYTORUN_SECTION)), sizeof(READYTORUN_HEADER));
+            switch (sections[i].Type) {
+                case ReadyToRunSectionType::CompilerIdentifier: {
+                    uint64_t offsetOfCompilerIdentifier;
+                    if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offsetOfCompilerIdentifier)) {
+                        throw InvalidImageException("Failed to load image. Corrupt section table.");
+                    }
+                    strncpy(compilerIdentifier, reinterpret_cast<const char*>(pe->fileBuffer->buf + offsetOfCompilerIdentifier), sections[i].Section.Size <= COMPILER_ID_SIZE ? sections[i].Section.Size : COMPILER_ID_SIZE);
+                } break;
+                case ReadyToRunSectionType::ImportSections: {
+                    READYTORUN_IMPORT_SECTION importSections[sections[i].Section.Size / sizeof(READYTORUN_IMPORT_SECTION)];
+                    uint64_t offset;
+                    if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offset)) {
+                        throw InvalidImageException("Failed to load image. Corrupt section table.");
+                    }
+                    memcpy(importSections, pe->fileBuffer->buf + offset, sections[i].Section.Size);
+                    // Map import sections.
+                    for(int j = 0; j < sections[i].Section.Size / sizeof(READYTORUN_IMPORT_SECTION); j++){
+                        allImportSections.push_back(importSections[j]);
+                    }
+                } break;
+                case ReadyToRunSectionType::RuntimeFunctions: {
+                    RUNTIME_FUNCTION runtimeFunctions[sections[i].Section.Size / sizeof(RUNTIME_FUNCTION)];
+                    uint64_t offset;
+                    if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offset)) {
+                        throw InvalidImageException("Failed to load image. Corrupt section table.");
+                    }
+                    if (!offset)
+                        break;
+                    memcpy(runtimeFunctions, pe->fileBuffer->buf + offset, sections[i].Section.Size);
+                    // Map import sections.
+                    for(int j = 0; j < sections[i].Section.Size / sizeof(RUNTIME_FUNCTION); j++){
+                        allRuntimeFunctions.push_back(runtimeFunctions[j]);
+                    }
+                } break;
+                case ReadyToRunSectionType::MethodDefEntryPoints: {
+                    uint64_t offset;
+                    if (!convertAddress(pe, sections[i].Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, offset)) {
+                        throw InvalidImageException("Failed to load image. Corrupt section table.");
+                    }
+                    if (!offset)
+                        break;
+                    m_methodDefEntryPoints = NativeFormat::NativeArray(&m_nativeReader, offset);
+                }
+                break;
+            }
+        }
+    } else {
+        throw InvalidImageException("Failed to load image. Corrupt section table.");
+    }
+
+    // Run import sections to get fixups and signatures..
+
+    for (auto & section : allImportSections){
+        if (section.Signatures) {
+            uint64_t sigOffset;
+            if (!convertAddress(pe, section.Signatures, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, sigOffset)) {
+                throw InvalidImageException("Failed to load image. Corrupt section table.");
+            }
+
+            uint64_t fixupsOffset;
+            if (!convertAddress(pe, section.Section.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, fixupsOffset)) {
+                throw InvalidImageException("Failed to load image. Corrupt section table.");
+            }
+
+            PVOID *pFixups = (PVOID *)(DWORD *)(pe->fileBuffer->buf + fixupsOffset);
+            DWORD nFixups = section.Section.Size / sizeof(void*);
+            DWORD * signatures = (DWORD *)(pe->fileBuffer->buf + sigOffset);
+            for (DWORD i = 0; i < nFixups; i++)
+            {
+                uint64_t pOffset;
+                convertAddress(pe, signatures[i], AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, pOffset);
+                PBYTE pSig = (PBYTE)(pe->fileBuffer->buf + pOffset);
+                //printf("0x%02X - %d\n", pSig[0], pSig[1]);
+            }
+        }
+    }
+    // Read metadata tables
+    uint64_t metaDataBase;
+    if (!convertAddress(pe, corHeader.MetaData.VirtualAddress, AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, metaDataBase)){
+        throw InvalidImageException("Failed to load image. Corrupt metadata table.");
+    }
+    ECMA_STORAGE_HEADER header = {};
+    auto cursor = pe->fileBuffer->buf + metaDataBase;
+    memcpy(&header, cursor, sizeof(ECMA_STORAGE_HEADER));
+    if (header.lSignature != 0x424A5342){
+        throw InvalidImageException("Failed to load image. Corrupt metadata table.");
+    }
+    cursor += sizeof(ECMA_STORAGE_HEADER);
+    std::string versionString = std::string();
+    for (int i = 0; i < header.iVersionString; i++){
+        versionString.push_back(*(cursor));
+        cursor ++;
+    }
+    ECMA_STORAGE_HEADER2 header2 = {};
+    memcpy(&header2, cursor, sizeof(ECMA_STORAGE_HEADER2));
+    cursor += sizeof(ECMA_STORAGE_HEADER2);
+    streamHeaders = vector<ECMA_STREAM_HEADER>(header2.iStreams);
+    for (int idx = 0; idx < header2.iStreams; idx ++){
+        memcpy(&streamHeaders[idx], cursor, sizeof(ECMA_STREAM_HEADER));
+        int nameLen = (int)(strlen(streamHeaders[idx].name) + 1);
+        nameLen = ALIGN4BYTE(nameLen);
+        cursor += (sizeof(ULONG) * 2) + nameLen;
+        if (strcmp(streamHeaders[idx].name, "#~") == 0){
+            // Read logical tables.
+            HOME_TABLE_HEADER htHeader = {};
+
+            memcpy(&htHeader, pe->fileBuffer->buf + metaDataBase + streamHeaders[idx].offset, sizeof(HOME_TABLE_HEADER));
+            assert(htHeader.Reserved1 == 0);
+            if (htHeader.MajorVersion != 2){
+                throw InvalidImageException("Image version meta data table not supported");
+            }
+            uint32_t tableSizes [htHeader.MaskValid.count()];
+            auto tableCursor = pe->fileBuffer->buf + metaDataBase + streamHeaders[idx].offset + sizeof(HOME_TABLE_HEADER);
+
+            memcpy(tableSizes, tableCursor, sizeof(uint32_t) * htHeader.MaskValid.count());
+            tableCursor += sizeof(uint32_t) * htHeader.MaskValid.count();
+            int pt = 0;
+            for (const auto t: AllMetaDataTables){
+                if (htHeader.MaskValid[t]) {
+                    metaDataTableSizes[t] = tableSizes[pt];
+
+                    // Load Table.
+                    switch (t){
+                        case Module:
+                            moduleTable = vector<ModuleTableRow>(metaDataTableSizes[t]);
+                            memcpy(moduleTable.data(), tableCursor, sizeof(ModuleTableRow) * metaDataTableSizes[t]);
+                            tableCursor += sizeof(ModuleTableRow) * metaDataTableSizes[t];
+                            break;
+                    }
+                    pt++;
+                } else {
+                    metaDataTableSizes[t] = 0;
+                }
+            }
+        } else if(strcmp(streamHeaders[idx].name, "#Strings") == 0){
+            auto stringHeapEnd = pe->fileBuffer->buf + metaDataBase + streamHeaders[idx].offset + streamHeaders[idx].size;
+            auto stringHeapPosition = pe->fileBuffer->buf + metaDataBase + streamHeaders[idx].offset;
+            while (stringHeapPosition <= stringHeapEnd){
+                stringHeap.push_back(*stringHeapPosition);
+                stringHeapPosition++;
+            }
+        }
+
+
+    }
+}
+
 bool convertAddress(peparse::parsed_pe * pe,
                     std::uint64_t address,
                     AddressType source_type,
@@ -245,208 +412,4 @@ bool convertAddress(peparse::parsed_pe * pe,
             return false;
         }
     }
-}
-
-
-int printExps(void *N,
-              const peparse::VA &funcAddr,
-              const std::string &mod,
-              const std::string &func) {
-    static_cast<void>(N);
-
-    auto address = static_cast<std::uint32_t>(funcAddr);
-
-    std::cout << "EXP: ";
-    std::cout << mod;
-    std::cout << "!";
-    std::cout << func;
-    std::cout << ": 0x";
-    std::cout << std::hex << address;
-    std::cout << "\n";
-    return 0;
-}
-
-int printImports(void *N,
-                 const peparse::VA &impAddr,
-                 const std::string &modName,
-                 const std::string &symName) {
-    static_cast<void>(N);
-
-    auto address = static_cast<std::uint32_t>(impAddr);
-
-    std::cout << "0x" << std::hex << address << " " << modName << "!" << symName;
-    std::cout << "\n";
-    return 0;
-}
-
-int printSymbols(void *N,
-                 const std::string &strName,
-                 const uint32_t &value,
-                 const int16_t &sectionNumber,
-                 const uint16_t &type,
-                 const uint8_t &storageClass,
-                 const uint8_t &numberOfAuxSymbols) {
-    static_cast<void>(N);
-
-    std::cout << "Symbol Name: " << strName << "\n";
-    std::cout << "Symbol Value: 0x" << std::hex << value << "\n";
-
-    std::cout << "Symbol Section Number: ";
-    switch (sectionNumber) {
-        case IMAGE_SYM_UNDEFINED:
-            std::cout << "UNDEFINED";
-            break;
-        case IMAGE_SYM_ABSOLUTE:
-            std::cout << "ABSOLUTE";
-            break;
-        case IMAGE_SYM_DEBUG:
-            std::cout << "DEBUG";
-            break;
-        default:
-            std::cout << sectionNumber;
-            break;
-    }
-    std::cout << "\n";
-
-    std::cout << "Symbol Type: ";
-    switch (type) {
-        case IMAGE_SYM_TYPE_NULL:
-            std::cout << "NULL";
-            break;
-        case IMAGE_SYM_TYPE_VOID:
-            std::cout << "VOID";
-            break;
-        case IMAGE_SYM_TYPE_CHAR:
-            std::cout << "CHAR";
-            break;
-        case IMAGE_SYM_TYPE_SHORT:
-            std::cout << "SHORT";
-            break;
-        case IMAGE_SYM_TYPE_INT:
-            std::cout << "INT";
-            break;
-        case IMAGE_SYM_TYPE_LONG:
-            std::cout << "LONG";
-            break;
-        case IMAGE_SYM_TYPE_FLOAT:
-            std::cout << "FLOAT";
-            break;
-        case IMAGE_SYM_TYPE_DOUBLE:
-            std::cout << "DOUBLE";
-            break;
-        case IMAGE_SYM_TYPE_STRUCT:
-            std::cout << "STRUCT";
-            break;
-        case IMAGE_SYM_TYPE_UNION:
-            std::cout << "UNION";
-            break;
-        case IMAGE_SYM_TYPE_ENUM:
-            std::cout << "ENUM";
-            break;
-        case IMAGE_SYM_TYPE_MOE:
-            std::cout << "IMAGE_SYM_TYPE_MOE";
-            break;
-        case peparse::IMAGE_SYM_TYPE_BYTE:
-            std::cout << "BYTE";
-            break;
-        case peparse::IMAGE_SYM_TYPE_WORD:
-            std::cout << "WORD";
-            break;
-        case IMAGE_SYM_TYPE_UINT:
-            std::cout << "UINT";
-            break;
-        case peparse::IMAGE_SYM_TYPE_DWORD:
-            std::cout << "DWORD";
-            break;
-        default:
-            std::cout << "UNKNOWN";
-            break;
-    }
-    std::cout << "\n";
-
-    std::cout << "Symbol Storage Class: ";
-    switch (storageClass) {
-        case IMAGE_SYM_CLASS_END_OF_FUNCTION:
-            std::cout << "FUNCTION";
-            break;
-        case IMAGE_SYM_CLASS_NULL:
-            std::cout << "NULL";
-            break;
-        case IMAGE_SYM_CLASS_AUTOMATIC:
-            std::cout << "AUTOMATIC";
-            break;
-        case IMAGE_SYM_CLASS_EXTERNAL:
-            std::cout << "EXTERNAL";
-            break;
-        case IMAGE_SYM_CLASS_STATIC:
-            std::cout << "STATIC";
-            break;
-        case IMAGE_SYM_CLASS_REGISTER:
-            std::cout << "REGISTER";
-            break;
-        case IMAGE_SYM_CLASS_EXTERNAL_DEF:
-            std::cout << "EXTERNAL DEF";
-            break;
-        case IMAGE_SYM_CLASS_LABEL:
-            std::cout << "LABEL";
-            break;
-        case IMAGE_SYM_CLASS_UNDEFINED_LABEL:
-            std::cout << "UNDEFINED LABEL";
-            break;
-        case IMAGE_SYM_CLASS_MEMBER_OF_STRUCT:
-            std::cout << "MEMBER OF STRUCT";
-            break;
-        default:
-            std::cout << "UNKNOWN";
-            break;
-    }
-    std::cout << "\n";
-
-    std::cout << "Symbol Number of Aux Symbols: "
-              << static_cast<std::uint32_t>(numberOfAuxSymbols) << "\n";
-
-    return 0;
-}
-
-
-int printRsrc(void *N, const peparse::resource &r) {
-    static_cast<void>(N);
-
-    if (r.type_str.length())
-        std::cout << "Type (string): " << r.type_str << "\n";
-    else
-        std::cout << "Type: 0x" << std::hex << r.type << "\n";
-
-    if (r.name_str.length())
-        std::cout << "Name (string): " << r.name_str << "\n";
-    else
-        std::cout << "Name: 0x" << std::hex << r.name << "\n";
-
-    if (r.lang_str.length())
-        std::cout << "Lang (string): " << r.lang_str << "\n";
-    else
-        std::cout << "Lang: 0x" << std::hex << r.lang << "\n";
-
-    std::cout << "Codepage: 0x" << std::hex << r.codepage << "\n";
-    std::cout << "RVA: " << std::dec << r.RVA << "\n";
-    std::cout << "Size: " << std::dec << r.size << "\n";
-    return 0;
-}
-
-int printSecs(void *N,
-              const peparse::VA &secBase,
-              const std::string &secName,
-              const peparse::image_section_header &s,
-              const peparse::bounded_buffer *data) {
-    static_cast<void>(N);
-    static_cast<void>(s);
-
-    std::cout << "Sec Name: " << secName << "\n";
-    std::cout << "Sec Base: 0x" << std::hex << secBase << "\n";
-    if (data)
-        std::cout << "Sec Size: " << std::dec << data->bufLen << "\n";
-    else
-        std::cout << "Sec Size: 0"
-                  << "\n";
-    return 0;
 }
