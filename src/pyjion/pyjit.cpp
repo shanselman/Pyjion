@@ -26,6 +26,7 @@
 #include <Python.h>
 #include "pyjit.h"
 #include "pycomp.h"
+#include "objects/assemblyobject.h"
 
 #ifdef WINDOWS
 #define BUFSIZE 65535
@@ -686,6 +687,8 @@ static struct PyModuleDef pyjionmodule = {
         -1,                                             /* size of per-interpreter state of the module,
 			  or -1 if the module keeps state in global variables. */
         PyjionMethods};
+
+
 PyObject* PyjionUnboxingError;
 PyMODINIT_FUNC PyInit__pyjion(void) {
     // Install our frame evaluation function
@@ -696,5 +699,20 @@ PyMODINIT_FUNC PyInit__pyjion(void) {
     int ret = PyModule_AddObject(mod, "PyjionUnboxingError", PyjionUnboxingError);
     if (ret != 0)
         return nullptr;
+
+    Py_INCREF(&PyjionAssembly_Type);
+    if (PyModule_AddObject(mod, "Assembly", (PyObject *) &PyjionAssembly_Type) < 0) {
+        Py_DECREF(&PyjionAssembly_Type);
+        Py_DECREF(mod);
+        return nullptr;
+    }
+
+    Py_INCREF(&PyjionAssemblyType_Type);
+    if (PyModule_AddObject(mod, "AssemblyType", (PyObject *) &PyjionAssemblyType_Type) < 0) {
+        Py_DECREF(&PyjionAssemblyType_Type);
+        Py_DECREF(mod);
+        return nullptr;
+    }
+
     return mod;
 }

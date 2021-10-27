@@ -133,9 +133,9 @@ PEDecoder::PEDecoder(const char* filePath) {
         throw InvalidImageException("Failed to load image. Corrupt metadata table.");
     }
     cursor += sizeof(ECMA_STORAGE_HEADER);
-    std::string versionString = std::string();
+    assemblyVersion = std::string();
     for (int i = 0; i < header.iVersionString; i++){
-        versionString.push_back(*(cursor));
+        assemblyVersion.push_back(*(cursor));
         cursor ++;
     }
     ECMA_STORAGE_HEADER2 header2 = {};
@@ -162,16 +162,60 @@ PEDecoder::PEDecoder(const char* filePath) {
             memcpy(tableSizes, tableCursor, sizeof(uint32_t) * htHeader.MaskValid.count());
             tableCursor += sizeof(uint32_t) * htHeader.MaskValid.count();
             int pt = 0;
+
+            assert(sizeof(ModuleTableRow) == 10);
+            assert(sizeof(TypeRefRow) == 6);
+            assert(sizeof(TypeDefRow) == 14);
+            assert(sizeof(FieldRow) == 6);
+
             for (const auto t: AllMetaDataTables){
                 if (htHeader.MaskValid[t]) {
                     metaDataTableSizes[t] = tableSizes[pt];
-
                     // Load Table.
                     switch (t){
-                        case Module:
+                        case MetaDataTable_Module:
                             moduleTable = vector<ModuleTableRow>(metaDataTableSizes[t]);
                             memcpy(moduleTable.data(), tableCursor, sizeof(ModuleTableRow) * metaDataTableSizes[t]);
                             tableCursor += sizeof(ModuleTableRow) * metaDataTableSizes[t];
+                            break;
+                        case MetaDataTable_TypeRef:
+                            typeRefTable = vector<TypeRefRow>(metaDataTableSizes[t]);
+                            memcpy(typeRefTable.data(), tableCursor, sizeof(TypeRefRow) * metaDataTableSizes[t]);
+                            tableCursor += sizeof(TypeRefRow) * metaDataTableSizes[t];
+                            break;
+                        case MetaDataTable_TypeDef:
+                            typeDefTable = vector<TypeDefRow>(metaDataTableSizes[t]);
+                            memcpy(typeDefTable.data(), tableCursor, sizeof(TypeDefRow) * metaDataTableSizes[t]);
+                            tableCursor += sizeof(TypeDefRow) * metaDataTableSizes[t];
+                            break;
+                        case MetaDataTable_FieldPtr:
+                            // Not implemented
+                            break;
+                        case MetaDataTable_Field:
+                            fieldTable = vector<FieldRow>(metaDataTableSizes[t]);
+                            memcpy(fieldTable.data(), tableCursor, sizeof(FieldRow) * metaDataTableSizes[t]);
+                            tableCursor += sizeof(FieldRow) * metaDataTableSizes[t];
+                            break;
+                        case MetaDataTable_MethodPtr:
+                            // Not implemented
+                            break;
+                        case MetaDataTable_Method:
+                            methodTable = vector<MethodRow>(metaDataTableSizes[t]);
+                            memcpy(methodTable.data(), tableCursor, sizeof(MethodRow) * metaDataTableSizes[t]);
+                            tableCursor += sizeof(MethodRow) * metaDataTableSizes[t];
+                            break;
+                        case MetaDataTable_ParamPtr:
+                            // Not implemented
+                            break;
+                        case MetaDataTable_Param:
+                            paramTable = vector<ParamRow>(metaDataTableSizes[t]);
+                            memcpy(paramTable.data(), tableCursor, sizeof(ParamRow) * metaDataTableSizes[t]);
+                            tableCursor += sizeof(ParamRow) * metaDataTableSizes[t];
+                            break;
+                        case MetaDataTable_InterfaceImpl:
+                            interfaceImplTable = vector<InterfaceImplRow>(metaDataTableSizes[t]);
+                            memcpy(interfaceImplTable.data(), tableCursor, sizeof(InterfaceImplRow) * metaDataTableSizes[t]);
+                            tableCursor += sizeof(InterfaceImplRow) * metaDataTableSizes[t];
                             break;
                     }
                     pt++;
@@ -187,8 +231,6 @@ PEDecoder::PEDecoder(const char* filePath) {
                 stringHeapPosition++;
             }
         }
-
-
     }
 }
 

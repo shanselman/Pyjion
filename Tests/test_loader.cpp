@@ -31,6 +31,29 @@ TEST_CASE("Test basic loader") {
         PEDecoder decoder = PEDecoder("/usr/local/share/dotnet/shared/Microsoft.NETCore.App/6.0.0-rc.2.21480.5/System.Console.dll");
         CHECK(decoder.GetCorHeader()->Flags & COMIMAGE_FLAGS_IL_LIBRARY);
         CHECK(decoder.GetReadyToRunHeader()->MajorVersion == 5);
-        printf("Assembly Module is %s", decoder.GetModuleName().c_str());
+        CHECK(decoder.GetModuleName() == "System.Console.dll");
+        auto typeRefs = decoder.GetTypeRefs();
+        CHECK(typeRefs.size() == 125);
+        CHECK(typeRefs[124].Name == 6055);
+        auto typeDefs = decoder.GetTypeDefs();
+        CHECK(typeDefs.size() == 53);
+        CHECK(typeDefs[0].Flags == 0);
+        CHECK(typeDefs[0].Name == 0x0577);
+        CHECK(typeDefs[0].Namespace == 0);
+        CHECK(typeDefs[0].Extends == 0);
+        CHECK(typeDefs[0].FieldList == 1);
+        CHECK(typeDefs[0].MethodList == 1);
+
+        CHECK(typeDefs[1].Flags == 0x00100100);
+        CHECK(typeDefs[1].Name == 0x1523);
+        CHECK(typeDefs[1].Namespace == 0x2e74);
+        CHECK(typeDefs[1].Extends == 5);
+        CHECK(typeDefs[1].FieldList == 1);
+        CHECK(typeDefs[1].MethodList == 1);
+        // ...
+        CHECK(typeDefs[40].Name == 2380);
+
+        auto publicTypeDefs = decoder.GetPublicClasses();
+        CHECK(publicTypeDefs.size() == 8);
     }
 }

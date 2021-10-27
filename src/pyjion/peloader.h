@@ -23,7 +23,9 @@
 *
 */
 
+#define _PEPARSE_WINDOWS_CONFLICTS
 #include <pe-parse/parse.h>
+#undef _PEPARSE_WINDOWS_CONFLICTS
 
 #include <windows.h>
 #include <corhdr.h>
@@ -90,53 +92,54 @@ struct HOME_TABLE_HEADER { // Header for #~
 
 enum MetaDataTable
 {
-    Module = 0x00,
-    TypeRef = 0x01,
-    TypeDef = 0x02,
-    FieldPtr = 0x03,
-    Field = 0x04,
-    MethodPtr = 0x05,
-    Method = 0x06,
-    ParamPtr = 0x07,
-    Param = 0x08,
-    InterfaceImpl = 0x09,
-    MemberRef = 0x0A,
-    Constant = 0x0B,
-    CustomAttribute = 0x0C,
-    FieldMarshal = 0x0D,
-    DeclSecurity = 0x0E,
-    ClassLayout = 0x0F,
-    FieldLayout = 0x10,
-    StandAloneSig = 0x11,
-    EventMap = 0x12,
-    EventPtr = 0x13,
-    Event = 0x14,
-    PropertyMap = 0x15,
-    PropertyPtr = 0x16,
-    Property = 0x17,
-    MethodSemantics = 0x18,
-    MethodImpl = 0x19,
-    ModuleRef = 0x1A,
-    TypeSpec= 0x1B,
-    ImplMap= 0x1C,
-    FieldRVA= 0x1D,
-    ENCLog= 0x1E,
-    ENCMap= 0x1F,
-    Assembly= 0x20,
-    AssemblyProcessor= 0x21,
-    AssemblyOS= 0x22,
-    AssemblyRef= 0x23,
-    AssemblyRefProcessor= 0x24,
-    AssemblyRefOS= 0x25,
-    File= 0x26,
-    ExportedType= 0x27,
-    ManifestResource= 0x28,
-    NestedClass= 0x29,
-    GenericParam= 0x2A,
-    MethodSpec= 0x2B,
-    GenericParamConstraint= 0x2C,
+    MetaDataTable_Module = 0x00,
+    MetaDataTable_TypeRef = 0x01,
+    MetaDataTable_TypeDef = 0x02,
+    MetaDataTable_FieldPtr = 0x03,
+    MetaDataTable_Field = 0x04,
+    MetaDataTable_MethodPtr = 0x05,
+    MetaDataTable_Method = 0x06,
+    MetaDataTable_ParamPtr = 0x07,
+    MetaDataTable_Param = 0x08,
+    MetaDataTable_InterfaceImpl = 0x09,
+    MetaDataTable_MemberRef = 0x0A,
+    MetaDataTable_Constant = 0x0B,
+    MetaDataTable_CustomAttribute = 0x0C,
+    MetaDataTable_FieldMarshal = 0x0D,
+    MetaDataTable_DeclSecurity = 0x0E,
+    MetaDataTable_ClassLayout = 0x0F,
+    MetaDataTable_FieldLayout = 0x10,
+    MetaDataTable_StandAloneSig = 0x11,
+    MetaDataTable_EventMap = 0x12,
+    MetaDataTable_EventPtr = 0x13,
+    MetaDataTable_Event = 0x14,
+    MetaDataTable_PropertyMap = 0x15,
+    MetaDataTable_PropertyPtr = 0x16,
+    MetaDataTable_Property = 0x17,
+    MetaDataTable_MethodSemantics = 0x18,
+    MetaDataTable_MethodImpl = 0x19,
+    MetaDataTable_ModuleRef = 0x1A,
+    MetaDataTable_TypeSpec= 0x1B,
+    MetaDataTable_ImplMap= 0x1C,
+    MetaDataTable_FieldRVA= 0x1D,
+    MetaDataTable_ENCLog= 0x1E,
+    MetaDataTable_ENCMap= 0x1F,
+    MetaDataTable_Assembly= 0x20,
+    MetaDataTable_AssemblyProcessor= 0x21,
+    MetaDataTable_AssemblyOS= 0x22,
+    MetaDataTable_AssemblyRef= 0x23,
+    MetaDataTable_AssemblyRefProcessor= 0x24,
+    MetaDataTable_AssemblyRefOS= 0x25,
+    MetaDataTable_File= 0x26,
+    MetaDataTable_ExportedType= 0x27,
+    MetaDataTable_ManifestResource= 0x28,
+    MetaDataTable_NestedClass= 0x29,
+    MetaDataTable_GenericParam= 0x2A,
+    MetaDataTable_MethodSpec= 0x2B,
+    MetaDataTable_GenericParamConstraint= 0x2C,
 };
 
+#pragma pack(2)
 struct ModuleTableRow {
     uint16_t Generation;
     uint16_t Name;
@@ -145,7 +148,100 @@ struct ModuleTableRow {
     uint16_t EncBaseId;
 };
 
-static const MetaDataTable AllMetaDataTables[] = { Module, TypeRef, TypeDef, FieldPtr, Field, MethodPtr, Method, ParamPtr, Param, InterfaceImpl, MemberRef, Constant, CustomAttribute, FieldMarshal, DeclSecurity, ClassLayout, FieldLayout, StandAloneSig, EventMap, EventPtr, Event, PropertyMap, PropertyPtr, Property, MethodSemantics, MethodImpl, ModuleRef, TypeSpec, ImplMap, FieldRVA, ENCLog, ENCMap, Assembly, AssemblyProcessor, AssemblyOS, AssemblyRef, AssemblyRefProcessor, AssemblyRefOS, File, ExportedType, ManifestResource, NestedClass, GenericParam, MethodSpec, GenericParamConstraint };
+#pragma pack(2)
+struct TypeRefRow {
+    uint16_t ResolutionScope;
+    uint16_t Name;
+    uint16_t Namespace;
+};
+
+#pragma pack(2)
+struct TypeDefRow {
+    uint32_t Flags;
+    uint16_t Name;
+    uint16_t Namespace;
+    uint16_t Extends;
+    uint16_t FieldList;
+    uint16_t MethodList;
+};
+
+#pragma pack(2)
+struct FieldRow {
+    uint16_t Flags;
+    uint16_t Name;
+    uint16_t Signature;
+};
+
+#pragma pack(2)
+struct MethodRow {
+    uint32_t RVA;
+    uint16_t ImplFlags;
+    uint16_t Flags;
+    uint16_t Name;
+    uint16_t Signature;
+    uint16_t ParamList;
+};
+
+#pragma pack(2)
+struct ParamRow {
+    uint16_t Flags;
+    uint16_t Sequence;
+    uint16_t Name;
+};
+
+#pragma pack(2)
+struct InterfaceImplRow {
+    uint16_t Class;
+    uint16_t Interface;
+};
+
+static const MetaDataTable AllMetaDataTables[] = {
+        MetaDataTable_Module,
+        MetaDataTable_TypeRef,
+        MetaDataTable_TypeDef,
+        MetaDataTable_FieldPtr,
+        MetaDataTable_Field,
+        MetaDataTable_MethodPtr,
+        MetaDataTable_Method,
+        MetaDataTable_ParamPtr,
+        MetaDataTable_Param,
+        MetaDataTable_InterfaceImpl,
+        MetaDataTable_MemberRef,
+        MetaDataTable_Constant,
+        MetaDataTable_CustomAttribute,
+        MetaDataTable_FieldMarshal,
+        MetaDataTable_DeclSecurity,
+        MetaDataTable_ClassLayout,
+        MetaDataTable_FieldLayout,
+        MetaDataTable_StandAloneSig,
+        MetaDataTable_EventMap,
+        MetaDataTable_EventPtr,
+        MetaDataTable_Event,
+        MetaDataTable_PropertyMap,
+        MetaDataTable_PropertyPtr,
+        MetaDataTable_Property,
+        MetaDataTable_MethodSemantics,
+        MetaDataTable_MethodImpl,
+        MetaDataTable_ModuleRef,
+        MetaDataTable_TypeSpec,
+        MetaDataTable_ImplMap,
+        MetaDataTable_FieldRVA,
+        MetaDataTable_ENCLog,
+        MetaDataTable_ENCMap,
+        MetaDataTable_Assembly,
+        MetaDataTable_AssemblyProcessor,
+        MetaDataTable_AssemblyOS,
+        MetaDataTable_AssemblyRef,
+        MetaDataTable_AssemblyRefProcessor,
+        MetaDataTable_AssemblyRefOS,
+        MetaDataTable_File,
+        MetaDataTable_ExportedType,
+        MetaDataTable_ManifestResource,
+        MetaDataTable_NestedClass,
+        MetaDataTable_GenericParam,
+        MetaDataTable_MethodSpec,
+        MetaDataTable_GenericParamConstraint };
+
 
 bool convertAddress(peparse::parsed_pe* pe,
                     std::uint64_t address,
@@ -179,8 +275,19 @@ private:
     NativeFormat::NativeArray m_methodDefEntryPoints;
     vector<ECMA_STREAM_HEADER> streamHeaders;
     map<MetaDataTable, uint32_t> metaDataTableSizes;
+    // Metadata tables;
     vector<ModuleTableRow> moduleTable;
+    vector<TypeDefRow> typeDefTable;
+    vector<TypeRefRow> typeRefTable;
+//    vector<FieldPtrRow> fieldPtrTable;
+    vector<FieldRow> fieldTable;
+//    vector<MethodPtrRow> methodPtrTable;
+    vector<MethodRow> methodTable;
+    vector<ParamRow> paramTable;
+    vector<InterfaceImplRow> interfaceImplTable;
+
     std::string stringHeap;
+    std::string assemblyVersion;
 
 public:
     PEDecoder(const char* filePath);
@@ -214,6 +321,33 @@ public:
         if (moduleTable.size() != 1)
             return "";
         return GetString(moduleTable[0].Name);
+    }
+
+    const char* GetCompilerID(){
+        return compilerIdentifier;
+    }
+
+    const char* GetVersion(){
+        return assemblyVersion.c_str();
+    }
+
+    vector<TypeRefRow> GetTypeRefs(){
+        return typeRefTable;
+    }
+
+    vector<TypeDefRow> GetTypeDefs(){
+        return typeDefTable;
+    }
+
+    vector<TypeDefRow> GetPublicClasses(){
+        vector<TypeDefRow> results;
+        results.reserve(typeDefTable.size());
+        for (const auto &def : typeDefTable){
+            if (IsTdClass(def.Flags) && IsTdPublic(def.Flags))
+                results.push_back(def);
+        }
+        results.shrink_to_fit();
+        return results;
     }
 };
 

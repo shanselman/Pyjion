@@ -75,7 +75,7 @@ lib_path = _which_dotnet()
 
 try:
     from ._pyjion import enable, disable, info as _info, il, native, offsets, \
-        graph, init as _init, symbols, config, PyjionUnboxingError
+        graph, init as _init, symbols, config, PyjionUnboxingError, Assembly
 
     _init(lib_path)
 except ImportError:
