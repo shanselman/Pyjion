@@ -117,7 +117,6 @@ PEDecoder::PEDecoder(const char* filePath) {
                 uint64_t pOffset;
                 convertAddress(pe, signatures[i], AddressType::RelativeVirtualAddress, AddressType::PhysicalOffset, pOffset);
                 PBYTE pSig = (PBYTE)(pe->fileBuffer->buf + pOffset);
-                //printf("0x%02X - %d\n", pSig[0], pSig[1]);
             }
         }
     }

@@ -55,5 +55,9 @@ TEST_CASE("Test basic loader") {
 
         auto publicTypeDefs = decoder.GetPublicClasses();
         CHECK(publicTypeDefs.size() == 8);
+        CHECK(decoder.GetString(publicTypeDefs[0].Name) == "Console");
+        auto methods = decoder.GetClassMethods(publicTypeDefs[0]);
+        CHECK(methods.size() == 59);
+        CHECK(decoder.GetString(methods[0].Name) == "ReadKey");
     }
 }

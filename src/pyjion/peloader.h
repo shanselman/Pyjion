@@ -148,7 +148,6 @@ struct ModuleTableRow {
     uint16_t EncBaseId;
 };
 
-#pragma pack(2)
 struct TypeRefRow {
     uint16_t ResolutionScope;
     uint16_t Name;
@@ -165,14 +164,13 @@ struct TypeDefRow {
     uint16_t MethodList;
 };
 
-#pragma pack(2)
+
 struct FieldRow {
     uint16_t Flags;
     uint16_t Name;
     uint16_t Signature;
 };
 
-#pragma pack(2)
 struct MethodRow {
     uint32_t RVA;
     uint16_t ImplFlags;
@@ -182,14 +180,12 @@ struct MethodRow {
     uint16_t ParamList;
 };
 
-#pragma pack(2)
 struct ParamRow {
     uint16_t Flags;
     uint16_t Sequence;
     uint16_t Name;
 };
 
-#pragma pack(2)
 struct InterfaceImplRow {
     uint16_t Class;
     uint16_t Interface;
@@ -346,6 +342,36 @@ public:
             if (IsTdClass(def.Flags) && IsTdPublic(def.Flags))
                 results.push_back(def);
         }
+        results.shrink_to_fit();
+        return results;
+    }
+
+    vector<MethodRow> GetClassMethods(TypeDefRow cls, bool publicOnly = true, bool specialMethods = false) {
+        vector<MethodRow> results;
+        results.reserve(methodTable.size());
+        ssize_t pos = -1;
+        for (int i = 0 ; i < typeDefTable.size(); i++){
+            if (typeDefTable[i].Name == cls.Name && typeDefTable[i].Namespace == cls.Namespace) {
+                pos = i;
+                continue;
+            }
+        }
+        if (pos < 0){
+            return {};
+        }
+
+        size_t index = cls.MethodList - 1;
+        size_t lastIndex = -1;
+        if (pos == typeDefTable.size() - 1){ // If its the last row, don't try and get the next one
+            lastIndex = methodTable.size() - 1;
+        } else {
+            lastIndex = typeDefTable[pos + 1].MethodList - 1;
+        }
+        for (; index < lastIndex; index ++){
+            if ((!publicOnly || IsMdPublic(methodTable[index].Flags)) && !IsMdAbstract(methodTable[index].Flags) && (specialMethods || !IsMdSpecialName(methodTable[index].Flags)))
+                results.push_back(methodTable[index]);
+        }
+
         results.shrink_to_fit();
         return results;
     }
