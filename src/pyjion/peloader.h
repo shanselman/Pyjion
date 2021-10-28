@@ -306,7 +306,7 @@ public:
         return &r2rHeader;
     }
 
-    std::string GetString(uint64_t offset){ // TODO : Optimize
+    const std::string GetString(uint64_t offset){ // TODO : Optimize
         uint64_t i = offset;
         std::string result;
         while (stringHeap[i] != '\0'){
@@ -395,7 +395,7 @@ public:
         }
 
         size_t index = cls.MethodList - 1;
-        size_t lastIndex = -1;
+        size_t lastIndex;
         if (pos == typeDefTable.size() - 1){ // If its the last row, don't try and get the next one
             lastIndex = methodTable.size() - 1;
         } else {
@@ -404,6 +404,36 @@ public:
         for (; index < lastIndex; index ++){
             if ((!publicOnly || IsMdPublic(methodTable[index].Flags)) && !IsMdAbstract(methodTable[index].Flags) && (specialMethods || !IsMdSpecialName(methodTable[index].Flags)))
                 results.push_back(methodTable[index]);
+        }
+
+        results.shrink_to_fit();
+        return results;
+    }
+
+    vector<FieldRow> GetClassFields(TypeDefRow cls, bool publicOnly = true, bool specialFields = false) {
+        vector<FieldRow> results;
+        results.reserve(fieldTable.size());
+        ssize_t pos = -1;
+        for (int i = 0 ; i < typeDefTable.size(); i++){
+            if (typeDefTable[i].Name == cls.Name && typeDefTable[i].Namespace == cls.Namespace) {
+                pos = i;
+                continue;
+            }
+        }
+        if (pos < 0){
+            return {};
+        }
+
+        size_t index = cls.FieldList - 1;
+        size_t lastIndex;
+        if (pos == typeDefTable.size() - 1){ // If its the last row, don't try and get the next one
+            lastIndex = fieldTable.size() - 1;
+        } else {
+            lastIndex = typeDefTable[pos + 1].FieldList - 1;
+        }
+        for (; index < lastIndex; index ++){
+            if ((!publicOnly || IsFdPublic(fieldTable[index].Flags)) && (specialFields || !IsFdSpecialName(fieldTable[index].Flags)))
+                results.push_back(fieldTable[index]);
         }
 
         results.shrink_to_fit();

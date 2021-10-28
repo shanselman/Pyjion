@@ -21,6 +21,11 @@ PyJitAssembly_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
             Py_DECREF(self);
             return NULL;
         }
+        self->asDict = PyDict_New();
+        if (self->asDict == NULL) {
+            Py_DECREF(self);
+            return NULL;
+        }
     }
     return (PyObject *) self;
 }
@@ -44,6 +49,17 @@ int PyJitAssembly_init(PyjionAssemblyObject *self, PyObject *args, PyObject *kwa
             self->version = version;
             Py_XDECREF(oldVersion);
             Py_XDECREF(oldModuleName);
+
+            auto publicTypeDefs = self->decoder->GetPublicClasses();
+            for (const auto&def: publicTypeDefs){
+                auto t = PyJitAssemblyType_new(self->decoder, def);
+                if (t == nullptr){
+                    return -1;
+                }
+                Py_XINCREF(t); // This now belongs to this assembly. Keep a reference.
+                PyDict_SetItemString(self->asDict, self->decoder->GetString(def.Name).c_str(), t);
+            }
+
         } catch (InvalidImageException &e){
             PyErr_SetString(PyExc_ValueError, e.what());
             return -1;
@@ -64,24 +80,82 @@ PyJitAssembly_repr(PyjionAssemblyObject *self)
     return PyUnicode_FromFormat("<Assembly module='%U' compilerId='%s' version='%U'>", self->module_name, self->decoder->GetCompilerID(), self->version);
 }
 
-PyObject * PyJitAssemblyType_new(PEDecoder* decoder, TypeDefRow typeDef){
-    PyjionAssemblyTypeObject* obj = PyObject_New(PyjionAssemblyTypeObject, &PyjionAssemblyType_Type);
-    obj->name = PyUnicode_FromString(decoder->GetString(typeDef.Name).c_str());
-    obj->namespace_ = PyUnicode_FromString(decoder->GetString(typeDef.Namespace).c_str());
-    return reinterpret_cast<PyObject*>(obj);
+static PyObject*
+generic_meth(PyObject* self, PyObject* args) {
+    return Py_None;
 }
 
-PyObject *
-PyJitAssembly_getattro(PyjionAssemblyObject* self, PyObject* name){
-    auto publicTypeDefs = self->decoder->GetPublicClasses();
-    for (const auto&def: publicTypeDefs){
-        if (PyUnicode_CompareWithASCIIString(name, self->decoder->GetString(def.Name).c_str()) == 0){
-            auto t = PyJitAssemblyType_new(self->decoder, def);
-            Py_INCREF(t); // This now belongs to this assembly. Keep a reference.
-            return t;
-        }
+static PyObject *
+generic_repr(PyObject *self)
+{
+    return PyUnicode_FromFormat("<%s >", self->ob_type->tp_name);
+}
+
+PyObject * PyJitAssemblyType_new(PEDecoder* decoder, TypeDefRow typeDef){
+    auto publicMethods = decoder->GetClassMethods(typeDef);
+    auto publicFields = decoder->GetClassFields(typeDef);
+
+    PyMemberDef *members;
+    PyMethodDef *methods;
+    PyTypeObject *type;
+    PyType_Slot slots[4];
+    PyType_Spec spec;
+
+    /* Initialize MemberDefs */
+    members = PyMem_NEW(PyMemberDef, publicFields.size() + 1);
+    if (members == NULL) {
+        PyErr_NoMemory();
+        return NULL;
     }
-    return PyObject_GenericGetAttr(reinterpret_cast<PyObject*>(self), name);
+    for (size_t i = 0 ; i < publicFields.size(); i++) {
+        members[i].name = decoder->GetString(publicFields[i].Name).c_str();
+        members[i].offset = 0;
+        members[i].doc = "Reflected type specification";
+        members[i].flags = 0;
+        members[i].type = T_OBJECT;
+    }
+    members[publicFields.size()] = {nullptr};
+
+    methods = PyMem_NEW(PyMethodDef, publicMethods.size() + 1);
+    if (methods == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+    for (size_t i = 0 ; i < publicMethods.size(); i++) {
+        methods[i].ml_name = decoder->GetString(publicMethods[i].Name).c_str();
+        if (IsMdStatic(publicMethods[i].Flags))
+            methods[i].ml_flags = METH_VARARGS | METH_KEYWORDS | METH_STATIC;
+        else
+            methods[i].ml_flags = METH_VARARGS | METH_KEYWORDS;
+        methods[i].ml_doc = "Reflected type specification";
+        methods[i].ml_meth = generic_meth;
+    }
+    methods[publicMethods.size()] = {nullptr};
+
+    /* Initialize Slots */
+    slots[0] = (PyType_Slot){Py_tp_members, members};
+    slots[1] = (PyType_Slot){Py_tp_methods, methods};
+    slots[2] = (PyType_Slot){Py_tp_repr, (void*)generic_repr};
+    slots[3] = (PyType_Slot){0, 0};
+
+    /* Initialize Spec */
+    /* The name in this PyType_Spec is statically allocated so it is */
+    /* expected that it'll outlive the PyType_Spec */
+    spec.name = std::string("pyjion.").append(decoder->GetString(typeDef.Namespace)).append(".").append(decoder->GetString(typeDef.Name)).c_str();
+    printf("Creating spec for %s\n", spec.name);
+    spec.basicsize = sizeof(PyObject *);
+    spec.itemsize = 0;
+    spec.flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC;
+    spec.slots = slots;
+
+    type = (PyTypeObject *)PyType_FromSpecWithBases(&spec, (PyObject *)&PyTuple_Type);
+    PyMem_Free(members);
+    if (type == NULL) {
+        PyErr_Print();
+        return NULL;
+    }
+    Py_INCREF(type);
+    return PyObject_New(PyObject, type);
 }
 
 PyTypeObject PyjionAssembly_Type = {
@@ -101,7 +175,7 @@ PyTypeObject PyjionAssembly_Type = {
         0,                                    /* tp_hash */
         0,                                    /* tp_call */
         0,                                    /* tp_str */
-        reinterpret_cast<getattrofunc>(PyJitAssembly_getattro),              /* tp_getattro */
+        PyObject_GenericGetAttr,              /* tp_getattro */
         0,                                    /* tp_setattro */
         0,                                    /* tp_as_buffer */
         Py_TPFLAGS_DEFAULT,                   /* tp_flags */
@@ -119,7 +193,7 @@ PyTypeObject PyjionAssembly_Type = {
         0,                                          /* tp_dict */
         0,                                          /* tp_descr_get */
         0,                                          /* tp_descr_set */
-        0,      /* tp_dictoffset */
+        offsetof(PyjionAssemblyObject, asDict),      /* tp_dictoffset */
         (initproc) PyJitAssembly_init,                   /* tp_init */
         PyType_GenericAlloc,                        /* tp_alloc */
         PyJitAssembly_new,                          /* tp_new */

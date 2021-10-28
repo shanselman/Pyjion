@@ -44,7 +44,7 @@ PEDecoder::PEDecoder(const char* filePath) {
         READYTORUN_SECTION sections[r2rHeader.CoreHeader.NumberOfSections];
 
         for (size_t i = 0; i < r2rHeader.CoreHeader.NumberOfSections; i++) {
-            memcpy(&sections[i], pe->fileBuffer->buf + offsetOfManagedHeader + sizeof(READYTORUN_HEADER) + (i * sizeof(READYTORUN_SECTION)), sizeof(READYTORUN_HEADER));
+            memcpy(&sections[i], pe->fileBuffer->buf + offsetOfManagedHeader + sizeof(READYTORUN_HEADER) + (i * sizeof(READYTORUN_SECTION)), sizeof(READYTORUN_SECTION));
             switch (sections[i].Type) {
                 case ReadyToRunSectionType::CompilerIdentifier: {
                     uint64_t offsetOfCompilerIdentifier;

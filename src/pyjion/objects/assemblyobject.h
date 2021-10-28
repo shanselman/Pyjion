@@ -22,6 +22,7 @@ typedef struct {
             /* Type-specific fields go here. */
             PyObject* module_name;
     PyObject* version;
+    PyObject* asDict; // Public types dictionary.
     PEDecoder* decoder;
 } PyjionAssemblyObject;
 
@@ -30,8 +31,6 @@ PyObject * PyJitAssembly_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 int PyJitAssembly_init(PyjionAssemblyObject *self, PyObject *args, PyObject *kwargs);
 void PyJitAssembly_dealloc(PyjionAssemblyObject * self);
 PyObject * PyJitAssembly_repr(PyjionAssemblyObject *self);
-PyObject * PyJitAssembly_getattro(PyjionAssemblyObject* self, PyObject* name);
-
 PyObject * PyJitAssemblyType_new(PEDecoder* decoder, TypeDefRow typeDef);
 
 static PyMemberDef PyJitAssembly_members[] = {
