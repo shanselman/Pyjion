@@ -59,5 +59,8 @@ TEST_CASE("Test basic loader") {
         auto methods = decoder.GetClassMethods(publicTypeDefs[0]);
         CHECK(methods.size() == 59);
         CHECK(decoder.GetString(methods[0].Name) == "ReadKey");
+
+        auto signature = decoder.GetBlob(methods[0].Signature);
+        CHECK(signature.size() == 4);
     }
 }

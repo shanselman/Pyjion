@@ -229,6 +229,15 @@ PEDecoder::PEDecoder(const char* filePath) {
                 stringHeap.push_back(*stringHeapPosition);
                 stringHeapPosition++;
             }
+        } else if(strcmp(streamHeaders[idx].name, "#Blob") == 0){
+            blobHeap.resize(streamHeaders[idx].size);
+            memcpy(blobHeap.data(), pe->fileBuffer->buf + metaDataBase + streamHeaders[idx].offset, streamHeaders[idx].size);
+        } else if(strcmp(streamHeaders[idx].name, "#GUID") == 0){
+            guidHeap.resize(streamHeaders[idx].size);
+            memcpy(guidHeap.data(), pe->fileBuffer->buf + metaDataBase + streamHeaders[idx].offset, streamHeaders[idx].size);
+        } else if(strcmp(streamHeaders[idx].name, "#US") == 0){
+            usHeap.resize(streamHeaders[idx].size);
+            memcpy(usHeap.data(), pe->fileBuffer->buf + metaDataBase + streamHeaders[idx].offset, streamHeaders[idx].size);
         }
     }
 }

@@ -283,6 +283,9 @@ private:
     vector<InterfaceImplRow> interfaceImplTable;
 
     std::string stringHeap;
+    vector<uint8_t> blobHeap;
+    vector<uint8_t> guidHeap;
+    vector<uint8_t> usHeap;
     std::string assemblyVersion;
 
 public:
@@ -309,6 +312,37 @@ public:
         while (stringHeap[i] != '\0'){
             result.push_back(stringHeap[i]);
             i++;
+        }
+        return result;
+    }
+
+    vector<uint8_t> GetBlob(uint64_t offset) {
+        uint32_t size = 0;
+        uint32_t start = 0;
+
+        #define HI(x) (((x) >> 4) & 0x0F)
+        #define LO(x) ((x) & 0x0F)
+
+        if (blobHeap[offset] < 0x10){
+            // If the first one byte of the 'blob' is 0bs, then the rest of the 'blob' contains the (bs) bytes of actual data.
+            start = offset + 1;
+            size = LO(blobHeap[offset]);
+        } else if (blobHeap[offset] == 0x10){
+            // If the first two bytes of the 'blob' are 10bs and x, then the rest of the 'blob' contains the  (bs << 8 + x) bytes of actual data.
+            start = offset + 2;
+            size = HI(blobHeap[offset + 1]) << 8 + LO(blobHeap[offset + 1]);
+        } else if (blobHeap[offset] == 0x11){
+            // If the first four bytes of the 'blob' are 110bs, x, y, and z, then the rest of the 'blob' contains the (bs << 24 + x << 16 + y << 8 + z) bytes of actual data.
+            start = offset + 4;
+            size = LO(blobHeap[offset + 1]) << 24 + HI(blobHeap[offset + 2]) << 16 + LO(blobHeap[offset + 2]) << 8 + HI(blobHeap[offset + 3]);
+        } else {
+            // invalid data packet
+            return {};
+        }
+        vector<uint8_t> result;
+        result.reserve(size);
+        for (uint32_t i = 0; i < size; i++){
+            result.push_back(blobHeap[start + i]);
         }
         return result;
     }
