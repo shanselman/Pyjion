@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.Build.Traversal">
+
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="src/Pyjionlib/*.csproj" />
+  </ItemGroup>
+
+</Project>
