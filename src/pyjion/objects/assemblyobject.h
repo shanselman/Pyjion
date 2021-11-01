@@ -15,6 +15,7 @@ typedef struct {
             /* Type-specific fields go here. */
             PyObject* name;
             PyObject* namespace_;
+            uint16_t flags; // .NET Metadata flags for TypeDef
 } PyjionAssemblyTypeObject;
 
 typedef struct {

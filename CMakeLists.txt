@@ -153,7 +153,7 @@ else()
     message(STATUS "Enabling x86")
 endif()
 
-include_directories(CoreCLR/src/coreclr/inc CoreCLR/src/coreclr/jit CoreCLR/src/coreclr/vm pe-parse/pe-parser-library/include)
+include_directories(CoreCLR/src/coreclr/inc CoreCLR/src/coreclr/jit CoreCLR/src/coreclr/vm CoreCLR/src/native/corehost CoreCLR/src/native/corehost/nethost pe-parse/pe-parser-library/include)
 
 if (UNIX)
     if(DEFINED ENV{DOTNET_ROOT})
@@ -226,7 +226,7 @@ if(NET_SRC_LIB)  # use the libraries compiled from source
     message(STATUS "Using .NET builds " ${DOTNETPATH})
 endif()
 
-set(SOURCES src/pyjion/absint.cpp src/pyjion/absvalue.cpp src/pyjion/intrins.cpp src/pyjion/jitinit.cpp src/pyjion/pycomp.cpp src/pyjion/pyjit.cpp src/pyjion/exceptionhandling.cpp src/pyjion/stack.cpp src/pyjion/codemodel.cpp src/pyjion/binarycomp.cpp src/pyjion/instructions.cpp src/pyjion/unboxing.cpp src/pyjion/frame.h src/pyjion/pgc.cpp src/pyjion/base.cpp src/pyjion/objects/unboxedrangeobject.cpp src/pyjion/peloader.cpp src/pyjion/objects/assemblyobject.cpp)
+set(SOURCES src/pyjion/absint.cpp src/pyjion/absvalue.cpp src/pyjion/intrins.cpp src/pyjion/jitinit.cpp src/pyjion/pycomp.cpp src/pyjion/pyjit.cpp src/pyjion/exceptionhandling.cpp src/pyjion/stack.cpp src/pyjion/codemodel.cpp src/pyjion/binarycomp.cpp src/pyjion/instructions.cpp src/pyjion/unboxing.cpp src/pyjion/frame.h src/pyjion/pgc.cpp src/pyjion/base.cpp src/pyjion/objects/unboxedrangeobject.cpp src/pyjion/peloader.cpp src/pyjion/objects/assemblyobject.cpp src/pyjion/corehost.cpp)
 
 if (WIN32)
     enable_language(ASM_MASM)

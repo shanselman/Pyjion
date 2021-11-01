@@ -32,6 +32,7 @@
 #include <readytorun.h>
 #include <holder.h>
 #include <vector>
+#include <unordered_map>
 
 #include <iostream>
 #include <limits>
@@ -288,6 +289,9 @@ private:
     vector<uint8_t> usHeap;
     std::string assemblyVersion;
 
+    // Cached heap results
+    unordered_map<uint16_t, std::string> stringHeapCache;
+
 public:
     PEDecoder(const char* filePath);
     ~PEDecoder() {
@@ -306,19 +310,21 @@ public:
         return &r2rHeader;
     }
 
-    const std::string GetString(uint64_t offset){ // TODO : Optimize
-        uint64_t i = offset;
-        std::string result;
+    std::string GetString(uint16_t offset){
+        if (stringHeapCache.find(offset) != stringHeapCache.end()){
+            return stringHeapCache[offset];
+        }
+        uint16_t i = offset;
+        stringHeapCache[offset] = std::string();
         while (stringHeap[i] != '\0'){
-            result.push_back(stringHeap[i]);
+            stringHeapCache[offset].push_back(stringHeap[i]);
             i++;
         }
-        return result;
+        return stringHeapCache[offset];
     }
 
     vector<uint8_t> GetBlob(uint64_t offset) {
-        uint32_t size = 0;
-        uint32_t start = 0;
+        uint32_t size, start;
 
         #define HI(x) (((x) >> 4) & 0x0F)
         #define LO(x) ((x) & 0x0F)
