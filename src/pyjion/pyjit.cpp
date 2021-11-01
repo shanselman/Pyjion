@@ -166,7 +166,7 @@ HMODULE GetClrJit() {
 }
 #endif
 
-bool JitInit(const wchar_t* dotnetroot, const wchar_t* version) {
+bool JitInit(const char* dotnetroot, const char* version) {
     g_pyjionSettings = PyjionSettings();
     g_pyjionSettings.recursionLimit = Py_GetRecursionLimit();
 
@@ -563,8 +563,8 @@ static PyObject* pyjion_init(PyObject* self, PyObject* args) {
         return nullptr;
     }
 
-    auto path = PyUnicode_AsWideCharString(PyTuple_GetItem(args, 0), nullptr);
-    auto ver = PyUnicode_AsWideCharString(PyTuple_GetItem(args, 1), nullptr);
+    auto path = PyUnicode_AsUTF8(PyTuple_GetItem(args, 0));
+    auto ver = PyUnicode_AsUTF8(PyTuple_GetItem(args, 1));
     if (JitInit(path, ver)) {
         Py_RETURN_NONE;
     } else {

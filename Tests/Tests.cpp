@@ -32,11 +32,8 @@
 int main(int argc, char* const argv[]) {
     Py_Initialize();
     PyjionUnboxingError = PyErr_NewException("pyjion.PyjionUnboxingError", PyExc_ValueError, nullptr);
-#ifdef WINDOWS
-    JitInit(L"clrjit.dll");
-#else
-    JitInit(L"/usr/local/share/dotnet/", L"6.0.0-rc.2.21480.5");
-#endif
+    auto dotnetroot = getenv("DOTNET_ROOT");
+    JitInit(dotnetroot, "6.0.0-rc.2.21480.5");
     g_pyjionSettings.graph = true;
     g_pyjionSettings.debug = true;
     g_pyjionSettings.codeObjectSizeLimit = 1000000;

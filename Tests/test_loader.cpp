@@ -103,7 +103,7 @@ TEST_CASE("Test basic loader") {
         CHECK(decoder.GetCorHeader()->Flags & COMIMAGE_FLAGS_ILONLY);
         CHECK(decoder.GetModuleName() == "DotNetLib.dll");
         auto typeRefs = decoder.GetTypeRefs();
-        CHECK(typeRefs.size() == 21);
+        CHECK(typeRefs.size() == 20);
         auto typeDefs = decoder.GetTypeDefs();
         CHECK(typeDefs.size() == 3);
         auto publicTypeDefs = decoder.GetPublicClasses();
