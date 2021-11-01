@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "corehost.h"
+#include "pyjit.h"
 
 #include <coreclr_delegates.h>
 #include <hostfxr.h>
@@ -35,9 +36,9 @@
 
 using string_t = std::basic_string<char_t>;
 
-hostfxr_initialize_for_runtime_config_fn init_fptr;
-hostfxr_get_runtime_delegate_fn get_delegate_fptr;
-hostfxr_close_fn close_fptr;
+hostfxr_initialize_for_runtime_config_fn init_fptr = nullptr;
+hostfxr_get_runtime_delegate_fn get_delegate_fptr = nullptr;
+hostfxr_close_fn close_fptr = nullptr;
 
 // Forward declarations
 void *load_library(const char_t *);
@@ -73,10 +74,10 @@ void *get_export(void *h, const char *name)
 
 // <SnippetLoadHostFxr>
 // Using the nethost library, discover the location of hostfxr and get exports
-bool load_hostfxr(const char* fxr_path)
+bool load_hostfxr()
 {
     // Load hostfxr and get desired exports
-    void *lib = load_library(fxr_path);
+    void *lib = load_library(g_pyjionSettings.hostfxrpath.c_str());
     init_fptr = (hostfxr_initialize_for_runtime_config_fn)get_export(lib, "hostfxr_initialize_for_runtime_config");
     get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)get_export(lib, "hostfxr_get_runtime_delegate");
     close_fptr = (hostfxr_close_fn)get_export(lib, "hostfxr_close");
@@ -86,12 +87,12 @@ bool load_hostfxr(const char* fxr_path)
 
 // <SnippetInitialize>
 // Load and initialize .NET Core and get desired function pointer for scenario
-load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t *config_path)
+load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly()
 {
     // Load .NET Core
     void *load_assembly_and_get_function_pointer = nullptr;
     hostfxr_handle cxt = nullptr;
-    int rc = init_fptr(config_path, nullptr, &cxt);
+    int rc = init_fptr(g_pyjionSettings.runtimeconfigpath.c_str(), nullptr, &cxt);
     if (rc != 0 || cxt == nullptr)
     {
         std::cerr << "Init failed: " << std::hex << std::showbase << rc << std::endl;

@@ -65,23 +65,52 @@ TEST_CASE("Test basic loader") {
 
         auto signature = decoder.GetBlob(methods[0].Signature);
         CHECK(signature.size() == 4);
-
-        CHECK(load_hostfxr("/Users/anthonyshaw/CLionProjects/pyjion/CoreCLR/artifacts/bin/testhost/net6.0-OSX-Debug-x64/host/fxr/6.0.0/libhostfxr.dylib"));
-        auto t = get_dotnet_load_assembly("/Users/anthonyshaw/CLionProjects/pyjion/CoreCLR/artifacts/bin/testhost/net6.0-OSX-Debug-x64/shared/Microsoft.NETCore.App/6.0.0/demo.runtimeconfig.json");
+    }
+    SECTION("Test method execution"){
+        CHECK(load_hostfxr());
+        auto t = get_dotnet_load_assembly();
         REQUIRE(t != nullptr);
 
-        component_entry_point_fn beep = nullptr;
+        component_entry_point_fn hello = nullptr;
         StatusCode ret = (StatusCode)t(
-                "System.Runtime.Numerics.dll",
-                "System.Numerics.BigInteger, System.Runtime.Numerics, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
-                "TryParse",
+                "/Users/anthonyshaw/projects/samples/core/hosting/bin/Debug/net6.0/DotNetLib.dll",
+                "DotNetLib.Demo, DotNetLib",
+                "Hello",
                 nullptr /*delegate_type_name*/,
                 nullptr,
-                (void**) &beep);
-        // </SnippetLoadAndGet>
+                (void**) &hello);
         REQUIRE(ret == Success);
-        REQUIRE(beep != nullptr);
+        REQUIRE(hello != nullptr);
 
-        beep(nullptr, 0);
+        struct lib_args
+        {
+            const char_t *message;
+            int number;
+        };
+        for (int i = 0; i < 3; ++i)
+        {
+            lib_args args
+                    {
+                        "from host!",
+                        i
+                    };
+
+            CHECK(hello(&args, sizeof(args)) == 0);
+        }
+    }
+    SECTION("Test custom image") {
+        PEDecoder decoder = PEDecoder("/Users/anthonyshaw/projects/samples/core/hosting/bin/Debug/net6.0/DotNetLib.dll");
+        CHECK(decoder.GetCorHeader()->Flags & COMIMAGE_FLAGS_ILONLY);
+        CHECK(decoder.GetModuleName() == "DotNetLib.dll");
+        auto typeRefs = decoder.GetTypeRefs();
+        CHECK(typeRefs.size() == 21);
+        auto typeDefs = decoder.GetTypeDefs();
+        CHECK(typeDefs.size() == 3);
+        auto publicTypeDefs = decoder.GetPublicClasses();
+        CHECK(publicTypeDefs.size() == 1);
+        CHECK(decoder.GetString(publicTypeDefs[0].Name) == "Demo");
+        auto methods = decoder.GetClassMethods(publicTypeDefs[0]);
+        CHECK(methods.size() == 1);
+        CHECK(decoder.GetString(methods[0].Name) == "Hello");
     }
 }

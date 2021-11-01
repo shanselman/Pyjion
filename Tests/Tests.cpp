@@ -35,7 +35,7 @@ int main(int argc, char* const argv[]) {
 #ifdef WINDOWS
     JitInit(L"clrjit.dll");
 #else
-    JitInit(L"libclrjit.so");
+    JitInit(L"/usr/local/share/dotnet/", L"6.0.0-rc.2.21480.5");
 #endif
     g_pyjionSettings.graph = true;
     g_pyjionSettings.debug = true;

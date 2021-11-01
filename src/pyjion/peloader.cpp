@@ -91,8 +91,6 @@ PEDecoder::PEDecoder(const char* filePath) {
                 break;
             }
         }
-    } else {
-        throw InvalidImageException("Failed to load image. Corrupt section table.");
     }
 
     // Run import sections to get fixups and signatures..
