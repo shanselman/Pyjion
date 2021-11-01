@@ -35,7 +35,9 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dot-net-version }}
-
+      - name: Build .NET lib
+        run: dotnet build
+        working-directory: ${{runner.workspace}}/pyjion-lib
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
 
@@ -159,6 +161,9 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dot-net-version }}
+      - name: Build .NET lib
+        run: dotnet build
+        working-directory: ${{runner.workspace}}/pyjion-lib
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
 
@@ -266,7 +271,9 @@ jobs:
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ matrix.dot-net-version }}
-
+      - name: Build .NET lib
+        run: dotnet build
+        working-directory: ${{runner.workspace}}/pyjion-lib
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
