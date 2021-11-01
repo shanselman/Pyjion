@@ -33,6 +33,7 @@
 #include <holder.h>
 #include <vector>
 #include <unordered_map>
+#include <bitset>
 
 #include <iostream>
 #include <limits>
