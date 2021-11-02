@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29102.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetLib", "DotNetLib\DotNetLib.csproj", "{89ED1849-4F94-4641-8517-15D3CC5964E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pyjionlib", "Pyjionlib\Pyjionlib.csproj", "{89ED1849-4F94-4641-8517-15D3CC5964E5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{91651AB7-F670-48A0-8681-8167891611A8}"
 EndProject
