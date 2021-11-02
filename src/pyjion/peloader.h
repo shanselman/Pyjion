@@ -141,7 +141,7 @@ enum MetaDataTable
     MetaDataTable_GenericParamConstraint= 0x2C,
 };
 
-#pragma pack(2)
+#pragma pack(push, 2)
 struct ModuleTableRow {
     uint16_t Generation;
     uint16_t Name;
@@ -156,7 +156,7 @@ struct TypeRefRow {
     uint16_t Namespace;
 };
 
-#pragma pack(2)
+
 struct TypeDefRow {
     uint32_t Flags;
     uint16_t Name;
@@ -192,6 +192,8 @@ struct InterfaceImplRow {
     uint16_t Class;
     uint16_t Interface;
 };
+
+#pragma pack(pop)
 
 static const MetaDataTable AllMetaDataTables[] = {
         MetaDataTable_Module,

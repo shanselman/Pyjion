@@ -282,6 +282,13 @@ if (WIN32)
     )
 endif(WIN32)
 
+add_custom_command(
+        TARGET _pyjion POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        ${CMAKE_SOURCE_DIR}/pyjion.runtimeconfig.json
+        ${CMAKE_CURRENT_BINARY_DIR}/
+)
+
 set_target_properties(
         _pyjion
         PROPERTIES
