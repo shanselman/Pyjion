@@ -14,18 +14,23 @@ namespace Pyjion
 
         public static int Hello(IntPtr arg, int argLength)
         {
-            if (argLength < System.Runtime.InteropServices.Marshal.SizeOf(typeof(LibArgs)))
+            if (argLength < Marshal.SizeOf(typeof(LibArgs)))
             {
-                return System.Runtime.InteropServices.Marshal.SizeOf(typeof(LibArgs));
+                return Marshal.SizeOf(typeof(LibArgs));
             }
 
             LibArgs libArgs = Marshal.PtrToStructure<LibArgs>(arg);
             Console.WriteLine($"Hello from .NET, I am {nameof(Test)}");
-            string message = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                ? Marshal.PtrToStringUni(libArgs.Message)
-                : Marshal.PtrToStringUTF8(libArgs.Message);
+            string message = Marshal.PtrToStringUTF8(libArgs.Message);
             Console.WriteLine($"You said : '{message}'");
             return 0;
+        }
+
+        public delegate int HelloDelegate(int x, int y);
+
+        public static int Hello2(int x, int y)
+        {
+            return x * y;
         }
     }
 }

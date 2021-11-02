@@ -264,6 +264,18 @@ public:
 
 #define COMPILER_ID_SIZE 50
 
+template<typename T>
+int findQualifiedMatch(vector<T> vec, T match){
+    int pos = -1;
+    for (int i = 0 ; i < vec.size(); i++){
+        if (vec[i].Name == match.Name && vec[i].Namespace == match.Namespace) {
+            pos = i;
+            continue;
+        }
+    }
+    return pos;
+}
+
 class PEDecoder {
 private:
     peparse::parsed_pe* pe;
@@ -279,9 +291,7 @@ private:
     vector<ModuleTableRow> moduleTable;
     vector<TypeDefRow> typeDefTable;
     vector<TypeRefRow> typeRefTable;
-//    vector<FieldPtrRow> fieldPtrTable;
     vector<FieldRow> fieldTable;
-//    vector<MethodPtrRow> methodPtrTable;
     vector<MethodRow> methodTable;
     vector<ParamRow> paramTable;
     vector<InterfaceImplRow> interfaceImplTable;
@@ -391,17 +401,11 @@ public:
 
     vector<MethodRow> GetClassMethods(TypeDefRow cls, bool publicOnly = true, bool specialMethods = false) {
         vector<MethodRow> results;
-        results.reserve(methodTable.size());
-        int pos = -1;
-        for (int i = 0 ; i < typeDefTable.size(); i++){
-            if (typeDefTable[i].Name == cls.Name && typeDefTable[i].Namespace == cls.Namespace) {
-                pos = i;
-                continue;
-            }
-        }
+        int pos = findQualifiedMatch<TypeDefRow>(typeDefTable, cls);
         if (pos < 0){
             return {};
         }
+        results.reserve(methodTable.size());
 
         int index = cls.MethodList - 1;
         int lastIndex;
@@ -421,14 +425,8 @@ public:
 
     vector<FieldRow> GetClassFields(TypeDefRow cls, bool publicOnly = true, bool specialFields = false) {
         vector<FieldRow> results;
+        int pos = findQualifiedMatch<TypeDefRow>(typeDefTable, cls);
         results.reserve(fieldTable.size());
-        int pos = -1;
-        for (int i = 0 ; i < typeDefTable.size(); i++){
-            if (typeDefTable[i].Name == cls.Name && typeDefTable[i].Namespace == cls.Namespace) {
-                pos = i;
-                continue;
-            }
-        }
         if (pos < 0){
             return {};
         }
@@ -443,6 +441,35 @@ public:
         for (; index < lastIndex; index ++){
             if ((!publicOnly || IsFdPublic(fieldTable[index].Flags)) && (specialFields || !IsFdSpecialName(fieldTable[index].Flags)))
                 results.push_back(fieldTable[index]);
+        }
+
+        results.shrink_to_fit();
+        return results;
+    }
+
+    vector<ParamRow> GetMethodParams(MethodRow meth) {
+        vector<ParamRow> results;
+        int pos = -1;
+        for (int i = 0 ; i < methodTable.size(); i++){
+            if (methodTable[i].Name == meth.Name && methodTable[i].RVA == meth.RVA) {
+                pos = i;
+                continue;
+            }
+        }
+        if (pos < 0){
+            return {};
+        }
+        results.reserve(methodTable.size());
+
+        int index = meth.ParamList - 1;
+        int lastIndex;
+        if (pos == methodTable.size() - 1){ // If its the last row, don't try and get the next one
+            lastIndex = methodTable.size() - 1;
+        } else {
+            lastIndex = methodTable[pos + 1].ParamList - 1;
+        }
+        for (; index < lastIndex; index ++){
+            results.push_back(paramTable[index]);
         }
 
         results.shrink_to_fit();
