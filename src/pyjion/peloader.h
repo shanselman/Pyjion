@@ -390,7 +390,7 @@ public:
     vector<MethodRow> GetClassMethods(TypeDefRow cls, bool publicOnly = true, bool specialMethods = false) {
         vector<MethodRow> results;
         results.reserve(methodTable.size());
-        ssize_t pos = -1;
+        int pos = -1;
         for (int i = 0 ; i < typeDefTable.size(); i++){
             if (typeDefTable[i].Name == cls.Name && typeDefTable[i].Namespace == cls.Namespace) {
                 pos = i;
@@ -401,8 +401,8 @@ public:
             return {};
         }
 
-        size_t index = cls.MethodList - 1;
-        size_t lastIndex;
+        int index = cls.MethodList - 1;
+        int lastIndex;
         if (pos == typeDefTable.size() - 1){ // If its the last row, don't try and get the next one
             lastIndex = methodTable.size() - 1;
         } else {
@@ -420,7 +420,7 @@ public:
     vector<FieldRow> GetClassFields(TypeDefRow cls, bool publicOnly = true, bool specialFields = false) {
         vector<FieldRow> results;
         results.reserve(fieldTable.size());
-        ssize_t pos = -1;
+        int pos = -1;
         for (int i = 0 ; i < typeDefTable.size(); i++){
             if (typeDefTable[i].Name == cls.Name && typeDefTable[i].Namespace == cls.Namespace) {
                 pos = i;
@@ -431,8 +431,8 @@ public:
             return {};
         }
 
-        size_t index = cls.FieldList - 1;
-        size_t lastIndex;
+        int index = cls.FieldList - 1;
+        int lastIndex;
         if (pos == typeDefTable.size() - 1){ // If its the last row, don't try and get the next one
             lastIndex = fieldTable.size() - 1;
         } else {

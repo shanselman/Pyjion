@@ -40,11 +40,11 @@ hostfxr_get_runtime_delegate_fn get_delegate_fptr;
 hostfxr_close_fn close_fptr;
 
 // Forward declarations
-void *load_library(const char_t *);
+void *load_library(const char *);
 void *get_export(void *, const char *);
 
 #ifdef WINDOWS
-void *load_library(const char_t *path)
+void *load_library(const char_t* path)
 {
     HMODULE h = ::LoadLibraryW(path);
     assert(h != nullptr);
@@ -57,7 +57,7 @@ void *get_export(void *h, const char *name)
     return f;
 }
 #else
-void *load_library(const char_t *path)
+void *load_library(const char* path)
 {
     void *h = dlopen(path, RTLD_LAZY | RTLD_LOCAL);
     assert(h != nullptr);
