@@ -27,10 +27,14 @@
 #include "peloader.h"
 #include "corehost.h"
 #include "error_codes.h"
+#include <filesystem>
 
 TEST_CASE("Test basic loader") {
     SECTION("Test builtin R2R image") {
-        PEDecoder decoder = PEDecoder("/usr/local/share/dotnet/shared/Microsoft.NETCore.App/6.0.0-rc.2.21480.5/System.Console.dll");
+        auto dotnetroot = getenv("DOTNET_ROOT");
+        auto version = getenv("DOTNET_VERSION");
+        std::filesystem::path console_path = ( std::filesystem::path(dotnetroot) / std::filesystem::path("shared/Microsoft.NETCore.App/") / std::filesystem::path(version) / std::filesystem::path("System.Console.dll"));
+        PEDecoder decoder = PEDecoder(console_path.c_str());
         CHECK(decoder.GetCorHeader()->Flags & COMIMAGE_FLAGS_IL_LIBRARY);
         CHECK(decoder.GetReadyToRunHeader()->MajorVersion == 5);
         CHECK(decoder.GetModuleName() == "System.Console.dll");
@@ -67,14 +71,16 @@ TEST_CASE("Test basic loader") {
         CHECK(signature.size() == 4);
     }
     SECTION("Test method execution"){
+        std::filesystem::path libPath = filesystem::path("../pyjion-lib/bin/Debug/Pyjionlib.dll");
+        REQUIRE(std::filesystem::exists(libPath));
         CHECK(load_hostfxr());
         auto t = get_dotnet_load_assembly();
         REQUIRE(t != nullptr);
 
         component_entry_point_fn hello = nullptr;
         StatusCode ret = (StatusCode)t(
-                "/Users/anthonyshaw/projects/samples/core/hosting/bin/Debug/net6.0/DotNetLib.dll",
-                "DotNetLib.Demo, DotNetLib",
+                libPath.c_str(),
+                "Pyjion.Test, Pyjionlib",
                 "Hello",
                 nullptr /*delegate_type_name*/,
                 nullptr,
@@ -99,16 +105,18 @@ TEST_CASE("Test basic loader") {
         }
     }
     SECTION("Test custom image") {
-        PEDecoder decoder = PEDecoder("/Users/anthonyshaw/projects/samples/core/hosting/bin/Debug/net6.0/DotNetLib.dll");
+        std::filesystem::path libPath = filesystem::path("../pyjion-lib/bin/Debug/Pyjionlib.dll");
+        REQUIRE(std::filesystem::exists(libPath));
+        PEDecoder decoder = PEDecoder(libPath.c_str());
         CHECK(decoder.GetCorHeader()->Flags & COMIMAGE_FLAGS_ILONLY);
-        CHECK(decoder.GetModuleName() == "DotNetLib.dll");
+        CHECK(decoder.GetModuleName() == "Pyjionlib.dll");
         auto typeRefs = decoder.GetTypeRefs();
         CHECK(typeRefs.size() == 20);
         auto typeDefs = decoder.GetTypeDefs();
         CHECK(typeDefs.size() == 3);
         auto publicTypeDefs = decoder.GetPublicClasses();
         CHECK(publicTypeDefs.size() == 1);
-        CHECK(decoder.GetString(publicTypeDefs[0].Name) == "Demo");
+        CHECK(decoder.GetString(publicTypeDefs[0].Name) == "Test");
         auto methods = decoder.GetClassMethods(publicTypeDefs[0]);
         CHECK(methods.size() == 1);
         CHECK(decoder.GetString(methods[0].Name) == "Hello");
