@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
-        dot-net-version: [6.0.100-rc.2.21505.57]
+        dot-net-version: [6.0.100]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -145,7 +145,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
-        dot-net-version: [ 6.0.100-rc.2.21505.57 ]
+        dot-net-version: [ 6.0.100 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -251,7 +251,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
-        dot-net-version: [ 6.0.100-rc.2.21505.57 ]
+        dot-net-version: [ 6.0.100 ]
 
     steps:
       - uses: actions/checkout@v2
@@ -311,7 +311,7 @@ jobs:
       - name: Run C++ unit tests
         working-directory: ${{runner.workspace}}/build/Release
         run: |
-          cp c:\Users\runneradmin\AppData\Local\Microsoft\dotnet\shared\Microsoft.NETCore.App\6.0.0-rc.2.21480.5\clrjit.dll .
+          cp c:\Users\runneradmin\AppData\Local\Microsoft\dotnet\shared\Microsoft.NETCore.App\6.0.0\clrjit.dll .
           .\unit_tests.exe
 
       - name: Setup Python tests
