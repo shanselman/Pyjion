@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="src/Pyjionlib/*.csproj" />
+    <ProjectReference Include="src/Pyjionlib.Test/*.csproj" />
   </ItemGroup>
 
 </Project>

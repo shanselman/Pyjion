@@ -80,7 +80,7 @@ TEST_CASE("Test basic loader") {
         REQUIRE(t != nullptr);
 
         component_entry_point_fn hello = nullptr;
-        StatusCode ret = (StatusCode)t(
+        int ret = t(
                 libPath.c_str(),
                 "Pyjion.Test, Pyjionlib",
                 "Hello",
@@ -115,7 +115,7 @@ TEST_CASE("Test basic loader") {
         REQUIRE(t != nullptr);
         typedef int (CORECLR_DELEGATE_CALLTYPE *custom_entry_point_fn)(int, int);
         custom_entry_point_fn hello2 = nullptr;
-        StatusCode ret = (StatusCode)t(
+        int ret = t(
                 libPath.c_str(),
                 "Pyjion.Test, Pyjionlib",
                 "Hello2",
@@ -125,6 +125,63 @@ TEST_CASE("Test basic loader") {
         REQUIRE(ret == Success);
         REQUIRE(hello2 != nullptr);
         CHECK(hello2(3, 4) == 12);
+    }
+
+    SECTION("Test delegate plane execution"){
+        std::filesystem::path libPath = filesystem::path("../pyjion-lib/bin/Debug/Pyjionlib.dll");
+        REQUIRE(std::filesystem::exists(libPath));
+        CHECK(load_hostfxr());
+        auto load = get_dotnet_load_assembly();
+        REQUIRE(load != nullptr);
+        component_entry_point_fn dot = nullptr;
+        struct lib_args
+        {
+            double x1;
+            double y1;
+            double z1;
+            double d1;
+            double x2;
+            double y2;
+            double z2;
+            double d2;
+        };
+
+        int ret = load(
+                libPath.c_str(),
+                "Pyjion.PlaneOperations, Pyjionlib",
+                "VectorDotProduct",
+                nullptr,//"Pyjion.PlaneOperations+VectorDotProductDelegate, Pyjionlib" /*delegate_type_name*/,
+                nullptr,
+                (void**) &dot);
+
+        switch (ret) {
+            case 0: {
+                REQUIRE(ret == Success);
+                REQUIRE(dot != nullptr);
+                lib_args args = {1., 2., 3., 4., 5., 6., 7., 8.};
+                CHECK(dot(&args, sizeof(lib_args)) == 70.);
+            }
+                break;
+            case COR_E_MISSINGMETHOD:
+                FAIL("Missing method exception");
+                break;
+            case COR_E_ARGUMENTOUTOFRANGE:
+                FAIL("Argument out of range exception");
+                break;
+            case COR_E_INVALIDOPERATION:
+                FAIL("Invalid operation exception");
+                break;
+            case E_POINTER:
+                FAIL("Invalid argument exception");
+                break;
+            case COR_E_TYPELOAD:
+                FAIL("Type load failure");
+                break;
+            default:
+                FAIL("Unexpected exception");
+                break;
+        }
+
     }
 
     SECTION("Test custom image") {
