@@ -100,11 +100,11 @@ class OptimizationFlags(IntFlag):
     BuiltinMethods = 256
     TypeSlotLookups = 512
     FunctionCalls = 1024
-    LoadAttr = 2056
-    Unboxing = 4092
-    IsNone = 8184
-    IntegerUnboxingMultiply = 16368
-    OptimisticIntegers = 32736
+    LoadAttr = 2048
+    Unboxing = 4096
+    IsNone = 8192
+    IntegerUnboxingMultiply = 16384
+    OptimisticIntegers = 32768
 
 
 class CompilationResult(IntEnum):
