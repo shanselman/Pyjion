@@ -112,6 +112,7 @@ class CompilationResult(IntEnum):
     Success = 1,
     CompilationException = 10
     CompilationJitFailure = 11
+    CompilationStackEffectFault = 12
     IncompatibleCompilerFlags = 100
     IncompatibleSize = 101
     IncompatibleOpcode_Yield = 102

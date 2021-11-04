@@ -970,7 +970,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
 #ifdef DEBUG_VERBOSE
                     printf("Opcode %s at %d should have stack effect %d, but was %lu\n", opcodeName(opcode), curByte, PyCompile_OpcodeStackEffectWithJump(opcode, oparg, jump), (lastState.stackSize() - curStackLen));
 #endif
-                    return CompilationException;
+                    return CompilationStackEffectFault;
                 }
             }
             updateStartState(lastState, curByte + SIZEOF_CODEUNIT);
@@ -2446,7 +2446,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
 #ifdef DEBUG_VERBOSE
             printf("Opcode %s at %d should have stack effect %d, but was %lu\n", opcodeName(byte), op.index, PyCompile_OpcodeStackEffect(byte, oparg), (m_stack.size() - curStackSize));
 #endif
-            return {nullptr, CompilationException};
+            return {nullptr, CompilationStackEffectFault};
         }
     }
 
