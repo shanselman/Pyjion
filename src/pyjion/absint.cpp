@@ -41,6 +41,10 @@
     pgcRequired = true;  \
     pgcSize = count;
 
+#define PGC_PROBE_OUT() \
+    pgcRequired = true;  \
+    pgcOutSize = 1;
+
 #define PGC_UPDATE_STACK(count)                                        \
     if (pgc_status == PgcStatus::CompiledWithProbes) {                 \
         for (int pos = 0; pos < (count); pos++)                        \
@@ -263,6 +267,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
             auto opcode = GET_OPCODE(curByte);
             bool pgcRequired = false;
             short pgcSize = 0;
+            short pgcOutSize = 0;
             oparg = GET_OPARG(curByte);
         processOpCode:
             size_t curStackLen = lastState.stackSize();
@@ -560,6 +565,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     if (PGC_READY()) {
                         PGC_PROBE(1);
                         PGC_UPDATE_STACK(1);
+                        PGC_PROBE_OUT();
                     }
                     POP_VALUE();
                     PUSH_INTERMEDIATE(&Any);
@@ -2442,6 +2448,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
             default:
                 return {nullptr, IncompatibleOpcode_Unknown};
         }
+
         if (!skipEffect && static_cast<size_t>(PyCompile_OpcodeStackEffect(byte, oparg)) != (m_stack.size() - curStackSize)) {
 #ifdef DEBUG_VERBOSE
             printf("Opcode %s at %d should have stack effect %d, but was %lu\n", opcodeName(byte), op.index, PyCompile_OpcodeStackEffect(byte, oparg), (m_stack.size() - curStackSize));
