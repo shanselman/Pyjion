@@ -227,6 +227,7 @@ enum AbstractInterpreterResult {
     // Failure codes
     CompilationException = 10, // Exception within Pyjion
     CompilationJitFailure = 11,// JIT failed
+    CompilationStackEffectFault = 12,// Invalid stack effect in compilation
 
     // Incompat codes.
     IncompatibleCompilerFlags = 100,

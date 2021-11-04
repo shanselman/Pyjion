@@ -62,11 +62,11 @@ enum OptimizationFlags {
     BuiltinMethods = 256,  // OPTIMIZE_BUILTIN_METHODS; // OPT-12
     TypeSlotLookups = 512, //OPTIMIZE_TYPESLOT_LOOKUPS; // OPT-13
     FunctionCalls = 1024,  // OPTIMIZE_FUNCTION_CALLS; // OPT-14
-    LoadAttr = 2056,       // OPTIMIZE_LOAD_ATTR; // OPT-15
-    Unboxing = 4092,       // OPTIMIZE_UNBOXING; // OPT-16
-    IsNone = 8184,         // OPTIMIZE_ISNONE; // OPT-17
-    IntegerUnboxingMultiply = 16368,
-    OptimisticIntegers = 32736
+    LoadAttr = 2048,       // OPTIMIZE_LOAD_ATTR; // OPT-15
+    Unboxing = 4096,       // OPTIMIZE_UNBOXING; // OPT-16
+    IsNone = 8192,         // OPTIMIZE_ISNONE; // OPT-17
+    IntegerUnboxingMultiply = 16384,
+    OptimisticIntegers = 32768
 };
 
 class PyjionCodeProfile : public PyjionBase {
