@@ -1,6 +1,5 @@
 digraph test_floats { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (range)" color="black"];
 	OP2 [label="2 LOAD_FAST ('n')" color="black"];
 	OP4 [label="4 CALL_FUNCTION (1)" color="black"];
@@ -47,7 +46,6 @@ digraph test_floats {
 }
 digraph test_ints { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (range)" color="black"];
 	OP2 [label="2 LOAD_FAST ('n')" color="black"];
 	OP4 [label="4 CALL_FUNCTION (1)" color="black"];
@@ -94,7 +92,6 @@ digraph test_ints {
 }
 digraph test_bigints { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (range)" color="black"];
 	OP2 [label="2 LOAD_FAST ('n')" color="black"];
 	OP4 [label="4 CALL_FUNCTION (1)" color="black"];
@@ -144,8 +141,7 @@ digraph test_bigints {
 }
 digraph test_function_calls { 
 	node [shape=box];
-	FRAME [label=FRAME];
-	OP0 [label="0 LOAD_CONST (<code object f at 0x10bf51220, file "/Us)" color="black"];
+	OP0 [label="0 LOAD_CONST (<code object f at 0x109d8d220, file "/Us)" color="black"];
 	OP2 [label="2 LOAD_CONST ('test_function_calls.<locals>.f')" color="black"];
 	OP4 [label="4 MAKE_FUNCTION (0)" color="black"];
 	OP6 [label="6 STORE_FAST ('f')" color="black"];
@@ -208,7 +204,6 @@ digraph test_function_calls {
 }
 digraph test_builtin_type_calls { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (range)" color="black"];
 	OP2 [label="2 LOAD_FAST ('n')" color="black"];
 	OP4 [label="4 CALL_FUNCTION (1)" color="black"];
@@ -279,7 +274,6 @@ digraph test_builtin_type_calls {
 }
 digraph test_builtin_func_calls { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (range)" color="black"];
 	OP2 [label="2 LOAD_FAST ('n')" color="black"];
 	OP4 [label="4 CALL_FUNCTION (1)" color="black"];

@@ -1,6 +1,5 @@
 digraph advance { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (range)" color="black"];
 	OP2 [label="2 LOAD_FAST ('n')" color="black"];
 	OP4 [label="4 CALL_FUNCTION (1)" color="black"];
@@ -384,7 +383,6 @@ digraph advance {
 }
 digraph report_energy { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_FAST ('pairs')" color="black"];
 	OP2 [label="2 GET_ITER (0)" color="black"];
 	OP4 [label="4 FOR_ITER (48)" color="black"];
@@ -548,7 +546,6 @@ digraph report_energy {
 }
 digraph offset_momentum { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_FAST ('bodies')" color="black"];
 	OP2 [label="2 GET_ITER (0)" color="black"];
 	OP4 [label="4 FOR_ITER (26)" color="black"];
@@ -653,7 +650,6 @@ digraph offset_momentum {
 }
 digraph main { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (offset_momentum)" color="black"];
 	OP2 [label="2 LOAD_GLOBAL (BODIES)" color="black"];
 	OP4 [label="4 LOAD_FAST ('ref')" color="black"];

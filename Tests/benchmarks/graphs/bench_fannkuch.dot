@@ -1,6 +1,5 @@
 digraph fannkuch { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (list)" color="black"];
 	OP2 [label="2 LOAD_GLOBAL (range)" color="black"];
 	OP4 [label="4 LOAD_CONST (1)" color="red"];
