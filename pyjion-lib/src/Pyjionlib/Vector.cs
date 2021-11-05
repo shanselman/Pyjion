@@ -34,7 +34,5 @@ namespace Pyjionlib
 
             return (int)Plane.Dot(plane1, new Vector4(args.x2, args.y2, args.z2, args.d2));
         }
-
-
     }
 }
