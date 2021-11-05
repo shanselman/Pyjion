@@ -21,7 +21,7 @@ Prerequisites:
 
 - CPython 3.10
 - CMake 3.2 +
-- .NET 6 RC2
+- .NET 6
 - scikit-build
 
 ```console

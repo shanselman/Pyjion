@@ -2,7 +2,7 @@
 set -e -x
 
 cd /github/workspace/
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/src/dotnet/shared/Microsoft.NETCore.App/6.0.0-rc.2.21480.5
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/src/dotnet/shared/Microsoft.NETCore.App/6.0.0
 echo $LD_LIBRARY_PATH
 rm -rf _skbuild/
 /opt/python/cp310-cp310/bin/pip install --upgrade --no-cache-dir "pip<21.3"
