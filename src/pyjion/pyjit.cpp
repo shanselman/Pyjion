@@ -234,6 +234,8 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_compile_result = res.result;
     state->j_optimizations = res.optimizations;
     if (g_pyjionSettings.graph) {
+        if (state->j_graph != nullptr)
+            Py_DECREF(state->j_graph);
         state->j_graph = res.instructionGraph;
     }
     if (res.compiledCode == nullptr || res.result != Success) {
