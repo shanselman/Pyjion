@@ -364,3 +364,25 @@ TEST_CASE("Test unpacking sequence and math"){
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     }
 }
+
+
+TEST_CASE("Test LOAD_ATTR profiling") {
+    SECTION("test simple LOAD_ATTR") {
+        auto t = PgcProfilingTest(
+                "def f():\n"
+                "  class Node(object):\n"
+                "    def __init__(self):\n"
+                "        self.a = 2\n"
+                "        self.b = 3\n"
+                "    def prod(self):\n"
+                "        x = self.a\n"
+                "        y = self.b\n"
+                "        return x + y\n"
+                "  return Node().prod()\n");
+        CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
+        CHECK(t.returns() == "5");
+        CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
+        CHECK(t.returns() == "5");
+        CHECK(t.pgcStatus() == PgcStatus::Optimized);
+    }
+}

@@ -1,6 +1,5 @@
 digraph maximize { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_FAST ('points')" color="black"];
 	OP2 [label="2 LOAD_CONST (0)" color="red"];
 	OP4 [label="4 BINARY_SUBSCR (0)" color="black"];
@@ -43,7 +42,6 @@ digraph maximize {
 }
 digraph benchmark { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_CONST (None)" color="black"];
 	OP2 [label="2 BUILD_LIST (1)" color="black"];
 	OP4 [label="4 LOAD_FAST ('n')" color="black"];

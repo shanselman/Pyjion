@@ -39,6 +39,7 @@ typedef void(__cdecl* JITSTARTUP)(ICorJitHost*);
 #define MAX_UINT16_T 65535
 
 PyjionSettings g_pyjionSettings;
+AttributeTable* g_attrTable;
 extern BaseModule g_module;
 #define SET_OPT(opt, actualLevel, minLevel)                                      \
     if ((actualLevel) >= (minLevel)) {                                           \
@@ -61,7 +62,7 @@ void setOptimizationLevel(unsigned short level) {
     SET_OPT(FunctionCalls, level, 1);
     SET_OPT(LoadAttr, level, 1);
     SET_OPT(Unboxing, level, 1);
-    SET_OPT(IsNone, level, 1);
+    SET_OPT(AttrTypeTable, level, 1);
     SET_OPT(IntegerUnboxingMultiply, level, 2);
     SET_OPT(OptimisticIntegers, level, 2);
 }
@@ -168,6 +169,7 @@ bool JitInit(const wchar_t* path) {
     g_pyjionSettings = PyjionSettings();
     g_pyjionSettings.recursionLimit = Py_GetRecursionLimit();
     g_pyjionSettings.clrjitpath = path;
+    g_attrTable = new AttributeTable();
     g_extraSlot = PyThread_tss_alloc();
     PyThread_tss_create(g_extraSlot);
 #ifdef WINDOWS
@@ -199,6 +201,7 @@ bool JitInit(const wchar_t* path) {
     if (PyType_Ready(&PyJitMethodLocation_Type) < 0)
         return false;
     g_emptyTuple = PyTuple_New(0);
+    setOptimizationLevel(1);
     return true;
 }
 
@@ -232,6 +235,8 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_compile_result = res.result;
     state->j_optimizations = res.optimizations;
     if (g_pyjionSettings.graph) {
+        if (state->j_graph != nullptr)
+            Py_DECREF(state->j_graph);
         state->j_graph = res.instructionGraph;
     }
     if (res.compiledCode == nullptr || res.result != Success) {
@@ -338,7 +343,6 @@ static PyInterpreterState* inter() {
 }
 
 static PyObject* pyjion_enable(PyObject* self, PyObject* args) {
-    setOptimizationLevel(1);
     auto prev = _PyInterpreterState_GetEvalFrameFunc(inter());
     _PyInterpreterState_SetEvalFrameFunc(inter(), PyJit_EvalFrame);
     if (prev == PyJit_EvalFrame) {

@@ -284,7 +284,11 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
     }
 
     PyObject* g = PyUnicode_FromFormat("digraph %s { \n", name);
-    PyUnicode_AppendAndDel(&g, PyUnicode_FromString("\tnode [shape=box];\n\tFRAME [label=FRAME];\n"));
+    PyUnicode_AppendAndDel(&g, PyUnicode_FromString("\tnode [shape=box];\n"));
+
+    if (invalid)
+        PyUnicode_AppendAndDel(&g, PyUnicode_FromString("\t// Graph was marked invalid, locals not optimized\n"));
+
     set<py_opindex> exceptionHandlers;
     for (const auto& node : instructions) {
         const char* blockColor;

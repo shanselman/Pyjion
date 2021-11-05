@@ -10,6 +10,9 @@
 * Calls to C Functions are faster
 * Added an OptimisticIntegers optimization to level 2 to inspect integer values and unbox them if they're small
 * Abstract value profiler will assert tuples of constant values (e.g. float, int) based on value
+* LOAD_ATTR will infer the attribute type of classes using a cached attribute lookup table when optimization `AttrTypeTable` (level 1) is enabled
+* Fix a bug that would reset the optimization level to 1 whenever `pyjion.enable()` was called
+* Fix a bug that would cause an invalid jump operation and a failed compilation for EXTENDED_ARG jumps which occur in big functions
 
 ## 1.0.0 (rc4)
 

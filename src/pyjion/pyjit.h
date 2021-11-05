@@ -47,6 +47,7 @@
 #include <Python.h>
 #include "codemodel.h"
 #include "absvalue.h"
+#include "attrtable.h"
 
 using namespace std;
 
@@ -64,7 +65,7 @@ enum OptimizationFlags {
     FunctionCalls = 1024,  // OPTIMIZE_FUNCTION_CALLS; // OPT-14
     LoadAttr = 2048,       // OPTIMIZE_LOAD_ATTR; // OPT-15
     Unboxing = 4096,       // OPTIMIZE_UNBOXING; // OPT-16
-    IsNone = 8192,         // OPTIMIZE_ISNONE; // OPT-17
+    AttrTypeTable = 8192,         // OPTIMIZE_ISNONE; // OPT-17
     IntegerUnboxingMultiply = 16384,
     OptimisticIntegers = 32768
 };
@@ -127,6 +128,7 @@ typedef struct PyjionSettings {
 } PyjionSettings;
 
 extern PyjionSettings g_pyjionSettings;
+extern AttributeTable* g_attrTable;
 
 #define OPT_ENABLED(opt) ((g_pyjionSettings.optimizations & (opt)) == (opt))
 void PyjionJitFree(void* obj);

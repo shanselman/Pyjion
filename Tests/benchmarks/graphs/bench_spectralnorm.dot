@@ -1,6 +1,5 @@
 digraph eval_A { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_CONST (1.0)" color="blue"];
 	OP2 [label="2 LOAD_FAST ('i')" color="black"];
 	OP4 [label="4 LOAD_FAST ('j')" color="black"];
@@ -39,11 +38,10 @@ digraph eval_A {
 }
 digraph eval_times_u { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_CLOSURE (0)" color="black"];
 	OP2 [label="2 LOAD_CLOSURE (1)" color="black"];
 	OP4 [label="4 BUILD_TUPLE (2)" color="black"];
-	OP6 [label="6 LOAD_CONST (<code object <listcomp> at 0x104f735e0, )" color="black"];
+	OP6 [label="6 LOAD_CONST (<code object <listcomp> at 0x109eff5e0, )" color="black"];
 	OP8 [label="8 LOAD_CONST ('eval_times_u.<locals>.<listcomp>')" color="black"];
 	OP10 [label="10 MAKE_FUNCTION (8)" color="black"];
 	OP12 [label="12 LOAD_GLOBAL (range)" color="black"];
@@ -74,7 +72,6 @@ digraph eval_times_u {
 }
 digraph eval_AtA_times_u { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_GLOBAL (eval_times_u)" color="black"];
 	OP2 [label="2 LOAD_GLOBAL (part_At_times_u)" color="black"];
 	OP4 [label="4 LOAD_GLOBAL (eval_times_u)" color="black"];
@@ -93,7 +90,6 @@ digraph eval_AtA_times_u {
 }
 digraph part_A_times_u { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_FAST ('i_u')" color="black"];
 	OP2 [label="2 UNPACK_SEQUENCE (2)" color="black"];
 	OP4 [label="4 STORE_FAST ('i')" color="black"];
@@ -146,7 +142,6 @@ digraph part_A_times_u {
 }
 digraph part_At_times_u { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_FAST ('i_u')" color="black"];
 	OP2 [label="2 UNPACK_SEQUENCE (2)" color="black"];
 	OP4 [label="4 STORE_FAST ('i')" color="black"];
@@ -199,7 +194,6 @@ digraph part_At_times_u {
 }
 digraph bench_spectral_norm { 
 	node [shape=box];
-	FRAME [label=FRAME];
 	OP0 [label="0 LOAD_CONST (1)" color="red"];
 	OP2 [label="2 BUILD_LIST (1)" color="black"];
 	OP4 [label="4 LOAD_GLOBAL (DEFAULT_N)" color="black"];
