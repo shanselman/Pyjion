@@ -34,6 +34,7 @@
 #include "absint.h"
 #include "pyjit.h"
 #include "pycomp.h"
+#include "attrtable.h"
 
 #define PGC_READY() g_pyjionSettings.pgc&& profile != nullptr
 
@@ -567,13 +568,34 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                         PGC_UPDATE_STACK(1);
                         PGC_PROBE_OUT();
                     }
-                    POP_VALUE();
-                    PUSH_INTERMEDIATE(&Any);
+                    auto obj = POP_VALUE();
+                    if (OPT_ENABLED(AttrTypeTable)){
+                        if (obj.hasValue() && obj.Value->known()) {
+                            auto avk = g_attrTable->getAttr(obj.Value->pythonType(), utf8_names[oparg]);
+                            if (avk == AVK_Any){
+                                PUSH_INTERMEDIATE(&Any);
+                            } else {
+                                auto val = new PgcValue(GetPyType(avk), avk);
+                                PUSH_INTERMEDIATE(val);
+                            }
+                        } else {
+                            PUSH_INTERMEDIATE(&Any);
+                        }
+                    } else {
+                        PUSH_INTERMEDIATE(&Any);
+                    }
                     break;
                 }
-                case STORE_ATTR:
-                    POP_VALUE();
-                    POP_VALUE();
+                case STORE_ATTR: {
+                    auto name = PyTuple_GetItem(mCode->co_names, oparg);
+                    auto obj = POP_VALUE();
+                    auto value = POP_VALUE();
+                    if (OPT_ENABLED(AttrTypeTable)){
+                        if (obj.hasValue() && obj.Value->known()) {
+                            g_attrTable->captureStoreAttr(obj.Value->pythonType(), utf8_names[oparg], value.Value->kind());
+                        }
+                    }
+                }
                     break;
                 case DELETE_ATTR:
                     POP_VALUE();

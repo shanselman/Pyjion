@@ -375,14 +375,14 @@ TEST_CASE("Test LOAD_ATTR profiling") {
                 "        self.a = 2\n"
                 "        self.b = 3\n"
                 "    def prod(self):\n"
-                "        x = self.a + self.b\n"
-                "        y = self.b + self.a\n"
+                "        x = self.a\n"
+                "        y = self.b\n"
                 "        return x + y\n"
                 "  return Node().prod()\n");
         CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
-        CHECK(t.returns() == "10");
+        CHECK(t.returns() == "5");
         CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
-        CHECK(t.returns() == "10");
+        CHECK(t.returns() == "5");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     }
 }
