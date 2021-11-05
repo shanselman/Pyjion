@@ -1,7 +1,9 @@
 # Release notes
 
+## 1.0.0
+
 * Fix a bug on `pyjion.config()` crashing when called with invalid arguments (#401)
-* Update to .NET 6 RC2
+* Update to .NET 6 GA
 * LOAD_GLOBAL is faster when neither globals or builtins have changed since compiling, by caching the object address.
 * Calls to Python functions are now routed through Vector Call (faster)
 * Improved performance of calling builtin types, like int(), str(), etc.

@@ -2533,9 +2533,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         return result;
     } catch (const exception& e) {
 #ifdef DEBUG_VERBOSE
-        printf("Error whilst compiling : %s\n", e.what());
+        printf("Error whilst compiling %s: %s\n", PyUnicode_AsUTF8(mCode->co_name), e.what());
 #endif
-        return {nullptr, CompilationException};
+        return {nullptr, CompilationException, };
     }
 }
 
