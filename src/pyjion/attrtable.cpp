@@ -25,25 +25,33 @@
 
 #include "attrtable.h"
 
-void AttributeTable::captureStoreAttr(PyTypeObject* ty, const char* name, AbstractValueKind kind) {
+int AttributeTable::captureStoreAttr(PyTypeObject* ty, const char* name, AbstractValueKind kind) {
 #ifdef DEBUG_VERBOSE
     printf("Capturing value of %s.%s is %u\n", ty->tp_name, name, kind);
 #endif
     if (table.find(ty) == table.end()){
         table[ty] = unordered_map<const char*, AbstractValueKind>();
         table[ty][name] = kind;
-        return;
+        return 0;
     } else {
         if (table[ty].find(name) == table[ty].end()){
             table[ty][name] = kind;
         } else {
             if (table[ty][name] == kind)
-                return;
-            if (isKnownType(kind) && isKnownType(table[ty][name])){
-                // Mark as variable type...
-                table[ty][name] = AVK_Any;
+                return 0;
+            switch (table[ty][name]){
+                case AVK_Any:
+                    //Already a bad value
+                    break;
+                case AVK_None:
+                    table[ty][name] = kind;
+                    break;
+                default:
+                    // Mark as variable type...
+                    table[ty][name] = AVK_Any;
+                    return -1;
             }
-            return;
+            return 0;
         }
     }
 

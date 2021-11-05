@@ -34,7 +34,7 @@ class AttributeTable {
     unordered_map<PyTypeObject *, unordered_map<const char*, AbstractValueKind>> table;
 public:
     AttributeTable() = default;
-    void captureStoreAttr(PyTypeObject* ty, const char* name, AbstractValueKind kind);
+    int captureStoreAttr(PyTypeObject* ty, const char* name, AbstractValueKind kind);
     AbstractValueKind getAttr(PyTypeObject* ty, const char* name);
 };
 

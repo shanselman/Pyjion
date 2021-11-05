@@ -145,7 +145,7 @@ digraph test_bigints {
 digraph test_function_calls { 
 	node [shape=box];
 	FRAME [label=FRAME];
-	OP0 [label="0 LOAD_CONST (<code object f at 0x10c701560, file "/Us)" color="black"];
+	OP0 [label="0 LOAD_CONST (<code object f at 0x10bf51220, file "/Us)" color="black"];
 	OP2 [label="2 LOAD_CONST ('test_function_calls.<locals>.f')" color="black"];
 	OP4 [label="4 MAKE_FUNCTION (0)" color="black"];
 	OP6 [label="6 STORE_FAST ('f')" color="black"];

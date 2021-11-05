@@ -189,6 +189,11 @@ public:
             return existing;
         if (pyTypeObject == nullptr)
             return existing;
+#ifdef DEBUG_VERBOSE
+        if (existing.Value->kind() == AVK_Integer && kind == AVK_BigInteger){
+            printf("Warning: downcast to big integer;\n");
+        }
+#endif
         else {
             return {
                     new PgcValue(pyTypeObject, kind),

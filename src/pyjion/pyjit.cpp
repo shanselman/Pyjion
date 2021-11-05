@@ -201,6 +201,7 @@ bool JitInit(const wchar_t* path) {
     if (PyType_Ready(&PyJitMethodLocation_Type) < 0)
         return false;
     g_emptyTuple = PyTuple_New(0);
+    setOptimizationLevel(1);
     return true;
 }
 
@@ -342,7 +343,6 @@ static PyInterpreterState* inter() {
 }
 
 static PyObject* pyjion_enable(PyObject* self, PyObject* args) {
-    setOptimizationLevel(1);
     auto prev = _PyInterpreterState_GetEvalFrameFunc(inter());
     _PyInterpreterState_SetEvalFrameFunc(inter(), PyJit_EvalFrame);
     if (prev == PyJit_EvalFrame) {

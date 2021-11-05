@@ -10,6 +10,7 @@
 * Calls to C Functions are faster
 * Added an OptimisticIntegers optimization to level 2 to inspect integer values and unbox them if they're small
 * Abstract value profiler will assert tuples of constant values (e.g. float, int) based on value
+* Fix a bug that would reset the optimization level to 1 whenever `pyjion.enable()` was called
 
 ## 1.0.0 (rc4)
 

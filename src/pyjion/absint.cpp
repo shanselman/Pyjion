@@ -591,8 +591,12 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     auto obj = POP_VALUE();
                     auto value = POP_VALUE();
                     if (OPT_ENABLED(AttrTypeTable)){
-                        if (obj.hasValue() && obj.Value->known()) {
-                            g_attrTable->captureStoreAttr(obj.Value->pythonType(), utf8_names[oparg], value.Value->kind());
+                        if (obj.hasValue() && obj.Value->known() && value.hasValue() && value.Value->known()) {
+                            if (g_attrTable->captureStoreAttr(obj.Value->pythonType(), utf8_names[oparg], value.Value->kind()) != 0){
+#ifdef DEBUG_VERBOSE
+                                printf("!Switching value of %s.%s to %u at %s:%d\n", obj.Value->pythonType()->tp_name, utf8_names[oparg], value.Value->kind(), PyUnicode_AsUTF8(mCode->co_name), curByte);
+#endif
+                            };
                         }
                     }
                 }
