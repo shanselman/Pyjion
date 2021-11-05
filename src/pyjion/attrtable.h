@@ -23,9 +23,9 @@
 *
 */
 
-#import <Python.h>
-#import <unordered_map>
-#import "absvalue.h"
+#include <Python.h>
+#include <unordered_map>
+#include "absvalue.h"
 
 #ifndef PYJION_ATTRTABLE_H
 #define PYJION_ATTRTABLE_H
