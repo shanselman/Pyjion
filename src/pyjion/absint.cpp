@@ -288,6 +288,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
             switch (opcode) {
                 case EXTENDED_ARG: {
                     curByte += SIZEOF_CODEUNIT;
+                    opcodeIndex += SIZEOF_CODEUNIT; // TODO : Merge these variables, they are duplicative.
                     oparg = (oparg << 8) | GET_OPARG(curByte);
                     opcode = GET_OPCODE(curByte);
                     updateStartState(lastState, curByte);

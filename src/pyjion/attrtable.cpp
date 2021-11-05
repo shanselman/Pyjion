@@ -32,7 +32,6 @@ int AttributeTable::captureStoreAttr(PyTypeObject* ty, const char* name, Abstrac
     if (table.find(ty) == table.end()){
         table[ty] = unordered_map<const char*, AbstractValueKind>();
         table[ty][name] = kind;
-        return 0;
     } else {
         if (table[ty].find(name) == table[ty].end()){
             table[ty][name] = kind;
@@ -51,10 +50,9 @@ int AttributeTable::captureStoreAttr(PyTypeObject* ty, const char* name, Abstrac
                     table[ty][name] = AVK_Any;
                     return -1;
             }
-            return 0;
         }
     }
-
+    return 0;
 }
 AbstractValueKind AttributeTable::getAttr(PyTypeObject* ty, const char* name){
     if (table.find(ty) == table.end()){
