@@ -76,11 +76,11 @@ def test_load_attr(n=10000):
 
 
 __benchmarks__ = [
-    # (test_floats, "floatmath_micro", {"level": 2}, 10),
-    # (test_ints, "intmath_micro", {"level": 2, "pgc": True}, 10),
-    # (test_bigints, "bigintmath_micro", {"level": 2, "pgc": True}, 10),
-    # (test_function_calls, "function_call_micro", {"level": 2, "pgc": True}, 10),
-    # (test_builtin_type_calls, "type_call_micro", {"level": 2, "pgc": True}, 10),
-    # (test_builtin_func_calls, "builtin_call_micro", {"level": 2, "pgc": True}, 10),
+    (test_floats, "floatmath_micro", {"level": 2}, 10),
+    (test_ints, "intmath_micro", {"level": 2, "pgc": True}, 10),
+    (test_bigints, "bigintmath_micro", {"level": 2, "pgc": True}, 10),
+    (test_function_calls, "function_call_micro", {"level": 2, "pgc": True}, 10),
+    (test_builtin_type_calls, "type_call_micro", {"level": 2, "pgc": True}, 10),
+    (test_builtin_func_calls, "builtin_call_micro", {"level": 2, "pgc": True}, 10),
     (test_load_attr, "load_attr_micro", {"level": 2, "pgc": True}, 10)
 ]
