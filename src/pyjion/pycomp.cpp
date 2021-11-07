@@ -1014,11 +1014,30 @@ void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj
     if (obj.Value->pythonType() != nullptr && obj.Value->pythonType()->tp_getattro) {
         // Often its just PyObject_GenericGetAttr to instead of recycling, use that.
         if (obj.Value->pythonType()->tp_getattro == PyObject_GenericGetAttr) {
-            emit_load_local(objLocal);
-            m_il.ld_i(name);
-            m_il.emit_call(METHOD_GENERIC_GETATTR);
-            emit_load_local(objLocal);
-            decref();
+            auto descr = _PyType_Lookup(obj.Value->pythonType(), name);
+            // incref name
+            if (descr != nullptr && Py_TYPE(descr)->tp_descr_get && PyDescr_IsData(descr)) {
+                Py_INCREF(descr); // TODO : Collect this reference when the code object is
+                auto tp_descr_get_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
+                                                         vector<Parameter>{
+                                                                 Parameter(CORINFO_TYPE_NATIVEINT),
+                                                                 Parameter(CORINFO_TYPE_NATIVEINT),
+                                                                 Parameter(CORINFO_TYPE_NATIVEINT)},
+                                                         (void*) Py_TYPE(descr)->tp_descr_get,
+                                                         "tp_descr_get");
+                m_il.ld_i(descr);
+                emit_load_local(objLocal);
+                m_il.ld_i(obj.Value->pythonType());
+                m_il.emit_call(tp_descr_get_token);
+                emit_load_local(objLocal);
+                decref();
+            } else {
+                emit_load_local(objLocal);
+                m_il.ld_i(name);
+                m_il.emit_call(METHOD_GENERIC_GETATTR);
+                emit_load_local(objLocal);
+                decref();
+            }
         } else {
             auto getattro_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
                                                      vector<Parameter>{
