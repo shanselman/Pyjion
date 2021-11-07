@@ -1047,6 +1047,8 @@ void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj
                 emit_mark_label(cachedAttr);
 
                     emit_ptr(descr);
+                    emit_incref();
+                    emit_ptr(descr);
 
                 emit_mark_label(end);
                 emit_load_local(objLocal);
