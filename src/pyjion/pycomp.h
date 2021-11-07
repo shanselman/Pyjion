@@ -262,6 +262,13 @@
         m_il.add();                                 \
     }                                               \
     m_il.ld_ind_i();
+#define LD_FIELDU4(type, field)                      \
+    if (offsetof(type, field) > 0) {                \
+        m_il.ld_i((int32_t) offsetof(type, field)); \
+        m_il.add();                                 \
+    }                                               \
+    m_il.ld_ind_u4();
+
 #define LD_FIELDR8(type, field)                     \
     if (offsetof(type, field) > 0) {                \
         m_il.ld_i((int32_t) offsetof(type, field)); \

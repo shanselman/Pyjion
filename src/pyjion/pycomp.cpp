@@ -1031,6 +1031,26 @@ void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj
                 m_il.emit_call(tp_descr_get_token);
                 emit_load_local(objLocal);
                 decref();
+            } else if (descr != nullptr) {
+                Label cachedAttr = emit_define_label(), end = emit_define_label();
+                emit_load_local(objLocal);
+                LD_FIELDI(PyObject, ob_type);
+                LD_FIELDU4(PyTypeObject, tp_version_tag);
+                m_il.ld_u4(obj.Value->pythonType()->tp_version_tag);
+                emit_branch(BranchEqual, cachedAttr);
+
+                    emit_load_local(objLocal);
+                    m_il.ld_i(name);
+                    m_il.emit_call(METHOD_GENERIC_GETATTR);
+                    emit_branch(BranchAlways, end);
+
+                emit_mark_label(cachedAttr);
+
+                    emit_ptr(descr);
+
+                emit_mark_label(end);
+                emit_load_local(objLocal);
+                decref();
             } else {
                 emit_load_local(objLocal);
                 m_il.ld_i(name);

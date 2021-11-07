@@ -246,6 +246,10 @@ public:
         push_back(CEE_LDIND_I4);// PopI  / PushI
     }
 
+    void ld_ind_u4() {
+        push_back(CEE_LDIND_U4);// PopI  / PushI
+    }
+
     void ld_ind_i8() {
         push_back(CEE_LDIND_I8);// PopI  / PushI
     }
