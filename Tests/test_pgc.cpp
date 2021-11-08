@@ -385,4 +385,36 @@ TEST_CASE("Test LOAD_ATTR profiling") {
         CHECK(t.returns() == "5");
         CHECK(t.pgcStatus() == PgcStatus::Optimized);
     }
+    SECTION("test changed attribute for  LOAD_ATTR") {
+        auto t = PgcProfilingTest(
+                "def f():\n"
+                "  class Node(object):\n"
+                "    def __init__(self):\n"
+                "        self.a = 2\n"
+                "    def prod(self):\n"
+                "        x = self.a\n"
+                "        self.a = 4\n"
+                "        y = self.a\n"
+                "        return x + y\n"
+                "  return Node().prod()\n");
+        CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
+        CHECK(t.returns() == "6");
+        CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
+        CHECK(t.returns() == "6");
+        CHECK(t.pgcStatus() == PgcStatus::Optimized);
+    }
+    SECTION("test changed class attribute using setattr LOAD_ATTR") {
+        auto t = PgcProfilingTest(
+                "def f():\n"
+                "  class F:\n"
+                "    a = 1\n"
+                "  x = F()\n"
+                "  setattr(x, 'a', 2)\n"
+                "  return x.a\n");
+        CHECK(t.pgcStatus() == PgcStatus::Uncompiled);
+        CHECK(t.returns() == "2");
+        CHECK(t.pgcStatus() == PgcStatus::CompiledWithProbes);
+        CHECK(t.returns() == "2");
+        CHECK(t.pgcStatus() == PgcStatus::Optimized);
+    }
 }

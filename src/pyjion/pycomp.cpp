@@ -1031,7 +1031,7 @@ void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj
                 m_il.emit_call(tp_descr_get_token);
                 emit_load_local(objLocal);
                 decref();
-            } else if (descr != nullptr) {
+            } else if (descr != nullptr && Py_TYPE(descr)->tp_descr_get == nullptr) {
                 Label cachedAttr = emit_define_label(), end = emit_define_label();
                 emit_load_local(objLocal);
                 LD_FIELDI(PyObject, ob_type);
@@ -1094,6 +1094,7 @@ void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj
     if (guard) {
         emit_branch(BranchAlways, skip_guard);
         emit_mark_label(execute_guard);
+        emit_debug_msg("Guard fail");
         emit_load_local(objLocal);
         m_il.ld_i(name);
         m_il.emit_call(METHOD_LOADATTR_TOKEN);
