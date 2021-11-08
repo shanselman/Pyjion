@@ -822,8 +822,16 @@ void PyJit_DebugType(PyTypeObject* ty) {
 }
 
 void PyJit_DebugPyObject(PyObject* obj) {
-    printf("Object at %p -- ", obj);
-    printf("%s\n", PyUnicode_AsUTF8(PyObject_Repr(obj)));
+    if (obj == nullptr){
+        printf("Object is nullptr \n");
+        return;
+    }
+    printf("Object %s at %p -- ", obj->ob_type->tp_name,  obj);
+    auto r = PyObject_Repr(obj);
+    if (r != nullptr)
+        printf("%s\n", PyUnicode_AsUTF8(r));
+    else
+        printf("\n");
 }
 
 void PyJit_PyErrRestore(PyObject* tb, PyObject* value, PyObject* exception) {
@@ -1763,6 +1771,23 @@ PyObject* PyJit_LoadAttrHash(PyObject* owner, PyObject* key, Py_hash_t name_hash
         _PyErr_SetKeyError(key);
     Py_DECREF(owner);
     return value;
+}
+
+PyObject* PyJit_LoadAttrDictLookup(PyObject* descr, PyObject* dict, PyObject* name) {
+    if (dict == nullptr)
+        return descr;
+
+    Py_INCREF(dict);
+    auto res = PyDict_GetItem(dict, name);
+    if (res != nullptr) {
+        Py_INCREF(res);
+        Py_DECREF(dict);
+        return res;
+    } else {
+        Py_INCREF(descr);
+        Py_DECREF(dict);
+        return descr;
+    }
 }
 
 int PyJit_StoreAttr(PyObject* value, PyObject* owner, PyObject* name) {

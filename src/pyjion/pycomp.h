@@ -209,6 +209,7 @@
 #define METHOD_LOAD_ASSERTION_ERROR          0x00030006
 #define METHOD_GENERIC_GETATTR               0x00030007
 #define METHOD_LOADATTR_HASH                 0x00030008
+#define METHOD_LOADATTR_DICT_LOOKUP          0x00030009
 
 /* Tracing methods */
 #define METHOD_TRACE_LINE                    0x00030010

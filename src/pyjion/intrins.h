@@ -266,7 +266,7 @@ PyObject* PyJit_BuildClass(PyFrameObject* f);
 
 PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name);
 PyObject* PyJit_LoadAttrHash(PyObject* owner, PyObject* key, Py_hash_t name_hash);
-
+PyObject* PyJit_LoadAttrDictLookup(PyObject* descr, PyObject* dict, PyObject* name);
 int PyJit_StoreAttr(PyObject* value, PyObject* owner, PyObject* name);
 
 int PyJit_DeleteAttr(PyObject* owner, PyObject* name);
