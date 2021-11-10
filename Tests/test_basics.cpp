@@ -710,4 +710,13 @@ TEST_CASE("Test bytearray") {
                 "  return x[-1]\n");
         CHECK(t.raises() == PyExc_IndexError);
     }
+    SECTION("test bytearray indexes") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = bytearray(2)\n"
+                "  x[0] = 255\n"
+                "  x[1] = 155\n"
+                "  return x[0], x[1]\n");
+        CHECK(t.returns() == "(255, 155)");
+    }
 }

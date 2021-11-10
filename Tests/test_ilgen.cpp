@@ -266,3 +266,41 @@ TEST_CASE("Test valuetype"){
         CHECK(!symbols.empty());
     }
 }
+TEST_CASE("Test binary operations") {
+    SECTION("test << ") {
+        int32_t value1 = GENERATE(1, 4, 64);
+        int32_t value2 = GENERATE(1, 4, 64);
+        auto test_module = new UserModule(g_module);
+        auto gen = new ILGenerator(
+                test_module,
+                CORINFO_TYPE_INT,
+                std::vector<Parameter>{});
+        gen->ld_i4(value1);
+        gen->ld_i4(value2);
+        gen->lshift();
+        gen->ret();
+        auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        JITMethod method = gen->compile(jitInfo, g_jit, 100);
+        REQUIRE(method.m_addr != nullptr);
+        int32_t result = ((Returns_int32) method.getAddr())();
+        CHECK(result == (value1 << value2));
+    }
+    SECTION("test >> ") {
+        int32_t value1 = GENERATE(1, 4, 64);
+        int32_t value2 = GENERATE(1, 4, 64);
+        auto test_module = new UserModule(g_module);
+        auto gen = new ILGenerator(
+                test_module,
+                CORINFO_TYPE_INT,
+                std::vector<Parameter>{});
+        gen->ld_i4(value1);
+        gen->ld_i4(value2);
+        gen->rshift();
+        gen->ret();
+        auto* jitInfo = new CorJitInfo("test_module", "test_32_int", test_module, true);
+        JITMethod method = gen->compile(jitInfo, g_jit, 100);
+        REQUIRE(method.m_addr != nullptr);
+        int32_t result = ((Returns_int32) method.getAddr())();
+        CHECK(result == (value1 >> value2));
+    }
+}

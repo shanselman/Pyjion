@@ -52,6 +52,11 @@ bool supportsUnboxing(py_opcode opcode) {
         case GET_ITER:
         case FOR_ITER:
         case BINARY_SUBSCR:
+        case BINARY_LSHIFT:
+        case BINARY_RSHIFT:
+        case BINARY_AND:
+        case BINARY_OR:
+        case BINARY_XOR:
             return true;
         default:
             return false;

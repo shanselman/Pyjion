@@ -1974,6 +1974,21 @@ LocalKind PythonCompiler::emit_binary_int(uint16_t opcode) {
         case INPLACE_FLOOR_DIVIDE:
             m_il.emit_call(METHOD_INT_FLOOR_DIVIDE);
             return LK_Int;
+        case BINARY_LSHIFT:
+            m_il.lshift();
+            return LK_Int;
+        case BINARY_RSHIFT:
+            m_il.rshift();
+            return LK_Int;
+        case BINARY_AND:
+            m_il.bitwise_and();
+            return LK_Int;
+        case BINARY_OR:
+            m_il.bitwise_or();
+            return LK_Int;
+        case BINARY_XOR:
+            m_il.bitwise_xor();
+            return LK_Int;
         default:
             throw UnexpectedValueException();
     }
@@ -2389,7 +2404,7 @@ LocalKind PythonCompiler::emit_unboxed_binary_subscr(AbstractValueWithSources le
         LD_FIELDI(PyByteArrayObject, ob_start);
         emit_load_local(index);
         m_il.add();
-        m_il.ld_ind_i1();
+        m_il.ld_ind_u1();
         m_il.conv_i();
         emit_branch(BranchAlways, done);
 

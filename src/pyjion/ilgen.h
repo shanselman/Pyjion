@@ -246,6 +246,10 @@ public:
         push_back(CEE_LDIND_I1);// PopI + PopI / Push0
     }
 
+    void ld_ind_u1() {
+        push_back(CEE_LDIND_U1);// PopI + PopI / Push0
+    }
+
     void ld_ind_i4() {
         push_back(CEE_LDIND_I4);// PopI  / PushI
     }
@@ -379,6 +383,22 @@ public:
 
     void bitwise_and() {
         push_back(CEE_AND);//  Pop1+Pop1, Push1
+    }
+
+    void bitwise_or(){
+        push_back(CEE_OR);
+    }
+
+    void bitwise_xor(){
+        push_back(CEE_XOR);
+    }
+
+    void lshift() {
+        push_back(CEE_SHL);
+    }
+
+    void rshift() {
+        push_back(CEE_SHR);
     }
 
     void pop() {
