@@ -2367,6 +2367,43 @@ void PythonCompiler::emit_pgc_profile_capture(Local value, size_t ipos, size_t i
     m_il.emit_call(METHOD_PGC_PROBE);
 }
 
+LocalKind PythonCompiler::emit_unboxed_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right){
+    // This is the only supported scenario right now.
+    if (left.Value->kind() != AVK_Bytearray && right.Value->kind() != AVK_Integer)
+        throw UnexpectedValueException();
+
+    Local index = emit_define_local(LK_Int), array = emit_define_local(LK_Pointer);
+    Label overflow = emit_define_label(), done = emit_define_label();
+    emit_store_local(index);
+    emit_store_local(array);
+
+    emit_load_local(index);
+    emit_load_local(array);
+    emit_list_length();
+    emit_branch(BranchGreaterThanEqual, overflow);
+    emit_load_local(index);
+    m_il.ld_i(0);
+    emit_branch(BranchLessThan, overflow);
+
+        emit_load_local(array);
+        LD_FIELDI(PyByteArrayObject, ob_start);
+        emit_load_local(index);
+        m_il.add();
+        m_il.ld_ind_i1();
+        m_il.conv_i();
+        emit_branch(BranchAlways, done);
+
+    emit_mark_label(overflow);
+
+        emit_nan_long();
+
+    emit_mark_label(done);
+    emit_free_local(index);
+    emit_free_local(array);
+
+    return LK_Int;
+}
+
 void PythonCompiler::emit_box(AbstractValueKind kind) {
     switch (kind) {
         case AVK_Float:
@@ -2380,7 +2417,10 @@ void PythonCompiler::emit_box(AbstractValueKind kind) {
             break;
         case AVK_Range:
         case AVK_UnboxedRangeIterator:
-            break;// Do nothing. They're already Python objects.
+        case AVK_Bytearray:
+            m_il.dup();
+            emit_incref();
+            break;
         default:
             throw UnexpectedValueException();
     }
@@ -2535,6 +2575,13 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
             emit_free_local(lcl);
             break;
         }
+        case AVK_UnboxedRangeIterator:
+        case AVK_Range:
+        case AVK_Bytearray:
+            // TODO: Decide what to do with reference counts
+            break;
+        default:
+            throw UnexpectedValueException();
     }
 };
 

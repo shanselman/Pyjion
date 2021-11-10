@@ -433,6 +433,7 @@ public:
     LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
     void emit_binary_subscr() override;
     void emit_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) override;
+    LocalKind emit_unboxed_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) override;
     bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop) override;
     bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop, AbstractValueWithSources step) override;
 

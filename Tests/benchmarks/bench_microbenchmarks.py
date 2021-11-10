@@ -49,14 +49,25 @@ def test_builtin_type_calls(n=10000):
 
 
 def test_builtin_func_calls(n=10000):
-    for n in range(n):
-        sum((n, n))
-        sum((n, n))
-        sum((n, n))
-        sum((n, n))
-        sum((n, n))
-        sum((n, n))
-        sum((n, n))
+    for c in range(n):
+        sum((c, c))
+        sum((c, c))
+        sum((c, c))
+        sum((c, c))
+        sum((c, c))
+        sum((c, c))
+        sum((c, c))
+
+
+def test_bytearray_slicing(n=1000):
+    for y in range(1, n):
+        b = bytearray([0] * 2)
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
 
 
 __benchmarks__ = [
@@ -65,5 +76,6 @@ __benchmarks__ = [
     (test_bigints, "bigintmath_micro", {"level": 2, "pgc": True}, 10),
     (test_function_calls, "function_call_micro", {"level": 2, "pgc": True}, 10),
     (test_builtin_type_calls, "type_call_micro", {"level": 2, "pgc": True}, 10),
-    (test_builtin_func_calls, "builtin_call_micro", {"level": 2, "pgc": True}, 10)
+    (test_builtin_func_calls, "builtin_call_micro", {"level": 2, "pgc": True}, 10),
+    (test_bytearray_slicing, "bytearray_slicing", {"level": 2, "pgc": True}, 10)
 ]

@@ -563,6 +563,7 @@ class TypeValue : public AbstractValue {
 
 class ByteArrayValue : public AbstractValue {
     AbstractValueKind kind() override;
+    AbstractValue* binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) override;
     AbstractValue* unary(AbstractSource* selfSources, int op) override;
     const char* describe() override;
     AbstractValueKind resolveMethod(const char* name) override;

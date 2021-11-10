@@ -398,6 +398,7 @@ public:
     virtual LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) = 0;
     virtual void emit_binary_subscr() = 0;
     virtual void emit_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) = 0;
+    virtual LocalKind emit_unboxed_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) = 0;
     virtual bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop) = 0;
     virtual bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop, AbstractValueWithSources step) = 0;
 

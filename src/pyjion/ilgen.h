@@ -242,6 +242,10 @@ public:
         push_back(CEE_STIND_I8);// PopI + PopI / Push0
     }
 
+    void ld_ind_i1() {
+        push_back(CEE_LDIND_I1);// PopI + PopI / Push0
+    }
+
     void ld_ind_i4() {
         push_back(CEE_LDIND_I4);// PopI  / PushI
     }
@@ -428,6 +432,10 @@ public:
         push_back((BYTE) CEE_CGT_UN);//  Pop1+Pop1, PushI
         ld_i4(0);
         compare_eq();
+    }
+
+    void conv_i(){
+        push_back(CEE_CONV_I);
     }
 
     void conv_r8() {

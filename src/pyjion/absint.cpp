@@ -1206,14 +1206,14 @@ void AbstractInterpreter::invalidFloatErrorCheck(const char* reason, py_opindex 
     m_comp->emit_load_and_free_local(errorCheckLocal);
 }
 
-void AbstractInterpreter::invalidIntErrorCheck(const char* reason, py_opindex curByte, py_opcode opcode) {
+void AbstractInterpreter::invalidIntErrorCheck(const char* reason, py_opindex curByte, py_opcode opcode, void* exc, const char* message) {
     auto noErr = m_comp->emit_define_label();
     Local errorCheckLocal = m_comp->emit_define_local(LK_Int);
     m_comp->emit_store_local(errorCheckLocal);
     m_comp->emit_load_local(errorCheckLocal);
     m_comp->emit_infinity_long();
     m_comp->emit_branch(BranchNotEqual, noErr);
-    m_comp->emit_pyerr_setstring(PyExc_ZeroDivisionError, "division by zero/operation infinite");
+    m_comp->emit_pyerr_setstring(exc, message);
     branchRaise(reason, "", curByte);
     m_comp->emit_mark_label(noErr);
     m_comp->emit_load_and_free_local(errorCheckLocal);
@@ -2016,17 +2016,24 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case BINARY_SUBSCR:
-                if (OPT_ENABLED(KnownBinarySubscr) && stackInfo.size() >= 2) {
+                if (CAN_UNBOX() && op.escape) {
+                    auto retKind = m_comp->emit_unboxed_binary_subscr(stackInfo.second(), stackInfo.top());
+                    decStack(2);
+                    invalidIntErrorCheck("unboxed binary op failed", op.index, byte, PyExc_IndexError, "bytearray index out of range");
+                    incStack(1, retKind);
+                } else if (OPT_ENABLED(KnownBinarySubscr) && stackInfo.size() >= 2) {
                     FLAG_OPT_USAGE(KnownBinarySubscr);
                     m_comp->emit_binary_subscr(stackInfo.second(), stackInfo.top());
                     decStack(2);
                     errorCheck("optimized binary subscr failed", "", op.index);
+                    incStack();
                 } else {
                     m_comp->emit_binary_subscr();
                     decStack(2);
                     errorCheck("binary subscr failed", "", op.index);
+                    incStack();
                 }
-                incStack();
+
                 break;
             case BINARY_ADD:
             case BINARY_TRUE_DIVIDE:

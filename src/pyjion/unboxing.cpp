@@ -51,6 +51,7 @@ bool supportsUnboxing(py_opcode opcode) {
         case DELETE_FAST:
         case GET_ITER:
         case FOR_ITER:
+        case BINARY_SUBSCR:
             return true;
         default:
             return false;
@@ -88,6 +89,10 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
                     return true;
             }
             return false;
+        case BINARY_SUBSCR:
+            if (edgesIn.size() == 2 && edgesIn[0] == AVK_Integer && edgesIn[1] == AVK_Bytearray)
+                return true;
+            return false;
         default:
             return true;
     }
@@ -100,6 +105,7 @@ bool supportsEscaping(AbstractValueKind kind) {// TODO: Allow filter for the spe
         case AVK_Bool:
         case AVK_UnboxedRangeIterator:
         case AVK_Range:
+        case AVK_Bytearray:
             return true;
         default:
             return false;

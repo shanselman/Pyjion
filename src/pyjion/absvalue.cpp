@@ -1355,6 +1355,22 @@ AbstractValue* ByteArrayValue::unary(AbstractSource* selfSources, int op) {
     return AbstractValue::unary(selfSources, op);
 }
 
+AbstractValue* ByteArrayValue::binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {
+    switch (op) {
+        case BINARY_SUBSCR:
+            return &Integer;
+        case BINARY_MULTIPLY:
+            if (other.Value->kind() == AVK_Integer || other.Value->kind() == AVK_BigInteger)
+                return &ByteArray;
+            break;
+        case BINARY_ADD:
+        case INPLACE_ADD:
+            if (other.Value->kind() == AVK_Bytearray)
+                return &ByteArray;
+    }
+    return AbstractValue::binary(selfSources, op, other);
+}
+
 const char* ByteArrayValue::describe() {
     return "bytearray";
 }
