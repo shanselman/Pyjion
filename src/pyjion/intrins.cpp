@@ -2838,16 +2838,16 @@ PyObject* PyJit_BlockPop(PyFrameObject* frame) {
     return reinterpret_cast<PyObject*>(PyFrame_BlockPop(frame));
 }
 
-bool PyJit_UnboxBool(PyObject* o, int* failure) {
+int8_t PyJit_UnboxBool(PyObject* o, int* failure) {
     if (PyBool_Check(o)){
-        return Py_IsTrue(o);
+        return Py_IsTrue(o) ? 1 : 0;
     }
     if (PyLong_Check(o)){
         long val = PyLong_AsLong(o);
-        if (val == 0)
-            return false;
-        if (val == 1)
-            return true;
+        if (val == 0 || val == 1) {
+            Py_DECREF(o);
+            return (int8_t)val;
+        }
         *failure = 1;
         PyJit_PgcGuardException(o, "bool");
         return false;
