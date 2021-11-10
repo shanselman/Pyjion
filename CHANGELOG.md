@@ -7,7 +7,8 @@
 * The types of global variables are profiled at compile-time
 * Improved performance of bytearrays, by adding an unboxed bytearray type and unboxed slice operations for bytearrays, yielding unboxed integers
 * Fixed a reference count bug with unboxed range iterators
-
+* PGC will now allow an int of value 0 or 1 to be unboxed into a bool
+* 
 ## 1.0.0
 
 * Fix a bug on `pyjion.config()` crashing when called with invalid arguments (#401)
