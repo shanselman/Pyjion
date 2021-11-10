@@ -1,5 +1,10 @@
 # Release notes
 
+## 1.0.0 (develop/main)
+
+* Improved performance of bytearrays, by adding an unboxed bytearray type and unboxed slice operations for bytearrays, yielding unboxed integers
+* Fixed a reference count bug with unboxed range iterators
+
 ## 1.0.0
 
 * Fix a bug on `pyjion.config()` crashing when called with invalid arguments (#401)

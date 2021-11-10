@@ -49,14 +49,14 @@ def test_builtin_type_calls(n=10000):
 
 
 def test_builtin_func_calls(n=10000):
-    for c in range(n):
-        sum((c, c))
-        sum((c, c))
-        sum((c, c))
-        sum((c, c))
-        sum((c, c))
-        sum((c, c))
-        sum((c, c))
+    for _ in range(n):
+        sum((1, 2))
+        sum((1, 2))
+        sum((1, 2))
+        sum((1, 2))
+        sum((1, 2))
+        sum((1, 2))
+
 
 
 def test_bytearray_slicing(n=1000):
