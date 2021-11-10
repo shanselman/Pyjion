@@ -755,6 +755,11 @@ public:
     ArgumentValue(PyTypeObject* type, PyObject* object, AbstractValueKind kind) : VolatileValue(type, object, kind) {}
 };
 
+class GlobalValue : public VolatileValue {
+public:
+    GlobalValue(PyTypeObject* type, PyObject* object, AbstractValueKind kind) : VolatileValue(type, object, kind) {}
+};
+
 AbstractValueKind knownFunctionReturnType(AbstractValueWithSources source);
 
 extern UndefinedValue Undefined;

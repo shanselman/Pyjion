@@ -547,8 +547,9 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     } else {
                         // global source
                         auto globalSource = addGlobalSource(opcodeIndex, oparg, PyUnicode_AsUTF8(name), v);
+                        AbstractValue* avk = new GlobalValue(Py_TYPE(v), v, GetAbstractType(Py_TYPE(v), v));
                         auto value = AbstractValueWithSources(
-                                &Any,
+                                avk,
                                 globalSource);
                         lastState.push(value);
                         lastResolvedGlobal[oparg] = v;

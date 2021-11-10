@@ -2,6 +2,7 @@
 
 ## 1.0.0 (develop/main)
 
+* The types of global variables are profiled at compile-time
 * Improved performance of bytearrays, by adding an unboxed bytearray type and unboxed slice operations for bytearrays, yielding unboxed integers
 * Fixed a reference count bug with unboxed range iterators
 
