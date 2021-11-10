@@ -2837,3 +2837,22 @@ PyObject* PyJit_BlockPop(PyFrameObject* frame) {
     }
     return reinterpret_cast<PyObject*>(PyFrame_BlockPop(frame));
 }
+
+bool PyJit_UnboxBool(PyObject* o, int* failure) {
+    if (PyBool_Check(o)){
+        return Py_IsTrue(o);
+    }
+    if (PyLong_Check(o)){
+        long val = PyLong_AsLong(o);
+        if (val == 0)
+            return false;
+        if (val == 1)
+            return true;
+        *failure = 1;
+        PyJit_PgcGuardException(o, "bool");
+        return false;
+    }
+    *failure = 1;
+    PyJit_PgcGuardException(o, "bool");
+    return false;
+}

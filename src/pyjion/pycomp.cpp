@@ -2553,41 +2553,26 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
             break;
         }
         case AVK_Bool: {
-            Local lcl = emit_define_local(LK_Pointer);
-            Label guard_pass = emit_define_label();
-            Label guard_fail = emit_define_label();
-            emit_store_local(lcl);
-            if (guard) {
+            if (guard){
+                emit_load_local_addr(success);
+                m_il.emit_call(METHOD_UNBOX_BOOL);
+            } else {
+                Local lcl = emit_define_local(LK_Pointer);
+                Label isFalse = emit_define_label();
+                Label decref_out = emit_define_label();
+                emit_store_local(lcl);
                 emit_load_local(lcl);
-                LD_FIELDI(PyObject, ob_type);
-                emit_ptr(&PyBool_Type);
-                emit_branch(BranchNotEqual, guard_fail);
-            }
-
-            Label isFalse = emit_define_label();
-            Label decref_out = emit_define_label();
-            emit_load_local(lcl);
-            emit_ptr(Py_True);
-            emit_branch(BranchNotEqual, isFalse);
-            emit_int(1);
-            emit_branch(BranchAlways, decref_out);
-            emit_mark_label(isFalse);
-            emit_int(0);
-            emit_mark_label(decref_out);
-            emit_load_local(lcl);
-            decref();
-
-            if (guard) {
-                emit_branch(BranchAlways, guard_pass);
-                emit_mark_label(guard_fail);
+                emit_ptr(Py_True);
+                emit_branch(BranchNotEqual, isFalse);
                 emit_int(1);
-                emit_store_local(success);
+                emit_branch(BranchAlways, decref_out);
+                emit_mark_label(isFalse);
+                emit_int(0);
+                emit_mark_label(decref_out);
                 emit_load_local(lcl);
-                emit_guard_exception("bool");
-                emit_int(1);// keep the stack effect equivalent, this value is never used.
-                emit_mark_label(guard_pass);
+                decref();
+                emit_free_local(lcl);
             }
-            emit_free_local(lcl);
             break;
         }
         case AVK_UnboxedRangeIterator:
@@ -2916,6 +2901,7 @@ GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parame
 
 GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT));
+GLOBAL_METHOD(METHOD_UNBOX_BOOL, &PyJit_UnboxBool, CORINFO_TYPE_BOOL, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_INTRINSIC(INTRINSIC_TEST, &PyJit_LongTrueDivide, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_LONG));
 

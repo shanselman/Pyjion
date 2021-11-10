@@ -227,6 +227,7 @@
 #define METHOD_INT_FLOOR_DIVIDE              0x00050004
 #define METHOD_INT_TRUE_DIVIDE               0x00050005
 #define METHOD_INT_MOD                       0x00050006
+#define METHOD_UNBOX_BOOL                    0x00050007
 
 #define METHOD_STORE_SUBSCR_OBJ              0x00060000
 #define METHOD_STORE_SUBSCR_OBJ_I            0x00060001
