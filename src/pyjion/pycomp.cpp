@@ -2515,40 +2515,12 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
         }
         case AVK_Integer: {
             Local lcl = emit_define_local(LK_Pointer);
-            Label guard_pass = emit_define_label();
-            Label guard_fail = emit_define_label();
             emit_store_local(lcl);
-            if (guard) {
-                emit_load_local(lcl);
-                LD_FIELDI(PyObject, ob_type);
-                emit_ptr(&PyLong_Type);
-                emit_branch(BranchNotEqual, guard_fail);
-            }
-
             emit_load_local(lcl);
+            emit_load_local_addr(success);
             m_il.emit_call(METHOD_PYLONG_AS_LONGLONG);
             emit_load_local(lcl);
             decref();
-
-            // Check if result is MAXLONG and mark the success flag as failed
-            Label not_nan = emit_define_label();
-            emit_dup();
-            emit_nan_long();
-            emit_branch(BranchNotEqual, not_nan);
-            emit_int(1);
-            emit_store_local(success);
-            emit_mark_label(not_nan);
-
-            if (guard) {
-                emit_branch(BranchAlways, guard_pass);
-                emit_mark_label(guard_fail);
-                emit_int(1);
-                emit_store_local(success);
-                emit_load_local(lcl);
-                emit_guard_exception("int");
-                emit_nan_long();// keep the stack effect equivalent, this value is never used.
-                emit_mark_label(guard_pass);
-            }
             emit_free_local(lcl);
             break;
         }
@@ -2849,7 +2821,7 @@ GLOBAL_METHOD(METHOD_FLOAT_MODULUS_TOKEN, static_cast<double (*)(double, double)
 GLOBAL_METHOD(METHOD_FLOAT_FROM_DOUBLE, PyFloat_FromDouble, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_DOUBLE));
 GLOBAL_METHOD(METHOD_BOOL_FROM_LONG, PyBool_FromLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_INT));
 GLOBAL_METHOD(METHOD_NUMBER_AS_SSIZET, PyNumber_AsSsize_t, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_PYLONG_AS_LONGLONG, PyJit_LongAsLongLong, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_PYLONG_AS_LONGLONG, PyJit_LongAsLongLong, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_PYLONG_FROM_LONGLONG, PyLong_FromLongLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_LONG));
 
 GLOBAL_METHOD(METHOD_PYERR_SETSTRING, PyErr_SetString, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));

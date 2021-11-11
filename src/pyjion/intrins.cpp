@@ -2800,23 +2800,7 @@ double PyJit_DoublePow(double iv, double iw) {
     return ix;
 }
 
-long long PyJit_LongAsLongLong(PyObject* vv) {
-    if (vv == nullptr) {
-        PyErr_SetString(PyExc_ValueError,
-                        "Pyjion failed to unbox the integer because it is not initialized.");
-        return MAXLONG;
-    }
-    long long result = PyLong_AsLongLong(vv);
-    if (result == -1 && PyErr_Occurred()) {
-        PyErr_Clear();
-        PyErr_Format(PyExc_OverflowError,
-                     "Pyjion failed to unbox the integer %s because it is too large. Try disabling PGC pyjion.config(pgc=False) to avoid hitting this error.",
-                     PyUnicode_AsUTF8(PyObject_Repr(vv)));
 
-        return MAXLONG;
-    }
-    return result;
-}
 
 void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
     assert(PyjionUnboxingError != nullptr);
@@ -2836,6 +2820,33 @@ PyObject* PyJit_BlockPop(PyFrameObject* frame) {
         return nullptr;
     }
     return reinterpret_cast<PyObject*>(PyFrame_BlockPop(frame));
+}
+
+int64_t PyJit_LongAsLongLong(PyObject* vv, int* failure) {
+    if (vv == nullptr) {
+        PyErr_SetString(PyExc_ValueError,
+                        "Pyjion failed to unbox the integer because it is not initialized.");
+        *failure = 1;
+        return 0;
+    }
+    if (PyLong_Check(vv)){
+        int64_t result = PyLong_AsLongLong(vv);
+        if (result == -1 && PyErr_Occurred()) {
+            PyErr_Clear();
+            PyErr_Format(PyExc_OverflowError,
+                         "Pyjion failed to unbox the integer %s because it is too large. Try disabling PGC pyjion.config(pgc=False) to avoid hitting this error.",
+                         PyUnicode_AsUTF8(PyObject_Repr(vv)));
+            *failure = 1;
+            return MAXLONG;
+        }
+        return result;
+    } else if (PyBool_Check(vv)) {
+        return Py_IsTrue(vv) ? 1 : 0;
+    } else {
+        *failure = 1;
+        PyJit_PgcGuardException(vv, "int");
+        return MAXLONG;
+    }
 }
 
 int8_t PyJit_UnboxBool(PyObject* o, int* failure) {
