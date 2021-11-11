@@ -393,6 +393,10 @@ public:
         push_back(CEE_XOR);
     }
 
+    void bitwise_not(){
+        push_back(CEE_NOT);
+    }
+
     void lshift() {
         push_back(CEE_SHL);
     }

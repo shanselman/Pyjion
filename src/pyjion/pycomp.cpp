@@ -2535,12 +2535,7 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
                 emit_store_local(lcl);
                 emit_load_local(lcl);
                 emit_ptr(Py_True);
-                emit_branch(BranchNotEqual, isFalse);
-                emit_int(1);
-                emit_branch(BranchAlways, decref_out);
-                emit_mark_label(isFalse);
-                emit_int(0);
-                emit_mark_label(decref_out);
+                m_il.compare_eq();
                 emit_load_local(lcl);
                 decref();
                 emit_free_local(lcl);
@@ -2556,6 +2551,25 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
             throw UnexpectedValueException();
     }
 };
+
+void PythonCompiler::emit_unboxed_unary_not(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Integer:
+        case AVK_Bool:
+            m_il.ld_i4(0);
+            m_il.compare_eq();
+            break;
+        case AVK_Float:
+            m_il.ld_r8(0.0);
+            m_il.compare_eq();
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
 
 void PythonCompiler::emit_infinity() {
     m_il.ld_r8(INFINITY);

@@ -2005,10 +2005,16 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case UNARY_NOT:
-                m_comp->emit_unary_not();
-                decStack(1);
-                errorCheck("unary not failed", "", opcodeIndex);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_not(stackInfo.top());
+                    decStack(1);
+                    incStack(1, LK_Bool);
+                } else {
+                    m_comp->emit_unary_not();
+                    decStack(1);
+                    errorCheck("unary not failed", "", opcodeIndex);
+                    incStack();
+                }
                 break;
             case UNARY_INVERT:
                 m_comp->emit_unary_invert();
