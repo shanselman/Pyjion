@@ -1993,22 +1993,30 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 buildSet(oparg);
                 break;
             case UNARY_POSITIVE:
-                m_comp->emit_unary_positive();
-                decStack();
-                errorCheck("unary positive failed", "", opcodeIndex);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_positive(stackInfo.top());
+                } else {
+                    m_comp->emit_unary_positive();
+                    decStack();
+                    errorCheck("unary positive failed", "", opcodeIndex);
+                    incStack();
+                }
                 break;
             case UNARY_NEGATIVE:
-                m_comp->emit_unary_negative();
-                decStack();
-                errorCheck("unary negative failed", "", opcodeIndex);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_negative(stackInfo.top());
+                } else {
+                    m_comp->emit_unary_negative();
+                    decStack();
+                    errorCheck("unary negative failed", "", opcodeIndex);
+                    incStack();
+                }
                 break;
             case UNARY_NOT:
                 if (CAN_UNBOX() && op.escape) {
                     m_comp->emit_unboxed_unary_not(stackInfo.top());
                     decStack(1);
-                    incStack(1, LK_Bool);
+                    incStack(1, LK_Int);
                 } else {
                     m_comp->emit_unary_not();
                     decStack(1);
@@ -2017,10 +2025,16 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 }
                 break;
             case UNARY_INVERT:
-                m_comp->emit_unary_invert();
-                decStack(1);
-                errorCheck("unary invert failed", "", op.index);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_invert(stackInfo.top());
+                    decStack(1);
+                    incStack(1, LK_Int);
+                } else {
+                    m_comp->emit_unary_invert();
+                    decStack(1);
+                    errorCheck("unary invert failed", "", op.index);
+                    incStack();
+                }
                 break;
             case BINARY_SUBSCR:
                 if (CAN_UNBOX() && op.escape) {

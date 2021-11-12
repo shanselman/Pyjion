@@ -368,6 +368,9 @@ public:
     void emit_unary_not() override;
     void emit_unary_invert() override;
     void emit_unboxed_unary_not(AbstractValueWithSources val) override;
+    void emit_unboxed_unary_positive(AbstractValueWithSources val) override;
+    void emit_unboxed_unary_negative(AbstractValueWithSources val) override;
+    void emit_unboxed_unary_invert(AbstractValueWithSources val) override;
 
     void emit_import_name(void* name) override;
     void emit_import_from(void* name) override;

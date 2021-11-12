@@ -2571,6 +2571,76 @@ void PythonCompiler::emit_unboxed_unary_not(AbstractValueWithSources val) {
     }
 }
 
+void PythonCompiler::emit_unboxed_unary_positive(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Bool:
+            break; // Do nothing
+        case AVK_Integer: {
+            Local loc = emit_define_local(LK_Int), mask = emit_define_local(LK_Int);
+            emit_store_local(loc);
+            emit_load_local(loc);
+            emit_int(63);
+            m_il.rshift();
+            emit_store_local(mask);
+
+            emit_load_local(loc);
+            emit_load_local(mask);
+            m_il.add();
+            emit_load_local(mask);
+            m_il.bitwise_xor();
+            emit_free_local(loc);
+            emit_free_local(mask);
+        }
+            break;
+        case AVK_Float: {
+            // TODO : Write a more efficient branch-less version
+            Label is_positive = emit_define_label();
+            m_il.dup();
+            m_il.ld_r8(0.0);
+            emit_branch(BranchGreaterThanEqual, is_positive);
+            m_il.neg();
+            emit_mark_label(is_positive);
+        }
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
+
+void PythonCompiler::emit_unboxed_unary_negative(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Integer:
+        case AVK_Bool:
+        case AVK_Float:
+            m_il.neg();
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
+
+void PythonCompiler::emit_unboxed_unary_invert(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Integer:
+        case AVK_Bool:
+            m_il.ld_i4(1);
+            m_il.add();
+            m_il.neg();
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
+
 void PythonCompiler::emit_infinity() {
     m_il.ld_r8(INFINITY);
 }

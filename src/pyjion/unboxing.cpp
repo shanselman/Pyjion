@@ -58,6 +58,9 @@ bool supportsUnboxing(py_opcode opcode) {
         case BINARY_OR:
         case BINARY_XOR:
         case UNARY_NOT:
+        case UNARY_POSITIVE:
+        case UNARY_NEGATIVE:
+        case UNARY_INVERT:
             return true;
         default:
             return false;

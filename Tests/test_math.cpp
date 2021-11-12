@@ -822,6 +822,16 @@ TEST_CASE("test binary/arithmetic operations") {
                 "def f():\n    x = 1.0\n    y = +x\n    return y");
         CHECK(t.returns() == "1.0");
     }
+    SECTION("int postive unary") {
+        auto t = EmissionTest(
+                "def f():\n    x = -2\n    y = +x\n    return y");
+        CHECK(t.returns() == "2");
+    }
+    SECTION("int postive unary positive const") {
+        auto t = EmissionTest(
+                "def f():\n    x = 2\n    y = +x\n    return y");
+        CHECK(t.returns() == "2");
+    }
     SECTION("float not unary") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.0\n    if not x:\n        return 1\n    return 2");
@@ -841,6 +851,12 @@ TEST_CASE("test binary/arithmetic operations") {
         auto t = EmissionTest(
                 "def f():\n    x = 1.0\n    y = not x\n    return y");
         CHECK(t.returns() == "False");
+    }
+    SECTION("int ~ operator") {
+        CHECK(EmissionTest("def f():\n    x = -1\n    return ~x").returns() == "0");
+        CHECK(EmissionTest("def f():\n    x = -4\n    return ~x").returns() == "3");
+        CHECK(EmissionTest("def f():\n    x = 4\n    return ~x").returns() == "-5");
+        CHECK(EmissionTest("def f():\n    x = 0\n    return ~x").returns() == "-1");
     }
     SECTION("test unary constants") {
         auto t = EmissionTest(
