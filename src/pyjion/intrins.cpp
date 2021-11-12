@@ -1628,6 +1628,7 @@ PyObject* PyJit_GetUnboxedIter(PyObject* iterable) {
         it->step = PyLong_AsLongLong(r->step);
         it->len = PyLong_AsLongLong(r->length);
         it->index = 0;
+        Py_DECREF(iterable);
         return (PyObject*) it;
     } else {
         PyErr_SetString(PyExc_TypeError, "Iterable is not a range iterator. Cannot unbox.");

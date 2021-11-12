@@ -2135,8 +2135,16 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case GET_ITER: {
-                if (CAN_UNBOX() && op.escape) {
-                    m_comp->emit_getiter_unboxed();
+                if (CAN_UNBOX()) {
+                    auto edgesOut = graph->getEdgesFrom(curByte);
+                    if (edgesOut.size() == 1
+                        && edgesOut[0].kind == AVK_UnboxedRangeIterator
+                        && graph->operator[](edgesOut[0].to).escape
+                        && graph->operator[](edgesOut[0].to).opcode == FOR_ITER) {
+                        m_comp->emit_getiter_unboxed();
+                    } else {
+                        m_comp->emit_getiter();
+                    }
                 } else {
                     m_comp->emit_getiter();
                 }
