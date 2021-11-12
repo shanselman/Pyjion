@@ -27,6 +27,7 @@
 #define PYJION_INTRINS_H
 
 #include <Python.h>
+#include <structmember.h>
 #include <frameobject.h>
 #include <vector>
 #include "types.h"
@@ -54,6 +55,12 @@ typedef SSIZE_T ssize_t;
 
 #define SIG_STOP_ITER  0x7fffffff
 #define SIG_ITER_ERROR 0xbeef
+
+typedef struct {
+    PyTypeObject *type;
+    Py_ssize_t hint;
+    unsigned int tp_version_tag;
+} PyJit_LoadAttrCacheEntry;
 
 typedef struct {
     PyObject_HEAD
@@ -264,9 +271,8 @@ PyObject* PyJit_PyTuple_New(int32_t len);
 
 PyObject* PyJit_BuildClass(PyFrameObject* f);
 
-PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name);
-PyObject* PyJit_LoadAttrHash(PyObject* owner, PyObject* key, Py_hash_t name_hash);
-PyObject* PyJit_LoadAttrDictLookup(PyObject* descr, PyObject* dict, PyObject* name);
+PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJit_LoadAttrCacheEntry* la);
+
 int PyJit_StoreAttr(PyObject* value, PyObject* owner, PyObject* name);
 
 int PyJit_DeleteAttr(PyObject* owner, PyObject* name);

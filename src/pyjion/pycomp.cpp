@@ -989,124 +989,10 @@ void PythonCompiler::emit_delete_attr(PyObject* name) {
     m_il.emit_call(METHOD_DELETEATTR_TOKEN);
 }
 
-void PythonCompiler::emit_load_attr(PyObject* name, AbstractValueWithSources obj) {
-    if (!obj.hasValue() || !obj.Value->known()) {
-        m_il.ld_i(name);
-        m_il.emit_call(METHOD_LOADATTR_TOKEN);
-        return;
-    }
-    bool guard = obj.Value->needsGuard();
-    Local objLocal = emit_define_local(LK_Pointer);
-    emit_store_local(objLocal);
-    Label skip_guard = emit_define_label(), execute_guard = emit_define_label();
-    if (guard) {
-        emit_load_local(objLocal);
-        LD_FIELDI(PyObject, ob_type);
-        emit_ptr(obj.Value->pythonType());
-        emit_branch(BranchNotEqual, execute_guard);
-        emit_load_local(objLocal);
-        LD_FIELDI(PyObject, ob_type);
-        LD_FIELDI(PyTypeObject, tp_getattro);
-        emit_ptr((void*) obj.Value->pythonType()->tp_getattro);
-        emit_branch(BranchNotEqual, execute_guard);
-    }
-
-    if (obj.Value->pythonType() != nullptr && obj.Value->pythonType()->tp_getattro) {
-        // Often its just PyObject_GenericGetAttr to instead of recycling, use that.
-        if (obj.Value->pythonType()->tp_getattro == PyObject_GenericGetAttr) {
-            auto descr = _PyType_Lookup(obj.Value->pythonType(), name);
-            // incref name
-            if (descr != nullptr && Py_TYPE(descr)->tp_descr_get && PyDescr_IsData(descr)) {
-                Py_INCREF(descr);// TODO : Collect this reference when the code object is
-                auto tp_descr_get_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
-                                                             vector<Parameter>{
-                                                                     Parameter(CORINFO_TYPE_NATIVEINT),
-                                                                     Parameter(CORINFO_TYPE_NATIVEINT),
-                                                                     Parameter(CORINFO_TYPE_NATIVEINT)},
-                                                             (void*) Py_TYPE(descr)->tp_descr_get,
-                                                             "tp_descr_get");
-                m_il.ld_i(descr);
-                emit_load_local(objLocal);
-                m_il.ld_i(obj.Value->pythonType());
-                m_il.emit_call(tp_descr_get_token);
-                emit_load_local(objLocal);
-                decref();
-            } else if (descr != nullptr && Py_TYPE(descr)->tp_descr_get == nullptr && obj.Value->pythonType()->tp_dictoffset != 0) {
-                Label lookupAttr = emit_define_label(), end = emit_define_label();
-                emit_load_local(objLocal);
-                LD_FIELDI(PyObject, ob_type);
-                LD_FIELDU4(PyTypeObject, tp_version_tag);
-                m_il.ld_u4(obj.Value->pythonType()->tp_version_tag);
-                emit_branch(BranchNotEqual, lookupAttr);
-
-                    emit_ptr(descr);
-                    emit_load_local(objLocal);
-                    m_il.ld_i(obj.Value->pythonType()->tp_dictoffset);
-                    m_il.add();
-                    m_il.ld_ind_i();
-                    m_il.ld_i(name);
-                    m_il.emit_call(METHOD_LOADATTR_DICT_LOOKUP);
-                    emit_branch(BranchAlways, end);
-
-                emit_mark_label(lookupAttr);
-                    emit_load_local(objLocal);
-                    m_il.ld_i(name);
-                    m_il.emit_call(METHOD_GENERIC_GETATTR);
-
-                emit_mark_label(end);
-                emit_load_local(objLocal);
-                decref();
-            } else {
-                emit_load_local(objLocal);
-                m_il.ld_i(name);
-                m_il.emit_call(METHOD_GENERIC_GETATTR);
-                emit_load_local(objLocal);
-                decref();
-            }
-        } else {
-            auto getattro_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
-                                                     vector<Parameter>{
-                                                             Parameter(CORINFO_TYPE_NATIVEINT),
-                                                             Parameter(CORINFO_TYPE_NATIVEINT)},
-                                                     (void*) obj.Value->pythonType()->tp_getattro,
-                                                     "tp_getattro");
-            emit_load_local(objLocal);
-            m_il.ld_i(name);
-            m_il.emit_call(getattro_token);
-            emit_load_local(objLocal);
-            decref();
-        }
-    } else if (obj.Value->pythonType() != nullptr && obj.Value->pythonType()->tp_getattr) {
-        auto getattr_token = g_module.AddMethod(CORINFO_TYPE_NATIVEINT,
-                                                vector<Parameter>{
-                                                        Parameter(CORINFO_TYPE_NATIVEINT),
-                                                        Parameter(CORINFO_TYPE_NATIVEINT)},
-                                                (void*) obj.Value->pythonType()->tp_getattr,
-                                                "tp_getattr");
-        emit_load_local(objLocal);
-        m_il.ld_i((void*) PyUnicode_AsUTF8((PyObject*) name));
-        m_il.emit_call(getattr_token);
-        emit_load_local(objLocal);
-        decref();
-    } else {
-        emit_load_local(objLocal);
-        m_il.ld_i(name);
-        m_il.emit_call(METHOD_LOADATTR_TOKEN);
-    }
-
-    if (guard) {
-        emit_branch(BranchAlways, skip_guard);
-        emit_mark_label(execute_guard);
-        emit_load_local(objLocal);
-        m_il.ld_i(name);
-        m_il.emit_call(METHOD_LOADATTR_TOKEN);
-        emit_mark_label(skip_guard);
-    }
-    emit_free_local(objLocal);
-}
-
 void PythonCompiler::emit_load_attr(PyObject* name) {
+    Local cache = emit_define_local(LK_Pointer);
     m_il.ld_i(name);
+    emit_ptr(cache);
     m_il.emit_call(METHOD_LOADATTR_TOKEN);
 }
 
@@ -2848,10 +2734,7 @@ GLOBAL_METHOD(METHOD_STOREGLOBAL_TOKEN, &PyJit_StoreGlobal, CORINFO_TYPE_INT, Pa
 GLOBAL_METHOD(METHOD_DELETEGLOBAL_TOKEN, &PyJit_DeleteGlobal, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_LOADGLOBAL_TOKEN, &PyJit_LoadGlobal, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
-GLOBAL_METHOD(METHOD_LOADATTR_TOKEN, &PyJit_LoadAttr, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_GENERIC_GETATTR, &PyObject_GenericGetAttr, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_LOADATTR_HASH, &PyJit_LoadAttrHash, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_LOADATTR_DICT_LOOKUP, &PyJit_LoadAttrDictLookup, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_LOADATTR_TOKEN, &PyJit_LoadAttr, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_STOREATTR_TOKEN, &PyJit_StoreAttr, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_DELETEATTR_TOKEN, &PyJit_DeleteAttr, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));

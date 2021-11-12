@@ -1821,12 +1821,7 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 intErrorCheck("delete attr failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 break;
             case LOAD_ATTR:
-                if (OPT_ENABLED(LoadAttr) && !stackInfo.empty()) {
-                    FLAG_OPT_USAGE(LoadAttr);
-                    m_comp->emit_load_attr(PyTuple_GetItem(mCode->co_names, oparg), stackInfo.top());
-                } else {
-                    m_comp->emit_load_attr(PyTuple_GetItem(mCode->co_names, oparg));
-                }
+                m_comp->emit_load_attr(PyTuple_GetItem(mCode->co_names, oparg));
                 decStack();
                 errorCheck("load attr failed", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 incStack();

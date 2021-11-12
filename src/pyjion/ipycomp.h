@@ -225,7 +225,6 @@ public:
 
     // Loads/stores/deletes an attribute on an object
     virtual void emit_load_attr(PyObject* name) = 0;
-    virtual void emit_load_attr(PyObject* name, AbstractValueWithSources obj) = 0;
     virtual void emit_store_attr(PyObject* name) = 0;
     virtual void emit_delete_attr(PyObject* name) = 0;
 

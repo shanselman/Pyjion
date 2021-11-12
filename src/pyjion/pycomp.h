@@ -207,9 +207,6 @@
 #define METHOD_STOREGLOBAL_TOKEN             0x00030004
 #define METHOD_DELETEGLOBAL_TOKEN            0x00030005
 #define METHOD_LOAD_ASSERTION_ERROR          0x00030006
-#define METHOD_GENERIC_GETATTR               0x00030007
-#define METHOD_LOADATTR_HASH                 0x00030008
-#define METHOD_LOADATTR_DICT_LOOKUP          0x00030009
 
 /* Tracing methods */
 #define METHOD_TRACE_LINE                    0x00030010
@@ -330,7 +327,6 @@ public:
     void emit_store_attr(PyObject* name) override;
     void emit_delete_attr(PyObject* name) override;
     void emit_load_attr(PyObject* name) override;
-    void emit_load_attr(PyObject* name, AbstractValueWithSources obj) override;
     void emit_store_global(PyObject* name) override;
     void emit_delete_global(PyObject* name) override;
     void emit_load_global(PyObject* name, PyObject* last, uint64_t globals_ver, uint64_t builtins_ver) override;

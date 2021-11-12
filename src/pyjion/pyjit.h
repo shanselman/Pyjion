@@ -63,7 +63,7 @@ enum OptimizationFlags {
     BuiltinMethods = 256,  // OPTIMIZE_BUILTIN_METHODS; // OPT-12
     TypeSlotLookups = 512, //OPTIMIZE_TYPESLOT_LOOKUPS; // OPT-13
     FunctionCalls = 1024,  // OPTIMIZE_FUNCTION_CALLS; // OPT-14
-    LoadAttr = 2048,       // OPTIMIZE_LOAD_ATTR; // OPT-15
+    LoadAttr = 2048,       //  No longer used..
     Unboxing = 4096,       // OPTIMIZE_UNBOXING; // OPT-16
     AttrTypeTable = 8192,         // OPTIMIZE_ISNONE; // OPT-17
     IntegerUnboxingMultiply = 16384,
