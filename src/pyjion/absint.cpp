@@ -547,8 +547,9 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     } else {
                         // global source
                         auto globalSource = addGlobalSource(opcodeIndex, oparg, PyUnicode_AsUTF8(name), v);
+                        AbstractValue* avk = new GlobalValue(Py_TYPE(v), v, GetAbstractType(Py_TYPE(v), v));
                         auto value = AbstractValueWithSources(
-                                &Any,
+                                avk,
                                 globalSource);
                         lastState.push(value);
                         lastResolvedGlobal[oparg] = v;
@@ -1206,14 +1207,14 @@ void AbstractInterpreter::invalidFloatErrorCheck(const char* reason, py_opindex 
     m_comp->emit_load_and_free_local(errorCheckLocal);
 }
 
-void AbstractInterpreter::invalidIntErrorCheck(const char* reason, py_opindex curByte, py_opcode opcode) {
+void AbstractInterpreter::invalidIntErrorCheck(const char* reason, py_opindex curByte, py_opcode opcode, void* exc, const char* message) {
     auto noErr = m_comp->emit_define_label();
     Local errorCheckLocal = m_comp->emit_define_local(LK_Int);
     m_comp->emit_store_local(errorCheckLocal);
     m_comp->emit_load_local(errorCheckLocal);
     m_comp->emit_infinity_long();
     m_comp->emit_branch(BranchNotEqual, noErr);
-    m_comp->emit_pyerr_setstring(PyExc_ZeroDivisionError, "division by zero/operation infinite");
+    m_comp->emit_pyerr_setstring(exc, message);
     branchRaise(reason, "", curByte);
     m_comp->emit_mark_label(noErr);
     m_comp->emit_load_and_free_local(errorCheckLocal);
@@ -1992,41 +1993,68 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 buildSet(oparg);
                 break;
             case UNARY_POSITIVE:
-                m_comp->emit_unary_positive();
-                decStack();
-                errorCheck("unary positive failed", "", opcodeIndex);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_positive(stackInfo.top());
+                } else {
+                    m_comp->emit_unary_positive();
+                    decStack();
+                    errorCheck("unary positive failed", "", opcodeIndex);
+                    incStack();
+                }
                 break;
             case UNARY_NEGATIVE:
-                m_comp->emit_unary_negative();
-                decStack();
-                errorCheck("unary negative failed", "", opcodeIndex);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_negative(stackInfo.top());
+                } else {
+                    m_comp->emit_unary_negative();
+                    decStack();
+                    errorCheck("unary negative failed", "", opcodeIndex);
+                    incStack();
+                }
                 break;
             case UNARY_NOT:
-                m_comp->emit_unary_not();
-                decStack(1);
-                errorCheck("unary not failed", "", opcodeIndex);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_not(stackInfo.top());
+                    decStack(1);
+                    incStack(1, LK_Int);
+                } else {
+                    m_comp->emit_unary_not();
+                    decStack(1);
+                    errorCheck("unary not failed", "", opcodeIndex);
+                    incStack();
+                }
                 break;
             case UNARY_INVERT:
-                m_comp->emit_unary_invert();
-                decStack(1);
-                errorCheck("unary invert failed", "", op.index);
-                incStack();
+                if (CAN_UNBOX() && op.escape) {
+                    m_comp->emit_unboxed_unary_invert(stackInfo.top());
+                    decStack(1);
+                    incStack(1, LK_Int);
+                } else {
+                    m_comp->emit_unary_invert();
+                    decStack(1);
+                    errorCheck("unary invert failed", "", op.index);
+                    incStack();
+                }
                 break;
             case BINARY_SUBSCR:
-                if (OPT_ENABLED(KnownBinarySubscr) && stackInfo.size() >= 2) {
+                if (CAN_UNBOX() && op.escape) {
+                    auto retKind = m_comp->emit_unboxed_binary_subscr(stackInfo.second(), stackInfo.top());
+                    decStack(2);
+                    invalidIntErrorCheck("unboxed binary op failed", op.index, byte, PyExc_IndexError, "bytearray index out of range");
+                    incStack(1, retKind);
+                } else if (OPT_ENABLED(KnownBinarySubscr) && stackInfo.size() >= 2) {
                     FLAG_OPT_USAGE(KnownBinarySubscr);
                     m_comp->emit_binary_subscr(stackInfo.second(), stackInfo.top());
                     decStack(2);
                     errorCheck("optimized binary subscr failed", "", op.index);
+                    incStack();
                 } else {
                     m_comp->emit_binary_subscr();
                     decStack(2);
                     errorCheck("binary subscr failed", "", op.index);
+                    incStack();
                 }
-                incStack();
+
                 break;
             case BINARY_ADD:
             case BINARY_TRUE_DIVIDE:

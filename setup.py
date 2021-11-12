@@ -6,7 +6,7 @@ from skbuild.cmaker import get_cmake_version
 # Add CMake as a build requirement if cmake is not installed or is too low a version
 setup_requires = []
 try:
-    if LegacyVersion(get_cmake_version()) < LegacyVersion("3.2"):
+    if LegacyVersion(get_cmake_version()) < LegacyVersion("3.13"):
         setup_requires.append('cmake')
 except SKBuildError:
     setup_requires.append('cmake')
@@ -19,7 +19,7 @@ with open("CHANGELOG.md", "r") as fh:
 
 setup(
     name='pyjion',
-    version='1.0.0',
+    version='1.1.0',
     description='A JIT compiler wrapper for CPython',
     author='Anthony Shaw',
     author_email='anthonyshaw@apache.org',

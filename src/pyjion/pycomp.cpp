@@ -2018,6 +2018,21 @@ LocalKind PythonCompiler::emit_binary_int(uint16_t opcode) {
         case INPLACE_FLOOR_DIVIDE:
             m_il.emit_call(METHOD_INT_FLOOR_DIVIDE);
             return LK_Int;
+        case BINARY_LSHIFT:
+            m_il.lshift();
+            return LK_Int;
+        case BINARY_RSHIFT:
+            m_il.rshift();
+            return LK_Int;
+        case BINARY_AND:
+            m_il.bitwise_and();
+            return LK_Int;
+        case BINARY_OR:
+            m_il.bitwise_or();
+            return LK_Int;
+        case BINARY_XOR:
+            m_il.bitwise_xor();
+            return LK_Int;
         default:
             throw UnexpectedValueException();
     }
@@ -2411,6 +2426,43 @@ void PythonCompiler::emit_pgc_profile_capture(Local value, size_t ipos, size_t i
     m_il.emit_call(METHOD_PGC_PROBE);
 }
 
+LocalKind PythonCompiler::emit_unboxed_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right){
+    // This is the only supported scenario right now.
+    if (left.Value->kind() != AVK_Bytearray && right.Value->kind() != AVK_Integer)
+        throw UnexpectedValueException();
+
+    Local index = emit_define_local(LK_Int), array = emit_define_local(LK_Pointer);
+    Label overflow = emit_define_label(), done = emit_define_label();
+    emit_store_local(index);
+    emit_store_local(array);
+
+    emit_load_local(index);
+    emit_load_local(array);
+    emit_list_length();
+    emit_branch(BranchGreaterThanEqual, overflow);
+    emit_load_local(index);
+    m_il.ld_i(0);
+    emit_branch(BranchLessThan, overflow);
+
+        emit_load_local(array);
+        LD_FIELDI(PyByteArrayObject, ob_start);
+        emit_load_local(index);
+        m_il.add();
+        m_il.ld_ind_u1();
+        m_il.conv_i();
+        emit_branch(BranchAlways, done);
+
+    emit_mark_label(overflow);
+
+        emit_nan_long();
+
+    emit_mark_label(done);
+    emit_free_local(index);
+    emit_free_local(array);
+
+    return LK_Int;
+}
+
 void PythonCompiler::emit_box(AbstractValueKind kind) {
     switch (kind) {
         case AVK_Float:
@@ -2424,7 +2476,10 @@ void PythonCompiler::emit_box(AbstractValueKind kind) {
             break;
         case AVK_Range:
         case AVK_UnboxedRangeIterator:
-            break;// Do nothing. They're already Python objects.
+        case AVK_Bytearray:
+            m_il.dup();
+            emit_incref();
+            break;
         default:
             throw UnexpectedValueException();
     }
@@ -2504,83 +2559,131 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
         }
         case AVK_Integer: {
             Local lcl = emit_define_local(LK_Pointer);
-            Label guard_pass = emit_define_label();
-            Label guard_fail = emit_define_label();
             emit_store_local(lcl);
-            if (guard) {
-                emit_load_local(lcl);
-                LD_FIELDI(PyObject, ob_type);
-                emit_ptr(&PyLong_Type);
-                emit_branch(BranchNotEqual, guard_fail);
-            }
-
             emit_load_local(lcl);
+            emit_load_local_addr(success);
             m_il.emit_call(METHOD_PYLONG_AS_LONGLONG);
             emit_load_local(lcl);
             decref();
-
-            // Check if result is MAXLONG and mark the success flag as failed
-            Label not_nan = emit_define_label();
-            emit_dup();
-            emit_nan_long();
-            emit_branch(BranchNotEqual, not_nan);
-            emit_int(1);
-            emit_store_local(success);
-            emit_mark_label(not_nan);
-
-            if (guard) {
-                emit_branch(BranchAlways, guard_pass);
-                emit_mark_label(guard_fail);
-                emit_int(1);
-                emit_store_local(success);
-                emit_load_local(lcl);
-                emit_guard_exception("int");
-                emit_nan_long();// keep the stack effect equivalent, this value is never used.
-                emit_mark_label(guard_pass);
-            }
             emit_free_local(lcl);
             break;
         }
         case AVK_Bool: {
-            Local lcl = emit_define_local(LK_Pointer);
-            Label guard_pass = emit_define_label();
-            Label guard_fail = emit_define_label();
-            emit_store_local(lcl);
-            if (guard) {
+            if (guard){
+                emit_load_local_addr(success);
+                m_il.emit_call(METHOD_UNBOX_BOOL);
+            } else {
+                Local lcl = emit_define_local(LK_Pointer);
+                Label isFalse = emit_define_label();
+                Label decref_out = emit_define_label();
+                emit_store_local(lcl);
                 emit_load_local(lcl);
-                LD_FIELDI(PyObject, ob_type);
-                emit_ptr(&PyBool_Type);
-                emit_branch(BranchNotEqual, guard_fail);
-            }
-
-            Label isFalse = emit_define_label();
-            Label decref_out = emit_define_label();
-            emit_load_local(lcl);
-            emit_ptr(Py_True);
-            emit_branch(BranchNotEqual, isFalse);
-            emit_int(1);
-            emit_branch(BranchAlways, decref_out);
-            emit_mark_label(isFalse);
-            emit_int(0);
-            emit_mark_label(decref_out);
-            emit_load_local(lcl);
-            decref();
-
-            if (guard) {
-                emit_branch(BranchAlways, guard_pass);
-                emit_mark_label(guard_fail);
-                emit_int(1);
-                emit_store_local(success);
+                emit_ptr(Py_True);
+                m_il.compare_eq();
                 emit_load_local(lcl);
-                emit_guard_exception("bool");
-                emit_int(1);// keep the stack effect equivalent, this value is never used.
-                emit_mark_label(guard_pass);
+                decref();
+                emit_free_local(lcl);
             }
-            emit_free_local(lcl);
             break;
         }
+        case AVK_UnboxedRangeIterator:
+        case AVK_Range:
+        case AVK_Bytearray:
+            // TODO: Decide what to do with reference counts
+            break;
+        default:
+            throw UnexpectedValueException();
     }
 };
+
+void PythonCompiler::emit_unboxed_unary_not(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Integer:
+        case AVK_Bool:
+            m_il.ld_i4(0);
+            m_il.compare_eq();
+            break;
+        case AVK_Float:
+            m_il.ld_r8(0.0);
+            m_il.compare_eq();
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
+
+void PythonCompiler::emit_unboxed_unary_positive(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Bool:
+            break; // Do nothing
+        case AVK_Integer: {
+            Local loc = emit_define_local(LK_Int), mask = emit_define_local(LK_Int);
+            emit_store_local(loc);
+            emit_load_local(loc);
+            emit_int(63);
+            m_il.rshift();
+            emit_store_local(mask);
+
+            emit_load_local(loc);
+            emit_load_local(mask);
+            m_il.add();
+            emit_load_local(mask);
+            m_il.bitwise_xor();
+            emit_free_local(loc);
+            emit_free_local(mask);
+        }
+            break;
+        case AVK_Float: {
+            // TODO : Write a more efficient branch-less version
+            Label is_positive = emit_define_label();
+            m_il.dup();
+            m_il.ld_r8(0.0);
+            emit_branch(BranchGreaterThanEqual, is_positive);
+            m_il.neg();
+            emit_mark_label(is_positive);
+        }
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
+
+void PythonCompiler::emit_unboxed_unary_negative(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Integer:
+        case AVK_Bool:
+        case AVK_Float:
+            m_il.neg();
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
+
+void PythonCompiler::emit_unboxed_unary_invert(AbstractValueWithSources val) {
+#ifdef DEBUG
+    assert(supportsEscaping(val.Value->kind()));
+#endif
+    switch (val.Value->kind()){
+        case AVK_Integer:
+        case AVK_Bool:
+            m_il.ld_i4(1);
+            m_il.add();
+            m_il.neg();
+            break;
+        default:
+            throw UnexpectedValueException();
+    }
+}
 
 void PythonCompiler::emit_infinity() {
     m_il.ld_r8(INFINITY);
@@ -2847,7 +2950,7 @@ GLOBAL_METHOD(METHOD_FLOAT_MODULUS_TOKEN, static_cast<double (*)(double, double)
 GLOBAL_METHOD(METHOD_FLOAT_FROM_DOUBLE, PyFloat_FromDouble, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_DOUBLE));
 GLOBAL_METHOD(METHOD_BOOL_FROM_LONG, PyBool_FromLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_INT));
 GLOBAL_METHOD(METHOD_NUMBER_AS_SSIZET, PyNumber_AsSsize_t, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
-GLOBAL_METHOD(METHOD_PYLONG_AS_LONGLONG, PyJit_LongAsLongLong, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_PYLONG_AS_LONGLONG, PyJit_LongAsLongLong, CORINFO_TYPE_LONG, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_PYLONG_FROM_LONGLONG, PyLong_FromLongLong, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_LONG));
 
 GLOBAL_METHOD(METHOD_PYERR_SETSTRING, PyErr_SetString, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
@@ -2899,6 +3002,7 @@ GLOBAL_METHOD(METHOD_GIL_RELEASE, &PyGILState_Release, CORINFO_TYPE_VOID, Parame
 
 GLOBAL_METHOD(METHOD_BLOCK_POP, &PyJit_BlockPop, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BLOCK_PUSH, &PyFrame_BlockSetup, CORINFO_TYPE_VOID, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT), Parameter(CORINFO_TYPE_INT));
+GLOBAL_METHOD(METHOD_UNBOX_BOOL, &PyJit_UnboxBool, CORINFO_TYPE_BYTE, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_INTRINSIC(INTRINSIC_TEST, &PyJit_LongTrueDivide, CORINFO_TYPE_DOUBLE, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_LONG));
 

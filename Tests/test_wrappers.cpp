@@ -184,3 +184,22 @@ TEST_CASE("Test refcnt for Call methods") {
         CHECK(arg1->ob_refcnt == 1);
     }
 }
+
+TEST_CASE("Test unbox bool"){
+    SECTION("Test unboxable types"){
+        int res = 0;
+        CHECK(PyJit_UnboxBool(Py_True, &res) == 1);
+        CHECK(PyJit_UnboxBool(Py_False, &res) == 0);
+        CHECK(PyJit_UnboxBool(PyLong_FromLong(0), &res) == 0);
+        CHECK(PyJit_UnboxBool(PyLong_FromLong(1), &res) == 1);
+    }
+    SECTION("Test invalid types"){
+        int res = 0;
+        CHECK(PyJit_UnboxBool(PyLong_FromLong(2), &res) == 0);
+        CHECK(res == 1);
+        PyErr_Clear(); res = 0;
+        CHECK(PyJit_UnboxBool(PyLong_FromLong(-1), &res) == 0);
+        CHECK(res == 1);
+        PyErr_Clear();
+    }
+}

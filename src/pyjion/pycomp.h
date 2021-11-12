@@ -228,6 +228,7 @@
 #define METHOD_INT_FLOOR_DIVIDE              0x00050004
 #define METHOD_INT_TRUE_DIVIDE               0x00050005
 #define METHOD_INT_MOD                       0x00050006
+#define METHOD_UNBOX_BOOL                    0x00050007
 
 #define METHOD_STORE_SUBSCR_OBJ              0x00060000
 #define METHOD_STORE_SUBSCR_OBJ_I            0x00060001
@@ -374,6 +375,10 @@ public:
     void emit_unary_negative() override;
     void emit_unary_not() override;
     void emit_unary_invert() override;
+    void emit_unboxed_unary_not(AbstractValueWithSources val) override;
+    void emit_unboxed_unary_positive(AbstractValueWithSources val) override;
+    void emit_unboxed_unary_negative(AbstractValueWithSources val) override;
+    void emit_unboxed_unary_invert(AbstractValueWithSources val) override;
 
     void emit_import_name(void* name) override;
     void emit_import_from(void* name) override;
@@ -441,6 +446,7 @@ public:
     LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) override;
     void emit_binary_subscr() override;
     void emit_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) override;
+    LocalKind emit_unboxed_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) override;
     bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop) override;
     bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop, AbstractValueWithSources step) override;
 

@@ -20,7 +20,7 @@ $ pip install pyjion
 Prerequisites:
 
 - CPython 3.10
-- CMake 3.2 +
+- CMake 3.13 +
 - .NET 6
 - scikit-build
 

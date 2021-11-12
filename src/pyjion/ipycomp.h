@@ -389,6 +389,11 @@ public:
     // Performs a unary invert on the top value on the stack, pushing the result onto the stack or NULL if an error occurred
     virtual void emit_unary_invert() = 0;
 
+    virtual void emit_unboxed_unary_not(AbstractValueWithSources val) = 0;
+    virtual void emit_unboxed_unary_positive(AbstractValueWithSources val) = 0;
+    virtual void emit_unboxed_unary_negative(AbstractValueWithSources val) = 0;
+    virtual void emit_unboxed_unary_invert(AbstractValueWithSources val) = 0;
+
     // Performans a binary operation for values on the stack which are unboxed floating points
     virtual LocalKind emit_binary_float(uint16_t opcode) = 0;
     virtual LocalKind emit_binary_int(uint16_t opcode) = 0;
@@ -398,6 +403,7 @@ public:
     virtual LocalKind emit_unboxed_binary_object(uint16_t opcode, AbstractValueWithSources left, AbstractValueWithSources right) = 0;
     virtual void emit_binary_subscr() = 0;
     virtual void emit_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) = 0;
+    virtual LocalKind emit_unboxed_binary_subscr(AbstractValueWithSources left, AbstractValueWithSources right) = 0;
     virtual bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop) = 0;
     virtual bool emit_binary_subscr_slice(AbstractValueWithSources container, AbstractValueWithSources start, AbstractValueWithSources stop, AbstractValueWithSources step) = 0;
 

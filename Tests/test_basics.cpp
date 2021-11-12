@@ -673,3 +673,50 @@ TEST_CASE("Test range function") {
         CHECK(t.returns() == "99999");
     }
 }
+
+TEST_CASE("Test bytearray") {
+    SECTION("test slice const index") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = bytearray(b'12')\n"
+                "  return x[0]\n");
+        CHECK(t.returns() == "49");
+    }
+    SECTION("test slice const index 2") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = bytearray(b'12')\n"
+                "  return x[1]\n");
+        CHECK(t.returns() == "50");
+    }
+    SECTION("test slice var index") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = bytearray(b'12')\n"
+                "  return x[int('0')]\n");
+        CHECK(t.returns() == "49");
+    }
+    SECTION("test slice index error") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = bytearray(b'12')\n"
+                "  return x[2]\n");
+        CHECK(t.raises() == PyExc_IndexError);
+    }
+    SECTION("test slice -ve index error") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = bytearray(b'12')\n"
+                "  return x[-1]\n");
+        CHECK(t.raises() == PyExc_IndexError);
+    }
+    SECTION("test bytearray indexes") {
+        auto t = EmissionTest(
+                "def f():\n"
+                "  x = bytearray(2)\n"
+                "  x[0] = 255\n"
+                "  x[1] = 155\n"
+                "  return x[0], x[1]\n");
+        CHECK(t.returns() == "(255, 155)");
+    }
+}
