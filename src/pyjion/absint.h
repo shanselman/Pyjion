@@ -394,7 +394,7 @@ private:
     // indicating an error, and if so, branches to our current error handler.
     void errorCheck(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0);
     void invalidFloatErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
-    void invalidIntErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0);
+    void invalidIntErrorCheck(const char* reason = nullptr, py_opindex curByte = 0, py_opcode opcode = 0, void* exc = PyExc_ZeroDivisionError, const char* message = "zero division error");
     void intErrorCheck(const char* reason = nullptr, const char* context = "", py_opindex curByte = 0);
     vector<Label>& getRaiseAndFreeLabels(size_t blockId);
     void ensureRaiseAndFreeLocals(size_t localCount);

@@ -517,6 +517,11 @@ AbstractValue* IntegerValue::binary(AbstractSource* selfSources, int op, Abstrac
 
 AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
     auto other_kind = other.Value->kind();
+    int64_t other_int = MAXLONG;
+    if (other.hasSource() && other.Sources->hasConstValue() && other.Value->kind() == AVK_Integer) {
+        // Shortcut for const numeric values.
+        other_int = dynamic_cast<ConstSource*>(other.Sources)->getNumericValue();
+    }
     if (other_kind == AVK_Bool) {
         switch (op) {
             case BINARY_TRUE_DIVIDE:
@@ -596,17 +601,22 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
             case INPLACE_MULTIPLY:
                 if (OPT_ENABLED(IntegerUnboxingMultiply))
                     return &Integer;
+                else if (other_int < 1024)
+                    return &Integer;
                 else
-                    // TODO: assert Integer if the values are known (const)
                     return &BigInteger;
             case BINARY_POWER:
             case INPLACE_POWER:
-                // TODO: assert Integer if the values are known (const)
+                if (other_int <= 2) // TODO : This needs guarding if size of left-op is > sqrt(MAX_LONG)
+                    return &Integer;
+                return &BigInteger;
+            case BINARY_LSHIFT:
+                if (other_int <= 32) // TODO : This needs guarding if size of left-op is > 32 bits
+                    return &Integer;
                 return &BigInteger;
             case BINARY_ADD:
             case BINARY_AND:
             case BINARY_FLOOR_DIVIDE:
-            case BINARY_LSHIFT:
             case BINARY_MODULO:
             case BINARY_OR:
             case BINARY_RSHIFT:
@@ -1353,6 +1363,22 @@ AbstractValue* ByteArrayValue::unary(AbstractSource* selfSources, int op) {
     if (op == UNARY_NOT)
         return &Bool;
     return AbstractValue::unary(selfSources, op);
+}
+
+AbstractValue* ByteArrayValue::binary(AbstractSource* selfSources, int op, AbstractValueWithSources& other) {
+    switch (op) {
+        case BINARY_SUBSCR:
+            return &Integer;
+        case BINARY_MULTIPLY:
+            if (other.Value->kind() == AVK_Integer || other.Value->kind() == AVK_BigInteger)
+                return &ByteArray;
+            break;
+        case BINARY_ADD:
+        case INPLACE_ADD:
+            if (other.Value->kind() == AVK_Bytearray)
+                return &ByteArray;
+    }
+    return AbstractValue::binary(selfSources, op, other);
 }
 
 const char* ByteArrayValue::describe() {

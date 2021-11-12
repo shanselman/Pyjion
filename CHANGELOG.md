@@ -1,5 +1,17 @@
 # Release notes
 
+## 1.0.0 (develop/main)
+
+* Added unboxed integer operations for BINARY_LSHIFT, BINARY_RSHIFT, BINARY_AND, BINARY_OR, BINARY_XOR
+* BINARY_MULTIPLY and BINARY_POWER will stay unboxed if the right-hand operator is a constant that won't overflow (e.g. x ** 2)
+* Added unboxed UNARY_NOT,UNARY_POSITIVE and UNARY_NEGATIVE operation for float, bool and int types
+* Added unboxed UNARY_INVERY for int and bool types
+* The types of global variables are profiled at compile-time
+* Improved performance of bytearrays, by adding an unboxed bytearray type and unboxed slice operations for bytearrays, yielding unboxed integers
+* Fixed a reference count bug with unboxed range iterators
+* PGC will now allow an int of value 0 or 1 to be unboxed into a bool
+* Unboxing of integers is now more efficient and allows for True to be unboxed into 1 and False into 0
+
 ## 1.0.0
 
 * Fix a bug on `pyjion.config()` crashing when called with invalid arguments (#401)
