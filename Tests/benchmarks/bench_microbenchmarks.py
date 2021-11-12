@@ -59,6 +59,17 @@ def test_builtin_func_calls(n=10000):
         sum((n, n))
 
 
+def test_bytearray_slicing(n=1000):
+    for y in range(1, n):
+        b = bytearray([0] * 2)
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+        j = b[len(b) - 1] * b[len(b) - 1]
+
+
 class TestClass:
     attr1 = 10
     attr2 = 20
@@ -82,5 +93,6 @@ __benchmarks__ = [
     (test_function_calls, "function_call_micro", {"level": 2, "pgc": True}, 10),
     (test_builtin_type_calls, "type_call_micro", {"level": 2, "pgc": True}, 10),
     (test_builtin_func_calls, "builtin_call_micro", {"level": 2, "pgc": True}, 10),
+    (test_bytearray_slicing, "bytearray_slicing", {"level": 2, "pgc": True}, 10),
     (test_load_attr, "load_attr_micro", {"level": 2, "pgc": True}, 10)
 ]
