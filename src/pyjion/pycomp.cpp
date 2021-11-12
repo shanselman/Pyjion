@@ -990,9 +990,12 @@ void PythonCompiler::emit_delete_attr(PyObject* name) {
 }
 
 void PythonCompiler::emit_load_attr(PyObject* name) {
-    Local cache = emit_define_local(LK_Pointer);
+    auto* loadAttrCache = reinterpret_cast<PyJitLoadAttrCacheEntry*>(_PyObject_New(&PyJitLoadAttrCache_Type));
+    loadAttrCache->hint = 0;
+    loadAttrCache->type = nullptr;
+    loadAttrCache->tp_version_tag = 0;
     m_il.ld_i(name);
-    emit_ptr(cache);
+    emit_ptr(loadAttrCache);
     m_il.emit_call(METHOD_LOADATTR_TOKEN);
 }
 

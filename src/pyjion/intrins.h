@@ -29,6 +29,7 @@
 #include <Python.h>
 #include <structmember.h>
 #include <frameobject.h>
+#include "dict-common.h"
 #include <vector>
 #include "types.h"
 #include "pyjit.h"
@@ -57,10 +58,11 @@ typedef SSIZE_T ssize_t;
 #define SIG_ITER_ERROR 0xbeef
 
 typedef struct {
+    PyObject_HEAD
     PyTypeObject *type;
     Py_ssize_t hint;
     unsigned int tp_version_tag;
-} PyJit_LoadAttrCacheEntry;
+} PyJitLoadAttrCacheEntry;
 
 typedef struct {
     PyObject_HEAD
@@ -71,6 +73,47 @@ typedef struct {
 static PyTypeObject PyJitMethodLocation_Type = {
         PyObject_HEAD_INIT(nullptr) "pyjion.method_location",
         sizeof(PyJitMethodLocation),
+        0, /*tp_itemsize*/
+        /* methods */
+        (destructor) PyObject_Del, /*tp_dealloc*/
+        0,                         /*tp_vectorcall_offset*/
+        0,                         /*tp_getattr*/
+        0,                         /*tp_setattr*/
+        0,                         /*tp_as_async*/
+        0,                         /*tp_repr*/
+        0,                         /*tp_as_number*/
+        0,                         /*tp_as_sequence*/
+        0,                         /*tp_as_mapping*/
+        0,                         /*tp_hash*/
+        0,                         /*tp_call*/
+        0,                         /*tp_str*/
+        0,                         /*tp_getattro*/
+        0,                         /*tp_setattro*/
+        0,                         /*tp_as_buffer*/
+        Py_TPFLAGS_DEFAULT,        /*tp_flags*/
+        0,                         /*tp_doc*/
+        0,                         /*tp_traverse*/
+        0,                         /*tp_clear*/
+        0,                         /*tp_richcompare*/
+        0,                         /*tp_weaklistoffset*/
+        0,                         /*tp_iter*/
+        0,                         /*tp_iternext*/
+        0,                         /*tp_methods*/
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        PyType_GenericNew /* tp_new */
+};
+
+static PyTypeObject PyJitLoadAttrCache_Type = {
+        PyObject_HEAD_INIT(nullptr) "pyjion.load_attr_cache",
+        sizeof(PyJitLoadAttrCacheEntry),
         0, /*tp_itemsize*/
         /* methods */
         (destructor) PyObject_Del, /*tp_dealloc*/
@@ -271,7 +314,7 @@ PyObject* PyJit_PyTuple_New(int32_t len);
 
 PyObject* PyJit_BuildClass(PyFrameObject* f);
 
-PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJit_LoadAttrCacheEntry* la);
+PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJitLoadAttrCacheEntry* la);
 
 int PyJit_StoreAttr(PyObject* value, PyObject* owner, PyObject* name);
 

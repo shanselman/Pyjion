@@ -1755,7 +1755,7 @@ PyObject* PyJit_BuildClass(PyFrameObject* f) {
     return bc;
 }
 
-PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJit_LoadAttrCacheEntry* la) {
+PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJitLoadAttrCacheEntry* la) {
     PyTypeObject *type = Py_TYPE(owner);
     PyObject *res;
     PyObject **dictptr;
@@ -1765,47 +1765,27 @@ PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJit_LoadAttrCacheEnt
 
     if (PyType_HasFeature(type, Py_TPFLAGS_VALID_VERSION_TAG))
     {
-        if (la->type == type && la->tp_version_tag == type->tp_version_tag)
+        if (la->type == type && la->tp_version_tag == type->tp_version_tag && type->tp_dictoffset > 0)
         {
-            // Hint >= 0 is a dict index; hint == -1 is a dict miss.
-            // Hint < -1 is an inverted slot offset: offset is strictly > 0,
-            // so ~offset is strictly < -1 (assuming 2's complement).
-            if (la->hint < -1) {
-                // Even faster path -- slot hint.
-                Py_ssize_t offset = ~la->hint;
-                // fprintf(stderr, "Using hint for offset %zd\n", offset);
-                char *addr = (char *)owner + offset;
-                res = *(PyObject **)addr;
+            // Fast path for dict.
+            assert(type->tp_dict != nullptr);
+
+            dictptr = (PyObject **) ((char *)owner + type->tp_dictoffset);
+            dict = *dictptr;
+            if (dict != nullptr && PyDict_CheckExact(dict)) {
+                Py_INCREF(dict);
+                res = nullptr;
+                assert(!PyErr_Occurred());
+                res = PyDict_GetItem(dict, name);
                 if (res != nullptr) {
                     Py_INCREF(res);
                     Py_DECREF(owner);
+                    Py_DECREF(dict);
                     return res;
                 }
-                // Else slot is NULL.  Fall through to slow path to raise AttributeError(name).
-                // Don't DEOPT, since the slot is still there.
-            } else {
-                // Fast path for dict.
-                assert(type->tp_dict != nullptr);
-                assert(type->tp_dictoffset > 0);
-
-                dictptr = (PyObject **) ((char *)owner + type->tp_dictoffset);
-                dict = *dictptr;
-                if (dict != nullptr && PyDict_CheckExact(dict)) {
-                    Py_ssize_t hint = la->hint;
-                    Py_INCREF(dict);
-                    res = nullptr;
-                    assert(!PyErr_Occurred());
-                    //la->hint = PyDict_GetItemHint((PyDictObject*)dict, name, hint, &res);
-                    if (res != nullptr) {
-                        Py_INCREF(res);
-                        Py_DECREF(owner);
-                        Py_DECREF(dict);
-                        return res;
-                    }
-                    else {
-                        PyErr_Clear();
-                        Py_DECREF(dict);
-                    }
+                else {
+                    PyErr_Clear();
+                    Py_DECREF(dict);
                 }
             }
         }
@@ -1828,11 +1808,8 @@ PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJit_LoadAttrCacheEnt
                     if (dmem->type == T_OBJECT_EX) {
                         Py_ssize_t offset = dmem->offset;
                         assert(offset > 0);  // 0 would be confused with dict hint == -1 (miss).
-
                         la->type = type;
                         la->tp_version_tag = type->tp_version_tag;
-                        la->hint = ~offset;
-
                         char *addr = (char *)owner + offset;
                         res = *(PyObject **)addr;
                         if (res != nullptr) {
@@ -1855,17 +1832,13 @@ PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJit_LoadAttrCacheEnt
                     Py_INCREF(dict);
                     res = nullptr;
                     assert(!PyErr_Occurred());
-                    Py_ssize_t hint = 0 ; //_PyDict_GetItemHint((PyDictObject*)dict, name, -1, &res);
+                    res = PyDict_GetItem(dict, name);
                     if (res != nullptr) {
                         Py_INCREF(res);
                         Py_DECREF(dict);
                         Py_DECREF(owner);
-
                         la->type = type;
                         la->tp_version_tag = type->tp_version_tag;
-                        assert(hint >= 0);
-                        la->hint = hint;
-
                         return res;
                     }
                     else {
@@ -1881,7 +1854,6 @@ PyObject* PyJit_LoadAttr(PyObject* owner, PyObject* name, PyJit_LoadAttrCacheEnt
     res = PyObject_GetAttr(owner, name);
     Py_DECREF(owner);
     return res;
-
 }
 
 int PyJit_StoreAttr(PyObject* value, PyObject* owner, PyObject* name) {
