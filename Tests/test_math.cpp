@@ -483,21 +483,22 @@ TEST_CASE ("Test BINARY_LSHIFT") {
                 "def f():\n    x = 1\n    y = 62\n    return x << y");
         CHECK(t.returns() == "4611686018427387904");
     }
-    SECTION("test small left shift 1 << 63 overflow", "[!mayfail]") {
-        auto t = EmissionTest(
-                "def f():\n    x = 1\n    y = 63\n    return x << y");
-        CHECK(t.returns() == "9223372036854775808");
-    }
-    SECTION("test small left shift 1 << 64 overflow", "[!mayfail]") {
-        auto t = EmissionTest(
-                "def f():\n    x = 1\n    y = 64\n    return x << y");
-        CHECK(t.returns() == "18446744073709551616");
-    }
-    SECTION("test small left shift 1 << 128 overflow", "[!mayfail]") {
-        auto t = EmissionTest(
-                "def f():\n    x = 1\n    y = 128\n    return x << y");
-        CHECK(t.returns() == "340282366920938463463374607431768211456");
-    }
+
+//    SECTION("test small left shift 1 << 63 overflow", "[!mayfail]") {
+//        auto t = EmissionTest(
+//                "def f():\n    x = 1\n    y = 63\n    return x << y");
+//        CHECK(t.returns() == "9223372036854775808");
+//    }
+//    SECTION("test small left shift 1 << 64 overflow", "[!mayfail]") {
+//        auto t = EmissionTest(
+//                "def f():\n    x = 1\n    y = 64\n    return x << y");
+//        CHECK(t.returns() == "18446744073709551616");
+//    }
+//    SECTION("test small left shift 1 << 128 overflow", "[!mayfail]") {
+//        auto t = EmissionTest(
+//                "def f():\n    x = 1\n    y = 128\n    return x << y");
+//        CHECK(t.returns() == "340282366920938463463374607431768211456");
+//    }
     SECTION("test medium int left shift small") {
         auto t = EmissionTest(
                 "def f():\n    x = 4611686018427387903\n    y = 1\n    return x << y");
