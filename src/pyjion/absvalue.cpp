@@ -611,6 +611,8 @@ AbstractValue* IntegerValue::binary(int op, AbstractValueWithSources& other) {
                     return &Integer;
                 return &BigInteger;
             case BINARY_LSHIFT:
+                if (OPT_ENABLED(IntegerUnboxingMultiply))
+                    return &Integer;
                 if (other_int <= 32) // TODO : This needs guarding if size of left-op is > 32 bits
                     return &Integer;
                 return &BigInteger;
