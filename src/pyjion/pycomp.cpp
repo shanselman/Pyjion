@@ -2414,7 +2414,8 @@ LocalKind PythonCompiler::emit_unboxed_binary_subscr(AbstractValueWithSources le
 
     emit_mark_label(done);
     emit_free_local(index);
-    emit_free_local(array);
+    emit_load_and_free_local(array);
+    decref();
 
     return LK_Int;
 }
@@ -2429,12 +2430,6 @@ void PythonCompiler::emit_box(AbstractValueKind kind) {
             break;
         case AVK_Integer:
             m_il.emit_call(METHOD_PYLONG_FROM_LONGLONG);
-            break;
-        case AVK_Range:
-        case AVK_UnboxedRangeIterator:
-        case AVK_Bytearray:
-            m_il.dup();
-            emit_incref();
             break;
         default:
             throw UnexpectedValueException();
@@ -2542,11 +2537,6 @@ void PythonCompiler::emit_unbox(AbstractValueKind kind, bool guard, Local succes
             }
             break;
         }
-        case AVK_UnboxedRangeIterator:
-        case AVK_Range:
-        case AVK_Bytearray:
-            // TODO: Decide what to do with reference counts
-            break;
         default:
             throw UnexpectedValueException();
     }
