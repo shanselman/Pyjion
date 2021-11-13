@@ -2868,3 +2868,21 @@ int8_t PyJit_UnboxBool(PyObject* o, int* failure) {
     PyJit_PgcGuardException(o, "bool");
     return false;
 }
+
+int PyJit_StoreByteArrayUnboxed(int64_t value, PyObject* array, int64_t index){
+    if (index < 0 || index >= Py_SIZE(array)) {
+        PyErr_SetString(PyExc_IndexError, "bytearray index out of range");
+        Py_DECREF(array);
+        return -1;
+    }
+
+    if (value < 0 || value > 255) {
+        PyErr_SetString(PyExc_ValueError, "byte must be in range(0, 256)");
+        Py_DECREF(array);
+        return -1;
+    }
+
+    PyByteArray_AS_STRING(array)[index] = (char)value;
+    Py_DECREF(array);
+    return 0;
+}

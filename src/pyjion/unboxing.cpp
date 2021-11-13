@@ -61,6 +61,7 @@ bool supportsUnboxing(py_opcode opcode) {
         case UNARY_POSITIVE:
         case UNARY_NEGATIVE:
         case UNARY_INVERT:
+        case STORE_SUBSCR:
             return true;
         default:
             return false;
@@ -100,6 +101,10 @@ bool supportsUnboxing(py_opcode opcode, vector<AbstractValueKind> edgesIn) {
             return false;
         case BINARY_SUBSCR:
             if (edgesIn.size() == 2 && edgesIn[0] == AVK_Integer && edgesIn[1] == AVK_Bytearray)
+                return true;
+            return false;
+        case STORE_SUBSCR:
+            if (edgesIn.size() == 3 && edgesIn[0] == AVK_Integer && edgesIn[1] == AVK_Bytearray && edgesIn[2] == AVK_Integer)
                 return true;
             return false;
         default:

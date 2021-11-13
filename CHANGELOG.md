@@ -6,6 +6,7 @@
 * BINARY_MULTIPLY and BINARY_POWER will stay unboxed if the right-hand operator is a constant that won't overflow (e.g. x ** 2)
 * Added unboxed UNARY_NOT,UNARY_POSITIVE and UNARY_NEGATIVE operation for float, bool and int types
 * Added unboxed UNARY_INVERT for int and bool types
+* Added unboxed STORE_SUBSCR for bytearrays
 * The types of global variables are profiled at compile-time
 * Improved performance of bytearrays, by adding an unboxed bytearray type and unboxed slice operations for bytearrays, yielding unboxed integers
 * Fixed a reference count bug with unboxed range iterators
