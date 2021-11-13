@@ -2679,6 +2679,10 @@ void PythonCompiler::emit_escape_edges(vector<Edge> edges, Local success) {
     }
 }
 
+void PythonCompiler::emit_store_subscr_unboxed(AbstractValueWithSources value, AbstractValueWithSources container, AbstractValueWithSources key){
+    m_il.emit_call(METHOD_STORE_SUBSCR_BYTEARRAY_UB);
+}
+
 /************************************************************************
 * End Compiler interface implementation
 */
@@ -2743,6 +2747,7 @@ GLOBAL_METHOD(METHOD_STORE_SUBSCR_DICT, &PyJit_StoreSubscrDict, CORINFO_TYPE_INT
 GLOBAL_METHOD(METHOD_STORE_SUBSCR_DICT_HASH, &PyJit_StoreSubscrDictHash, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_STORE_SUBSCR_LIST, &PyJit_StoreSubscrList, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_STORE_SUBSCR_LIST_I, &PyJit_StoreSubscrListIndex, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_STORE_SUBSCR_BYTEARRAY_UB, &PyJit_StoreByteArrayUnboxed, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_LONG), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_LONG))
 
 GLOBAL_METHOD(METHOD_DELETESUBSCR_TOKEN, &PyJit_DeleteSubscr, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_BUILD_DICT_FROM_TUPLES, &PyJit_BuildDictFromTuples, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));

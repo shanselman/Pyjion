@@ -1965,7 +1965,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 incStack();
                 break;
             case STORE_SUBSCR:
-                if (OPT_ENABLED(KnownStoreSubscr) && stackInfo.size() >= 3) {
+                if (CAN_UNBOX() && op.escape){
+                    m_comp->emit_store_subscr_unboxed(stackInfo.third(), stackInfo.second(), stackInfo.top());
+                } else if (OPT_ENABLED(KnownStoreSubscr) && stackInfo.size() >= 3) {
                     FLAG_OPT_USAGE(KnownStoreSubscr);
                     m_comp->emit_store_subscr(stackInfo.third(), stackInfo.second(), stackInfo.top());
                 } else {

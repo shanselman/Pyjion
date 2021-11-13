@@ -249,6 +249,7 @@
 #define METHOD_SUBSCR_LIST_SLICE             0x00070009
 #define METHOD_SUBSCR_LIST_SLICE_STEPPED     0x0007000A
 #define METHOD_SUBSCR_LIST_SLICE_REVERSED    0x0007000B
+#define METHOD_STORE_SUBSCR_BYTEARRAY_UB     0x0007000C
 
 #define INTRINSIC_TEST                       0x10000001
 
@@ -361,6 +362,7 @@ public:
 
     void emit_store_subscr() override;
     void emit_store_subscr(AbstractValueWithSources value, AbstractValueWithSources container, AbstractValueWithSources key) override;
+    void emit_store_subscr_unboxed(AbstractValueWithSources value, AbstractValueWithSources container, AbstractValueWithSources key) override;
     void emit_delete_subscr() override;
 
     void emit_unary_positive() override;

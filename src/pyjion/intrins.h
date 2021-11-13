@@ -339,4 +339,6 @@ long long PyJit_LongPow(long long x, long long y);
 double PyJit_DoublePow(double iv, double iw);
 int64_t PyJit_LongAsLongLong(PyObject*, int*);
 int8_t PyJit_UnboxBool(PyObject*, int*);
+
+int PyJit_StoreByteArrayUnboxed(int64_t, PyObject*, int64_t);
 #endif
