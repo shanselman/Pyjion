@@ -44,7 +44,6 @@ def test():
     assert peers['C2'] == set(['A2', 'B2', 'D2', 'E2', 'F2', 'G2', 'H2', 'I2',
                                'C1', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9',
                                'A1', 'A3', 'B1', 'B3'])
-    print('All tests pass.')
 
 
 ################ Parse a Grid ################
@@ -217,7 +216,7 @@ hard2 = '8..........36......7..9.2...5...7.......457.....1...3...1....68..85...1
 
 def bench_sudoku():
     test()
-    solve_all([hard1], "easy", 0)
+    solve(hard1)
 
 
 __benchmarks__ = [(bench_sudoku, "sudoku", {"level": 2, "pgc": True}, 2)]
