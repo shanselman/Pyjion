@@ -217,7 +217,7 @@ hard2 = '8..........36......7..9.2...5...7.......457.....1...3...1....68..85...1
 
 def bench_sudoku():
     test()
-    solve_all([hard1, hard2], "easy", 0)
+    solve_all([hard1], "easy", 0)
 
 
 __benchmarks__ = [(bench_sudoku, "sudoku", {"level": 2, "pgc": True}, 2)]
