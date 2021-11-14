@@ -196,7 +196,7 @@ public:
 
     ~PyjionJittedCode();
 
-    void operator = (const PyjionJittedCode& code) {}
+    void operator = (const PyjionJittedCode& code);
 };
 
 void setOptimizationLevel(unsigned short level);
