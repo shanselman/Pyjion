@@ -71,6 +71,30 @@ PyjionJittedCode::~PyjionJittedCode() {
     delete j_profile;
 }
 
+
+void PyjionJittedCode::operator = (const PyjionJittedCode& code) {
+    j_run_count = code.j_run_count;
+    j_failed = code.j_failed;
+    j_compile_result = code.j_compile_result;
+    j_optimizations = code.j_optimizations;
+    j_addr = code.j_addr;
+    j_specialization_threshold = code.j_specialization_threshold;
+    j_ilLen = code.j_ilLen;
+    j_nativeSize = code.j_nativeSize;
+    j_pgc_status = code.j_pgc_status;
+    j_sequencePointsLen = code.j_sequencePointsLen;
+    j_callPointsLen = code.j_callPointsLen;
+    j_symbols = code.j_symbols;
+    j_tracingHooks = code.j_tracingHooks;
+    j_profilingHooks = code.j_profilingHooks;
+    *j_code = code->j_code;
+    *j_profile = code->j_profile;
+    *j_il = code->j_il;
+    *j_sequencePoints = code->j_sequencePoints;
+    *j_callPoints = code->j_callPoints;
+    *j_graph = code->j_graph;
+}
+
 int Pyjit_CheckRecursiveCall(PyThreadState* tstate, const char* where) {
     int recursion_limit = g_pyjionSettings.recursionLimit;
 
