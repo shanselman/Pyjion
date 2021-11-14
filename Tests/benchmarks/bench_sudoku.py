@@ -33,7 +33,7 @@ peers = dict((s, set(sum(units[s], [])) - set([s]))
 ################ Unit Tests ################
 
 def test():
-    "A set of tests that must pass."
+    """A set of tests that must pass."""
     assert len(squares) == 81
     assert len(unitlist) == 27
     assert all(len(units[s]) == 3 for s in squares)
@@ -114,7 +114,7 @@ def display(values):
         print(''.join((''.join(values[r + c].center(width) + ('|' if c in '36' else ''))
                        for c in cols)))
         if r in 'CF': print(line)
-    print
+    print()
 
 
 ################ Search ################
@@ -183,8 +183,8 @@ def solve_all(grids, name='', showif=0.0):
     times, results = zip(*[time_solve(grid) for grid in grids])
     N = len(grids)
     if N > 1:
-        print("Solved %d of %d %s puzzles (avg %.2f secs (%d Hz), max %.2f secs).") % (
-            sum(results), N, name, sum(times) / N, N / sum(times), max(times))
+        print("Solved %d of %d %s puzzles (avg %.2f secs (%d Hz), max %.2f secs)." % (
+            sum(results), N, name, sum(times) / N, N / sum(times), max(times)))
 
 
 def solved(values):
