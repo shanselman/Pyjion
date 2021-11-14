@@ -87,12 +87,12 @@ void PyjionJittedCode::operator = (const PyjionJittedCode& code) {
     j_symbols = code.j_symbols;
     j_tracingHooks = code.j_tracingHooks;
     j_profilingHooks = code.j_profilingHooks;
-    *j_code = code->j_code;
-    *j_profile = code->j_profile;
-    *j_il = code->j_il;
-    *j_sequencePoints = code->j_sequencePoints;
-    *j_callPoints = code->j_callPoints;
-    *j_graph = code->j_graph;
+    *j_code = *(code.j_code);
+    *j_profile = *(code.j_profile);
+    *j_il = *(code.j_il);
+    *j_sequencePoints = *(code.j_sequencePoints);
+    *j_callPoints = *(code.j_callPoints);
+    *j_graph = *(code.j_graph);
 }
 
 int Pyjit_CheckRecursiveCall(PyThreadState* tstate, const char* where) {
