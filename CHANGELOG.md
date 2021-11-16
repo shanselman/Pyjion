@@ -3,6 +3,7 @@
 ## 1.1.1
 
 * Fixed a critical bug where recursive functions that use a mutable container type (e.g. list) causes a decref to the wrong object and subsequent crash.
+* Fixes a bug on graph generation for recursive functions causing a crash in some situations
 
 ## 1.1.0
 
