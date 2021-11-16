@@ -136,7 +136,7 @@ jobs:
           
       - name: Run full test suite
         shell: bash
-        run: python -X dev -q Tests/run_cpython_tests.py -f Tests/python_tests.txt -v
+        run: python -X dev -q Tests/run_cpython_tests.py -f Tests/python_tests.txt  -o 1
         continue-on-error: true
         timeout-minutes: 30
 
@@ -242,7 +242,7 @@ jobs:
           path: dist
       - name: Run full test suite
         shell: bash
-        run: python -X dev -q Tests/run_cpython_tests.py -f Tests/python_tests_macos11.txt -v
+        run: python -X dev -q Tests/run_cpython_tests.py -f Tests/python_tests_macos11.txt  -o 1
         continue-on-error: true
         timeout-minutes: 30
 
@@ -349,7 +349,7 @@ jobs:
 
       - name: Run full test suite
         shell: bash
-        run: python -X dev -q Tests/run_cpython_tests.py -f Tests/python_tests_win.txt -v
+        run: python -X dev -q Tests/run_cpython_tests.py -f Tests/python_tests_win.txt  -o 1
         continue-on-error: true
         timeout-minutes: 30
 
