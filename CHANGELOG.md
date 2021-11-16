@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.1.1
+
+* Fixed a critical bug where recursive functions that use a mutable container type (e.g. list) causes a decref to the wrong object and subsequent crash.
+
 ## 1.1.0
 
 * Added unboxed integer operations for BINARY_LSHIFT, BINARY_RSHIFT, BINARY_AND, BINARY_OR, BINARY_XOR
