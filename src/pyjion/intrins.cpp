@@ -2805,6 +2805,8 @@ double PyJit_DoublePow(double iv, double iw) {
 
 void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
     assert(PyjionUnboxingError != nullptr);
+    if (PyErr_Occurred())
+        return;
     PyErr_Format(PyjionUnboxingError,
                  "Pyjion PGC expected %s, but %s is a %s. Try disabling PGC pyjion.config(pgc=False) to avoid hitting this error.",
                  expected,

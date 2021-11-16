@@ -27,22 +27,22 @@ def run_test(test, level, pgc):
             fail_count += 1
 
             for failedcase, reason in r.expectedFailures:
-                reasons += f"---------------------------------------------------------------"
-                reasons += f"Test case {failedcase} was expected to fail:"
+                reasons += f"---------------------------------------------------------------\n"
+                reasons += f"Test case {failedcase} was expected to fail:\n"
                 reasons += reason
-                reasons += f"---------------------------------------------------------------"
+                reasons += f"\n---------------------------------------------------------------\n"
 
             for failedcase, reason in r.failures:
-                reasons += f"---------------------------------------------------------------"
-                reasons += f"Test case {failedcase} failed:"
+                reasons += f"---------------------------------------------------------------\n"
+                reasons += f"Test case {failedcase} failed:\n"
                 reasons += reason
-                reasons += f"---------------------------------------------------------------"
+                reasons += f"\n---------------------------------------------------------------\n"
 
             for failedcase, reason in r.errors:
-                reasons += f"---------------------------------------------------------------"
-                reasons += f"Test case {failedcase} failed with errors:"
+                reasons += f"---------------------------------------------------------------\n"
+                reasons += f"Test case {failedcase} failed with errors:\n"
                 reasons += reason
-                reasons += f"---------------------------------------------------------------"
+                reasons += f"\n---------------------------------------------------------------\n"
 
         pyjion.disable()
         gc.collect()
