@@ -80,8 +80,9 @@ def main(input_file, opt_level, pgc):
             try:
                 res.get(timeout=TIMEOUT)
             except TimeoutError:
-                console.print(f":clock: Case timed out")  # ToDO: work out which one.
-
+                console.print(f":cross_mark: Case timed out")  # ToDO: work out which one.
+            except unittest.case.SkipTest:
+                console.print(f":cross_mark: Skipping test")
     for reason in reasons:
         console.print(reason)
 
