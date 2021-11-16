@@ -324,14 +324,15 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
                 break;
             case LOAD_CONST: {
                 auto ob_repr = PyObject_Repr(PyTuple_GetItem(this->code->co_consts, node.second.oparg));
-                if (ob_repr == nullptr)
+                if (ob_repr == nullptr) {
                     PyErr_Clear();
                     op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
                                               "?", blockColor);
-                else
+                } else {
                     op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
                                               PyUnicode_AsUTF8(PyUnicode_Substring(ob_repr, 0, 40)), blockColor);
                 }
+            }
                 break;
             case LOAD_FAST:
             case STORE_FAST:
