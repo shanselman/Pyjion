@@ -91,6 +91,7 @@ def main(input_file, opt_level, pgc):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pyjion smoke tests")
+    parser.add_argument('test', nargs='?', help='run an individual test')
     parser.add_argument('-f', '--fromfile', metavar='FILE',
                         help='read names of tests to run from a file.')
     parser.add_argument('-o', '--opt-level', type=int,
@@ -98,4 +99,12 @@ if __name__ == "__main__":
                         help='target optimization level')
     parser.add_argument('--pgc', action='store_true', help='Enable PGC')
     args = parser.parse_args()
-    main(args.fromfile, args.opt_level, args.pgc)
+    if args.test:
+        case, fail_count, pass_count, r = run_test(args.test, args.opt_level, args.pgc)
+        if not fail_count:
+            console.print(f":white_check_mark: {case} ({pass_count} Pass, {fail_count} Failed)")
+        else:
+            console.print(f":cross_mark: {case} ({pass_count} Pass, {fail_count} Failed)")
+        console.print(r)
+    else:
+        main(args.fromfile, args.opt_level, args.pgc)

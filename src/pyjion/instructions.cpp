@@ -330,7 +330,7 @@ PyObject* InstructionGraph::makeGraph(const char* name) {
             case STORE_FAST:
             case DELETE_FAST:
                 op = PyUnicode_FromFormat("\tOP%u [label=\"%u %s (%s)\" color=\"%s\"];\n", node.first, node.first, opcodeName(node.second.opcode),
-                                          PyUnicode_AsUTF8(PyObject_Repr(PyTuple_GetItem(this->code->co_varnames, node.second.oparg))), blockColor);
+                                          PyUnicode_AsUTF8(PyTuple_GetItem(this->code->co_varnames, node.second.oparg)), blockColor);
                 break;
             case POP_EXCEPT:
             case POP_BLOCK:
