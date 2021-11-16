@@ -735,6 +735,8 @@ public:
     }
 
     const char* describe() override {
+        if (_type == nullptr)
+            return "volatile";
         return _PyType_Name(_type);
     }
 
