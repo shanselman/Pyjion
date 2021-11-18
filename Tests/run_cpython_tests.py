@@ -5,6 +5,9 @@ import gc
 from multiprocessing import Pool, TimeoutError
 import unittest
 import argparse
+import io
+import pathlib
+from contextlib import redirect_stdout, redirect_stderr
 from rich.console import Console
 
 console = Console()
@@ -20,7 +23,9 @@ def run_test(test, level, pgc):
         pyjion.enable()
         pyjion.config(level=level, pgc=pgc, graph=True)
         r = unittest.result.TestResult()
-        case.run(r)
+        with redirect_stderr(io.StringIO()) as _:
+            with redirect_stdout(io.StringIO()) as _:
+                case.run(r)
         if r.wasSuccessful():
             pass_count += 1
         else:
@@ -52,6 +57,7 @@ def run_test(test, level, pgc):
 def main(input_file, opt_level, pgc):
     SAVEDCWD = os.getcwd()
     tests = []
+    logs = []
     console.print(f"Trying with Optimizations = {opt_level}, PGC = {pgc}")
 
     # Lifted from libregr.main
@@ -64,15 +70,13 @@ def main(input_file, opt_level, pgc):
             if match is not None:
                 tests.append(match.group())
 
-    reasons = []
-
     def result_f(args):
         case, fail_count, pass_count, r = args
         if not fail_count:
             console.print(f":white_check_mark: {case} ({pass_count} Pass, {fail_count} Failed)")
         else:
             console.print(f":cross_mark: {case} ({pass_count} Pass, {fail_count} Failed)")
-            reasons.append(r)
+            logs.append((case, r))
 
     with Pool(processes=4) as pool:
         multiple_results = [pool.apply_async(run_test, (test, opt_level, pgc), callback=result_f) for test in tests]
@@ -83,10 +87,11 @@ def main(input_file, opt_level, pgc):
                 console.print(f":cross_mark: Case timed out")  # ToDO: work out which one.
             except unittest.case.SkipTest:
                 console.print(f":cross_mark: Skipping test")
-    for reason in reasons:
-        console.print(reason)
 
-    return
+    log_path = pathlib.Path(SAVEDCWD) / "Tests" / "logs"
+    for case, reason in logs:
+        with open(log_path / (case + ".txt"), "w") as f:
+            f.write(reason)
 
 
 if __name__ == "__main__":
