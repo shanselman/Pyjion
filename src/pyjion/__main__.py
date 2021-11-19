@@ -26,7 +26,7 @@ def main():
     parser.add_argument('-o',
                     '--opt-level',
                     action='store', type=int, default=1,
-                    help='Optimization level (default 1')
+                    help='Optimization level (default 1)')
 
     args = parser.parse_args()
 
@@ -35,9 +35,9 @@ def main():
     pyjion.config(graph=args.graph, debug=args.debug, pgc=not args.no_pgc, level=args.opt_level)
 
     if args.module:
-        runpy.run_module(args.module)
+        runpy.run_module(args.module, alter_sys=True)
     else:
-        runpy.run_path(args.script)
+        runpy.run_path(args.script, run_name="__main__")
     pyjion.disable()
 
 
