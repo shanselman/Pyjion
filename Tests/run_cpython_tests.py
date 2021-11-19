@@ -89,6 +89,8 @@ def main(input_file, opt_level, pgc):
                 console.print(f":cross_mark: Skipping test")
 
     log_path = pathlib.Path(SAVEDCWD) / "Tests" / "logs"
+    if not log_path.exists():
+        log_path.mkdir()
     for case, reason in logs:
         with open(log_path / (case + ".txt"), "w") as f:
             f.write(reason)
