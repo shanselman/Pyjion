@@ -2466,16 +2466,9 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 break;
             }
             case LOAD_METHOD: {
-                if (OPT_ENABLED(BuiltinMethods) && !stackInfo.empty() && stackInfo.top().hasValue() && stackInfo.top().Value->known() && !stackInfo.top().Value->needsGuard()) {
-                    FLAG_OPT_USAGE(BuiltinMethods);
-                    m_comp->emit_builtin_method(PyTuple_GetItem(mCode->co_names, oparg), stackInfo.top().Value);
-                    errorCheck("failed to load method", "", op.index);
-                } else {
-                    m_comp->emit_dup();// dup self as needs to remain on stack
-                    m_comp->emit_load_method(PyTuple_GetItem(mCode->co_names, oparg));
-                    errorCheck("failed to load method", "", op.index);
-                }
+                m_comp->emit_load_method(PyTuple_GetItem(mCode->co_names, oparg));
                 incStack(1);
+                intErrorCheck("failed to load method", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 break;
             }
             case CALL_METHOD: {
@@ -2585,10 +2578,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         if (g_pyjionSettings.graph) {
             result.instructionGraph = instructionGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));
 
-            //            // This snippet is really useful from time to time. Keep it here commented out
-            //            if (PyUnicode_CompareWithASCIIString(mCode->co_name, "test_float_conversion") == 0){
-            //                printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
-            //            }
+                        // This snippet is really useful from time to time. Keep it here commented out
+                        if (PyUnicode_CompareWithASCIIString(mCode->co_name, "resolve_expression") == 0){
+                            printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
+                        }
 
 #ifdef DUMP_INSTRUCTION_GRAPHS
             printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
