@@ -4,6 +4,8 @@
 
 * Fixed a critical bug where recursive functions that use a mutable container type (e.g. list) causes a decref to the wrong object and subsequent crash.
 * Fixes a bug on graph generation for recursive functions causing a crash in some situations
+* Fixes a bug on method calls, which called the wrong method when the class was copied using `copy.copy()`
+* Reduced memory consumption for method calls
 
 ## 1.1.0
 
