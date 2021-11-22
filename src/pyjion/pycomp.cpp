@@ -2157,11 +2157,24 @@ void PythonCompiler::emit_builtin_method(PyObject* name, AbstractValue* typeValu
         emit_load_method(name);// Can't inline this type of method
         return;
     }
+    Label guard_pass = emit_define_label(), guard_fail = emit_define_label();
+    if (typeValue->needsGuard()){
+        m_il.dup();
+        LD_FIELDI(PyObject, ob_type);
+        emit_ptr(pyType);
+        emit_branch(BranchNotEqual, guard_fail);
+    }
     // Use cached method
     emit_ptr(meth);
     emit_ptr(meth);
     emit_incref();
     emit_int(0);
+    if (typeValue->needsGuard()){
+        emit_branch(BranchAlways, guard_pass);
+        emit_mark_label(guard_fail);
+        emit_load_method(name);
+        emit_mark_label(guard_pass);
+    }
 }
 
 void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWithSources func) {
