@@ -2147,7 +2147,6 @@ void PythonCompiler::emit_builtin_method(PyObject* name, AbstractValue* typeValu
     auto pyType = typeValue->pythonType();
 
     if (pyType == nullptr) {
-        emit_dup();
         emit_load_method(name);// Can't inline this type of method
         return;
     }
@@ -2155,13 +2154,14 @@ void PythonCompiler::emit_builtin_method(PyObject* name, AbstractValue* typeValu
     auto meth = _PyType_Lookup(pyType, name);
 
     if (meth == nullptr || !PyType_HasFeature(Py_TYPE(meth), Py_TPFLAGS_METHOD_DESCRIPTOR)) {
-        emit_dup();
         emit_load_method(name);// Can't inline this type of method
         return;
     }
+    // Use cached method
     emit_ptr(meth);
     emit_ptr(meth);
     emit_incref();
+    emit_int(0);
 }
 
 void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWithSources func) {

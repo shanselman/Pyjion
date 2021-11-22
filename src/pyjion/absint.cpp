@@ -2466,7 +2466,12 @@ AbstactInterpreterCompileResult AbstractInterpreter::compileWorker(PgcStatus pgc
                 break;
             }
             case LOAD_METHOD: {
-                m_comp->emit_load_method(PyTuple_GetItem(mCode->co_names, oparg));
+                if (OPT_ENABLED(BuiltinMethods) && !stackInfo.empty() && stackInfo.top().hasValue() && stackInfo.top().Value->known() && !stackInfo.top().Value->needsGuard()) {
+                    FLAG_OPT_USAGE(BuiltinMethods);
+                    m_comp->emit_builtin_method(PyTuple_GetItem(mCode->co_names, oparg), stackInfo.top().Value);
+                } else {
+                    m_comp->emit_load_method(PyTuple_GetItem(mCode->co_names, oparg));
+                }
                 incStack(1);
                 intErrorCheck("failed to load method", PyUnicode_AsUTF8(PyTuple_GetItem(mCode->co_names, oparg)), op.index);
                 break;
