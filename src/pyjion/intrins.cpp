@@ -62,25 +62,6 @@ PyObject* g_emptyTuple;
         return -1;                                             \
     }
 
-static inline void PyJit_DECREF(
-        const char *filename, int lineno,
-        PyObject *op)
-{
-    if (--op->ob_refcnt != 0) {
-#ifdef DEBUG
-        if (op->ob_refcnt < 0) {
-            _Py_NegativeRefcount(filename, lineno, op);
-        }
-#endif
-    }
-    else {
-        _Py_Dealloc(op);
-    }
-}
-
-#define Py_DECREF(op) PyJit_DECREF(__FILE__, __LINE__, _PyObject_CAST(op))
-
-
 template<typename T>
 void decref(T v) {
     Py_DECREF(v);

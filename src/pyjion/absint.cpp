@@ -2578,10 +2578,10 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
         if (g_pyjionSettings.graph) {
             result.instructionGraph = instructionGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));
 
-                        // This snippet is really useful from time to time. Keep it here commented out
-                        if (PyUnicode_CompareWithASCIIString(mCode->co_name, "resolve_expression") == 0){
-                            printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
-                        }
+//                        // This snippet is really useful from time to time. Keep it here commented out
+//                        if (PyUnicode_CompareWithASCIIString(mCode->co_name, "resolve_expression") == 0){
+//                            printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
+//                        }
 
 #ifdef DUMP_INSTRUCTION_GRAPHS
             printf("%s", PyUnicode_AsUTF8(result.instructionGraph));
