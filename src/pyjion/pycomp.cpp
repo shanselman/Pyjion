@@ -2110,13 +2110,16 @@ void PythonCompiler::emit_compare_ints(uint16_t compareType) {
 }
 
 void PythonCompiler::emit_load_method(void* name) {
-    auto* methodLocation = reinterpret_cast<PyJitMethodLocation*>(_PyObject_New(&PyJitMethodLocation_Type));
-    methodLocation->method = nullptr;
-    methodLocation->object = nullptr;
-
+    Local method = emit_define_local(LK_Pointer), self = emit_define_local(LK_Pointer);
+    Local result = emit_define_local(LK_Int);
     m_il.ld_i(name);
-    emit_ptr(methodLocation);
+    emit_load_local_addr(method);
+    emit_load_local_addr(self);
     m_il.emit_call(METHOD_LOAD_METHOD);
+    emit_store_local(result);
+    emit_load_and_free_local(self);
+    emit_load_and_free_local(method);
+    emit_load_and_free_local(result);
 }
 
 void PythonCompiler::emit_init_instr_counter() {
@@ -2144,7 +2147,6 @@ void PythonCompiler::emit_builtin_method(PyObject* name, AbstractValue* typeValu
     auto pyType = typeValue->pythonType();
 
     if (pyType == nullptr) {
-        emit_dup();
         emit_load_method(name);// Can't inline this type of method
         return;
     }
@@ -2152,33 +2154,14 @@ void PythonCompiler::emit_builtin_method(PyObject* name, AbstractValue* typeValu
     auto meth = _PyType_Lookup(pyType, name);
 
     if (meth == nullptr || !PyType_HasFeature(Py_TYPE(meth), Py_TPFLAGS_METHOD_DESCRIPTOR)) {
-        emit_dup();
         emit_load_method(name);// Can't inline this type of method
         return;
     }
-    auto* methLocationObject = reinterpret_cast<PyJitMethodLocation*>(_PyObject_New(&PyJitMethodLocation_Type));
-    methLocationObject->method = meth;
-    methLocationObject->object = nullptr;
-
-    auto obj = emit_define_local(LK_Pointer);
-    emit_store_local(obj);
-    emit_ptr(methLocationObject);
-    auto meth_location = emit_define_local(LK_Pointer);
-    emit_store_local(meth_location);
-
-    emit_load_local(meth_location);
-    emit_incref();
-
-    emit_load_local(meth_location);
-    LD_FIELDA(PyJitMethodLocation, object);
-    emit_load_local(obj);
-    m_il.st_ind_i();
-
+    // Use cached method
+    emit_ptr(meth);
     emit_ptr(meth);
     emit_incref();
-
-    emit_load_and_free_local(obj);
-    emit_load_and_free_local(meth_location);
+    emit_int(0);
 }
 
 void PythonCompiler::emit_call_function_inline(py_oparg n_args, AbstractValueWithSources func) {
@@ -2909,7 +2892,7 @@ GLOBAL_METHOD(METHOD_PYUNICODE_JOINARRAY, &PyJit_UnicodeJoinArray, CORINFO_TYPE_
 GLOBAL_METHOD(METHOD_FORMAT_VALUE, &PyJit_FormatValue, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_FORMAT_OBJECT, &PyJit_FormatObject, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
-GLOBAL_METHOD(METHOD_LOAD_METHOD, &PyJit_LoadMethod, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
+GLOBAL_METHOD(METHOD_LOAD_METHOD, &PyJit_LoadMethod, CORINFO_TYPE_INT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 
 GLOBAL_METHOD(METHOD_METHCALL_0_TOKEN, &MethCall0, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
 GLOBAL_METHOD(METHOD_METHCALL_1_TOKEN, &MethCall1, CORINFO_TYPE_NATIVEINT, Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT), Parameter(CORINFO_TYPE_NATIVEINT));
