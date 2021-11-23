@@ -219,7 +219,7 @@ def bench_sudoku():
     solve(hard1)
 
 
-__benchmarks__ = [(bench_sudoku, "sudoku", {"level": 2, "pgc": True}, 2)]
+__benchmarks__ = [(bench_sudoku, "sudoku", {"level": 1, "pgc": True}, 2)]
 
 ## References used:
 ## http://www.scanraid.com/BasicStrategies.htm
