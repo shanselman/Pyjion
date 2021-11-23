@@ -2,7 +2,9 @@
 
 ## 1.2.0
 
+* PGC types will now be inferred across jump statements, for loops and other small scopes, improving performance
 * LOAD_METHOD will use cached pointers for builtin types like `dict`, `list`, etc. meaning LOAD_METHOD is faster in many cases
+* Dictionary merge operators, `|` and `|=` will assert the return type as dict
 
 ## 1.1.1
 

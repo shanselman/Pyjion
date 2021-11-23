@@ -386,7 +386,7 @@ AbstractInterpreter::interpret(PyObject* builtins, PyObject* globals, PyjionCode
                     break;
                 }
                 case STORE_FAST: {
-                    if (PGC_READY()) {
+                    if (PGC_READY() && g_pyjionSettings.optimizationLevel >= 2) {
                         PGC_PROBE(1);
                         PGC_UPDATE_STACK(1);
                     }
