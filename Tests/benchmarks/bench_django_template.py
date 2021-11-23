@@ -10,6 +10,10 @@ DEFAULT_SIZE = 100
 
 
 def bench_django_template(size=100):
+    django.conf.settings.configure(TEMPLATES=[{
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    }])
+    django.setup()
     template = Template("""<table>
 {% for row in table %}
 <tr>{% for col in row %}<td>{{ col|escape }}</td>{% endfor %}</tr>
@@ -20,11 +24,5 @@ def bench_django_template(size=100):
     context = Context({"table": table})
     template.render(context)
 
-
-if __name__ == "__main__":
-    django.conf.settings.configure(TEMPLATES=[{
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    }])
-    django.setup()
 
 __benchmarks__ = [(bench_django_template, "django_template", {"level": 2, "pgc": True}, 5)]
