@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.0
+
+* LOAD_METHOD will use cached pointers for builtin types like `dict`, `list`, etc. meaning LOAD_METHOD is faster in many cases
+
 ## 1.1.1
 
 * Fixed a critical bug where recursive functions that use a mutable container type (e.g. list) causes a decref to the wrong object and subsequent crash.

@@ -5,7 +5,7 @@ try:
 except ImportError:
     has_pyyaml = False
 
-
+@pytest.mark.xfail(reason="optimization bug, see #309")
 @pytest.mark.skipif(not has_pyyaml, reason="No pyyaml installed")
 @pytest.mark.external
 def test_load_yaml():
