@@ -2146,7 +2146,7 @@ void PythonCompiler::emit_pending_calls() {
 void PythonCompiler::emit_builtin_method(PyObject* name, AbstractValue* typeValue) {
     auto pyType = typeValue->pythonType();
 
-    if (pyType == nullptr) {
+    if (pyType == nullptr || typeValue->kind() == AVK_Type) {
         emit_load_method(name);// Can't inline this type of method
         return;
     }
