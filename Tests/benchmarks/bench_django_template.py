@@ -1,8 +1,6 @@
 """Test the performance of the Django template system.
 This will have Django generate a 150x150-cell HTML table.
 """
-import pyjion
-import timeit
 import django.conf
 from django.template import Context, Template
 
@@ -29,8 +27,4 @@ if __name__ == "__main__":
     }])
     django.setup()
 
-    print("Django Template took {0} without Pyjion".format(timeit.repeat(bench_django_template, repeat=5, number=1)))
-    pyjion.enable()
-    pyjion.config(level=2)
-    print("Django Template took {0} with Pyjion".format(timeit.repeat(bench_django_template, repeat=5, number=1)))
-    pyjion.disable()
+__benchmarks__ = [(bench_django_template, "django_template", {"level": 2, "pgc": True}, 5)]
