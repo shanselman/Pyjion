@@ -292,7 +292,7 @@ public:
     }
 
     PgcStatus pgcStatus() {
-        return m_jittedcode->j_pgc_status;
+        return m_jittedcode->j_pgcStatus;
     }
 };
 
