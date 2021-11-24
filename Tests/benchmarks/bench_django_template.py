@@ -10,10 +10,11 @@ DEFAULT_SIZE = 100
 
 
 def bench_django_template(size=100):
-    django.conf.settings.configure(TEMPLATES=[{
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    }])
-    django.setup()
+    if not django.conf.settings.configured:
+        django.conf.settings.configure(TEMPLATES=[{
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        }])
+        django.setup()
     template = Template("""<table>
 {% for row in table %}
 <tr>{% for col in row %}<td>{{ col|escape }}</td>{% endfor %}</tr>

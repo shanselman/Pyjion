@@ -21,7 +21,7 @@ digraph test {
 	OP28 [label="28 LOAD_ASSERTION_ERROR (0)" color="black"];
 	OP30 [label="30 RAISE_VARARGS (1)" color="black"];
 	OP32 [label="32 LOAD_GLOBAL (all)" color="black"];
-	OP34 [label="34 LOAD_CONST (<code object <genexpr> at 0x108c41150, f)" color="black"];
+	OP34 [label="34 LOAD_CONST (<code object <genexpr> at 0x10d6b1150, f)" color="black"];
 	OP36 [label="36 LOAD_CONST ('test.<locals>.<genexpr>')" color="black"];
 	OP38 [label="38 MAKE_FUNCTION (0)" color="black"];
 	OP40 [label="40 LOAD_GLOBAL (squares)" color="black"];
@@ -34,7 +34,7 @@ digraph test {
 	OP50 [label="50 LOAD_ASSERTION_ERROR (0)" color="black"];
 	OP52 [label="52 RAISE_VARARGS (1)" color="black"];
 	OP54 [label="54 LOAD_GLOBAL (all)" color="black"];
-	OP56 [label="56 LOAD_CONST (<code object <genexpr> at 0x108c41220, f)" color="black"];
+	OP56 [label="56 LOAD_CONST (<code object <genexpr> at 0x10d6b1220, f)" color="black"];
 	OP58 [label="58 LOAD_CONST ('test.<locals>.<genexpr>')" color="black"];
 	OP60 [label="60 MAKE_FUNCTION (0)" color="black"];
 	OP62 [label="62 LOAD_GLOBAL (squares)" color="black"];
@@ -141,7 +141,7 @@ digraph test {
 digraph parse_grid { 
 	node [shape=box];
 	OP0 [label="0 LOAD_GLOBAL (dict)" color="black"];
-	OP2 [label="2 LOAD_CONST (<code object <genexpr> at 0x108c41490, f)" color="black"];
+	OP2 [label="2 LOAD_CONST (<code object <genexpr> at 0x10d6b1490, f)" color="black"];
 	OP4 [label="4 LOAD_CONST ('parse_grid.<locals>.<genexpr>')" color="black"];
 	OP6 [label="6 MAKE_FUNCTION (0)" color="black"];
 	OP8 [label="8 LOAD_GLOBAL (squares)" color="black"];
@@ -214,7 +214,7 @@ digraph parse_grid {
 }
 digraph grid_values { 
 	node [shape=box];
-	OP0 [label="0 LOAD_CONST (<code object <listcomp> at 0x108c41630, )" color="black"];
+	OP0 [label="0 LOAD_CONST (<code object <listcomp> at 0x10d6b1630, )" color="black"];
 	OP2 [label="2 LOAD_CONST ('grid_values.<locals>.<listcomp>')" color="black"];
 	OP4 [label="4 MAKE_FUNCTION (0)" color="black"];
 	OP6 [label="6 LOAD_FAST (grid)" color="black"];
@@ -271,7 +271,7 @@ digraph assign {
 	OP18 [label="18 LOAD_CLOSURE (0)" color="black"];
 	OP20 [label="20 LOAD_CLOSURE (1)" color="black"];
 	OP22 [label="22 BUILD_TUPLE (2)" color="black"];
-	OP24 [label="24 LOAD_CONST (<code object <genexpr> at 0x108c417d0, f)" color="black"];
+	OP24 [label="24 LOAD_CONST (<code object <genexpr> at 0x10d6b17d0, f)" color="black"];
 	OP26 [label="26 LOAD_CONST ('assign.<locals>.<genexpr>')" color="black"];
 	OP28 [label="28 MAKE_FUNCTION (8)" color="black"];
 	OP30 [label="30 LOAD_FAST (other_values)" color="black"];
@@ -359,7 +359,7 @@ digraph eliminate {
 	OP82 [label="82 LOAD_CLOSURE (1)" color="black"];
 	OP84 [label="84 LOAD_CLOSURE (2)" color="black"];
 	OP86 [label="86 BUILD_TUPLE (2)" color="black"];
-	OP88 [label="88 LOAD_CONST (<code object <genexpr> at 0x108c41970, f)" color="black"];
+	OP88 [label="88 LOAD_CONST (<code object <genexpr> at 0x10d6b1970, f)" color="black"];
 	OP90 [label="90 LOAD_CONST ('eliminate.<locals>.<genexpr>')" color="black"];
 	OP92 [label="92 MAKE_FUNCTION (8)" color="black"];
 	OP94 [label="94 LOAD_GLOBAL (peers)" color="black"];
@@ -384,7 +384,7 @@ digraph eliminate {
 	OP124 [label="124 LOAD_CLOSURE (0)" color="black"];
 	OP126 [label="126 LOAD_CLOSURE (2)" color="black"];
 	OP128 [label="128 BUILD_TUPLE (2)" color="black"];
-	OP130 [label="130 LOAD_CONST (<code object <listcomp> at 0x108c41a40, )" color="black"];
+	OP130 [label="130 LOAD_CONST (<code object <listcomp> at 0x10d6b1a40, )" color="black"];
 	OP132 [label="132 LOAD_CONST ('eliminate.<locals>.<listcomp>')" color="black"];
 	OP134 [label="134 MAKE_FUNCTION (8)" color="black"];
 	OP136 [label="136 LOAD_FAST (u)" color="black"];
@@ -539,7 +539,7 @@ digraph search {
 	OP12 [label="12 LOAD_GLOBAL (all)" color="black"];
 	OP14 [label="14 LOAD_CLOSURE (1)" color="black"];
 	OP16 [label="16 BUILD_TUPLE (1)" color="black"];
-	OP18 [label="18 LOAD_CONST (<code object <genexpr> at 0x108c41f20, f)" color="black"];
+	OP18 [label="18 LOAD_CONST (<code object <genexpr> at 0x10d6b1f20, f)" color="black"];
 	OP20 [label="20 LOAD_CONST ('search.<locals>.<genexpr>')" color="black"];
 	OP22 [label="22 MAKE_FUNCTION (8)" color="black"];
 	OP24 [label="24 LOAD_GLOBAL (squares)" color="black"];
@@ -554,7 +554,7 @@ digraph search {
 	OP38 [label="38 LOAD_GLOBAL (min)" color="black"];
 	OP40 [label="40 LOAD_CLOSURE (1)" color="black"];
 	OP42 [label="42 BUILD_TUPLE (1)" color="black"];
-	OP44 [label="44 LOAD_CONST (<code object <genexpr> at 0x108c41ff0, f)" color="black"];
+	OP44 [label="44 LOAD_CONST (<code object <genexpr> at 0x10d6b1ff0, f)" color="black"];
 	OP46 [label="46 LOAD_CONST ('search.<locals>.<genexpr>')" color="black"];
 	OP48 [label="48 MAKE_FUNCTION (8)" color="black"];
 	OP50 [label="50 LOAD_GLOBAL (squares)" color="black"];
@@ -568,7 +568,7 @@ digraph search {
 	OP66 [label="66 LOAD_CLOSURE (0)" color="black"];
 	OP68 [label="68 LOAD_CLOSURE (1)" color="black"];
 	OP70 [label="70 BUILD_TUPLE (2)" color="black"];
-	OP72 [label="72 LOAD_CONST (<code object <genexpr> at 0x108c420c0, f)" color="black"];
+	OP72 [label="72 LOAD_CONST (<code object <genexpr> at 0x10d6b20c0, f)" color="black"];
 	OP74 [label="74 LOAD_CONST ('search.<locals>.<genexpr>')" color="black"];
 	OP76 [label="76 MAKE_FUNCTION (8)" color="black"];
 	OP78 [label="78 LOAD_DEREF (1)" color="black"];

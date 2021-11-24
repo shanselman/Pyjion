@@ -44,7 +44,7 @@ digraph permutations {
 	OP78 [label="78 LOAD_GLOBAL (tuple)" color="black"];
 	OP80 [label="80 LOAD_CLOSURE (0)" color="black"];
 	OP82 [label="82 BUILD_TUPLE (1)" color="black"];
-	OP84 [label="84 LOAD_CONST (<code object <genexpr> at 0x108c40fb0, f)" color="black"];
+	OP84 [label="84 LOAD_CONST (<code object <genexpr> at 0x10d6b0fb0, f)" color="black"];
 	OP86 [label="86 LOAD_CONST ('permutations.<locals>.<genexpr>')" color="black"];
 	OP88 [label="88 MAKE_FUNCTION (8)" color="black"];
 	OP90 [label="90 LOAD_FAST (indices)" color="black"];
@@ -137,7 +137,7 @@ digraph permutations {
 	OP250 [label="250 LOAD_GLOBAL (tuple)" color="black"];
 	OP252 [label="252 LOAD_CLOSURE (0)" color="black"];
 	OP254 [label="254 BUILD_TUPLE (1)" color="black"];
-	OP256 [label="256 LOAD_CONST (<code object <genexpr> at 0x108c41080, f)" color="black"];
+	OP256 [label="256 LOAD_CONST (<code object <genexpr> at 0x10d6b1080, f)" color="black"];
 	OP258 [label="258 LOAD_CONST ('permutations.<locals>.<genexpr>')" color="black"];
 	OP260 [label="260 MAKE_FUNCTION (8)" color="black"];
 	OP262 [label="262 LOAD_FAST (indices)" color="black"];
@@ -319,7 +319,7 @@ digraph n_queens {
 	OP26 [label="26 LOAD_GLOBAL (set)" color="black"];
 	OP28 [label="28 LOAD_CLOSURE (0)" color="black"];
 	OP30 [label="30 BUILD_TUPLE (1)" color="black"];
-	OP32 [label="32 LOAD_CONST (<code object <genexpr> at 0x108c40860, f)" color="black"];
+	OP32 [label="32 LOAD_CONST (<code object <genexpr> at 0x10d6b0860, f)" color="black"];
 	OP34 [label="34 LOAD_CONST ('n_queens.<locals>.<genexpr>')" color="black"];
 	OP36 [label="36 MAKE_FUNCTION (8)" color="black"];
 	OP38 [label="38 LOAD_FAST (cols)" color="black"];
@@ -337,7 +337,7 @@ digraph n_queens {
 	OP58 [label="58 LOAD_GLOBAL (set)" color="black"];
 	OP60 [label="60 LOAD_CLOSURE (0)" color="black"];
 	OP62 [label="62 BUILD_TUPLE (1)" color="black"];
-	OP64 [label="64 LOAD_CONST (<code object <genexpr> at 0x108c40a00, f)" color="black"];
+	OP64 [label="64 LOAD_CONST (<code object <genexpr> at 0x10d6b0a00, f)" color="black"];
 	OP66 [label="66 LOAD_CONST ('n_queens.<locals>.<genexpr>')" color="black"];
 	OP68 [label="68 MAKE_FUNCTION (8)" color="black"];
 	OP70 [label="70 LOAD_FAST (cols)" color="black"];
