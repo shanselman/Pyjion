@@ -171,6 +171,7 @@ public:
     SymbolTable j_symbols;
     bool j_tracingHooks;
     bool j_profilingHooks;
+    AbstractValueKind* j_specializedKinds;
 
     explicit PyjionJittedCode(PyObject* code) {
         j_compileResult = 0;

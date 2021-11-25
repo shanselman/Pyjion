@@ -242,10 +242,15 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     // Compile and run the now compiled code...
     AbstractInterpreter interp((PyCodeObject*) state->j_code);
     int argCount = frame->f_code->co_argcount + frame->f_code->co_kwonlyargcount;
-
+    vector<AbstractValueKind> argTypes = vector<AbstractValueKind>(argCount);
     // provide the interpreter information about the specialized types
     for (int i = 0; i < argCount; i++) {
         interp.setLocalType(i, frame->f_localsplus[i]);
+        if (frame->f_localsplus[i] == nullptr) {
+            argTypes[i] = AVK_Any;
+        } else {
+            argTypes[i] = GetAbstractType(Py_TYPE(frame->f_localsplus[i]), frame->f_localsplus[i]);
+        }
     }
 
     if (tstate->cframe->use_tracing && tstate->c_tracefunc) {
@@ -292,6 +297,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_sequencePointsLen = res.compiledCode->get_sequence_points_length();
     state->j_callPoints = res.compiledCode->get_call_points();
     state->j_callPointsLen = res.compiledCode->get_call_points_length();
+    state->j_specializedKinds = &argTypes[0];
 
 #ifdef DUMP_SEQUENCE_POINTS
     printf("Method disassembly for %s\n", PyUnicode_AsUTF8(frame->f_code->co_name));
@@ -352,6 +358,19 @@ PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
     if (jitted != nullptr && !throwflag) {
         if (jitted->j_addr != nullptr && !jitted->j_failed && (!g_pyjionSettings.pgc || jitted->j_pgcStatus == Optimized)) {
             jitted->j_runCount++;
+
+            // Check specialized types.
+            for (int i = 0; i < (f->f_code->co_argcount + f->f_code->co_kwonlyargcount); i++) {
+                if (f->f_localsplus[i] != nullptr) {
+                    if (jitted->j_specializedKinds[i] != GetAbstractType(Py_TYPE(f->f_localsplus[i]), f->f_localsplus[i])){
+#ifdef DEBUG
+                        printf("Running generic path because of changed types\n");
+#endif
+                        return PyJit_ExecuteJittedFrame((void*) jitted->j_genericAddr, f, ts, jitted);
+                    }
+                }
+            }
+
             return PyJit_ExecuteJittedFrame((void*) jitted->j_addr, f, ts, jitted);
         } else if (!jitted->j_failed && jitted->j_runCount++ >= jitted->j_threshold) {
             auto result = PyJit_ExecuteAndCompileFrame(jitted, f, ts, jitted->j_profile);
