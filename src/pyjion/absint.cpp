@@ -1411,6 +1411,7 @@ AbstactInterpreterCompileWorkerResult AbstractInterpreter::compileWorker(PgcStat
     BlockStack m_blockStack;
     m_raiseAndFreeLocals.clear();
     m_raiseAndFree.clear();
+    m_stack.clear();
     offsetLabels yieldOffsets;
     m_comp->emit_lasti_init();
     auto rootHandlerLabel = m_comp->emit_define_label();
@@ -1484,7 +1485,7 @@ AbstactInterpreterCompileWorkerResult AbstractInterpreter::compileWorker(PgcStat
         auto curStackDepth = m_offsetStack.find(curByte);
         if (curStackDepth != m_offsetStack.end()) {
             // Recover stack from jump
-            m_stack = curStackDepth->second;
+            m_stack = ValueStack(curStackDepth->second);
         }
         if (m_exceptionHandler.IsHandlerAtOffset(curByte)) {
             ExceptionHandler* handler = m_exceptionHandler.HandlerAtOffset(curByte);

@@ -66,7 +66,10 @@ public:
 
     using std::vector<StackEntryKind>::size;
     using std::vector<StackEntryKind>::rbegin;
+    using std::vector<StackEntryKind>::begin;
     using std::vector<StackEntryKind>::rend;
+    using std::vector<StackEntryKind>::end;
+    using std::vector<StackEntryKind>::clear;
 
     void dup_top() {
         if (empty())
