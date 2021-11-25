@@ -279,6 +279,9 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
 
     // Update the jitted information for this tree node
     state->j_addr = (Py_EvalFunc) res.compiledCode->get_code_addr();
+    if (res.genericCompiledCode != nullptr) {
+        state->j_genericAddr = (Py_EvalFunc) res.genericCompiledCode->get_code_addr();
+    }
     assert(state->j_addr != nullptr);
     state->j_il = res.compiledCode->get_il();
     state->j_ilLen = res.compiledCode->get_il_len();

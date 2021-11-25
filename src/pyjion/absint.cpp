@@ -2327,13 +2327,11 @@ AbstactInterpreterCompileWorkerResult AbstractInterpreter::compileWorker(PgcStat
                 }
                 break;
             case SETUP_FINALLY: {
-                auto current = m_blockStack.back();
                 auto handlerLabel = m_comp->emit_define_label();
-
                 auto newHandler = m_exceptionHandler.AddSetupFinallyHandler(
                         handlerLabel,
                         m_stack,
-                        current.CurrentHandler,
+                        CUR_HANDLER,
                         op.jumpsTo);
 
                 auto newBlock = BlockInfo(

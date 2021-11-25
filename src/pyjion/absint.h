@@ -319,7 +319,6 @@ class AbstractInterpreter : public PyjionBase {
     // all values produced during abstract interpretation, need to be freed
     vector<AbstractValue*> m_values;
     vector<AbstractSource*> m_sources;
-    vector<Local> m_raiseAndFreeLocals;
     unordered_map<py_oparg, Local> m_fastNativeLocals;
     unordered_map<py_oparg, StackEntryKind> m_fastNativeLocalKinds;
     IPythonCompiler* m_comp;
@@ -339,6 +338,8 @@ class AbstractInterpreter : public PyjionBase {
     //      raise logic.
     //  This was so we don't need to have decref/frees spread all over the code
     vector<vector<Label>> m_raiseAndFree;
+    vector<Local> m_raiseAndFreeLocals;
+
     unordered_map<py_opindex, bool> m_assignmentState;
 
 #pragma warning(default : 4251)
