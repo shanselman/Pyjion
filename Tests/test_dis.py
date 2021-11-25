@@ -28,7 +28,6 @@ def test_dis(capsys):
 
 
 @pytest.mark.graph
-@pytest.mark.nopgc  # TODO : Resolve PGC error in dis module.
 def test_dis_with_offsets(capsys):
     def test_f():
         numbers = (1, 2, 3, 4)
