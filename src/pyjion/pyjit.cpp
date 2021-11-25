@@ -71,6 +71,7 @@ PyjionJittedCode::~PyjionJittedCode() {
     delete j_profile;
     this->reset();
     Py_XDECREF(this->j_code);
+    // TODO : Look at other fields and ensure memory is deallocated.
 }
 
 void PyjionJittedCode::reset() {
@@ -282,7 +283,6 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
         return _PyEval_EvalFrameDefault(tstate, frame, 0);
     }
 
-    // Update the jitted information for this tree node
     state->j_addr = (Py_EvalFunc) res.compiledCode->get_code_addr();
     if (res.genericCompiledCode != nullptr) {
         state->j_genericAddr = (Py_EvalFunc) res.genericCompiledCode->get_code_addr();
@@ -363,7 +363,7 @@ PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
             for (int i = 0; i < (f->f_code->co_argcount + f->f_code->co_kwonlyargcount); i++) {
                 if (f->f_localsplus[i] != nullptr) {
                     if (jitted->j_specializedKinds[i] != GetAbstractType(Py_TYPE(f->f_localsplus[i]), f->f_localsplus[i])){
-#ifdef DEBUG
+#ifdef DEBUG_VERBOSE
                         printf("Running generic path because of changed types\n");
 #endif
                         return PyJit_ExecuteJittedFrame((void*) jitted->j_genericAddr, f, ts, jitted);
