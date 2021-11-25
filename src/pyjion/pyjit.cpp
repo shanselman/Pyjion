@@ -356,7 +356,8 @@ PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject) {
 PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
     auto jitted = PyJit_EnsureExtra((PyObject*) f->f_code);
     if (jitted != nullptr && !throwflag) {
-        if (jitted->j_addr != nullptr && !jitted->j_failed && (!g_pyjionSettings.pgc || jitted->j_pgcStatus == Optimized)) {
+        if (jitted->j_addr != nullptr && jitted->j_genericAddr != nullptr &&
+            !jitted->j_failed && (!g_pyjionSettings.pgc || jitted->j_pgcStatus == Optimized)) {
             jitted->j_runCount++;
 
             // Check specialized types.
