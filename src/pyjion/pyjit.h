@@ -155,6 +155,7 @@ public:
     short j_compileResult;
     unsigned int j_optimizations;
     Py_EvalFunc j_addr;
+    Py_EvalFunc j_genericAddr;
     uint8_t j_threshold;
     PyObject* j_code;
     PyjionCodeProfile* j_profile;
@@ -178,6 +179,7 @@ public:
         j_runCount = 0;
         j_failed = false;
         j_addr = nullptr;
+        j_genericAddr = nullptr;
         j_threshold = g_pyjionSettings.threshold;
         j_il = nullptr;
         j_ilLen = 0;

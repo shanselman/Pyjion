@@ -304,7 +304,7 @@ private:
 public:
     explicit InstructionGraphTest(const char* code, const char* name) {
         auto pyCode = CompileCode(code);
-        m_absint = std::make_unique<AbstractInterpreter>(pyCode, nullptr);
+        m_absint = std::make_unique<AbstractInterpreter>(pyCode);
         auto builtins = PyEval_GetBuiltins();
         auto globals_dict = PyObject_ptr(PyDict_New());
         auto profile = new PyjionCodeProfile();

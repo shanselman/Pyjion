@@ -78,6 +78,8 @@ public:
     }
 };
 
+typedef unordered_map<py_opindex, Label> offsetLabels;
+
 enum LocalKind {
     LK_Pointer,
     LK_Float,
@@ -495,6 +497,9 @@ public:
     virtual void emit_load_from_frame_value_stack(uint32_t idx) = 0;
     virtual void emit_dec_frame_stackdepth(uint32_t by) = 0;
     virtual void emit_set_frame_stackdepth(uint32_t to) = 0;
+
+    virtual void emit_return_value(Local, Label) = 0;
+    virtual void emit_yield_value(Local retValue, Label retLabel, py_opindex index, size_t stackSize, offsetLabels& yieldOffsets) = 0;
 };
 
 #endif

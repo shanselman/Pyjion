@@ -48,7 +48,7 @@ PythonCompiler::PythonCompiler(PyCodeObject* code) : m_il(m_module = new UserMod
                                                                   Parameter(CORINFO_TYPE_NATIVEINT),// PyjionCodeProfile*
                                                                   Parameter(CORINFO_TYPE_NATIVEINT),// PyTraceInfo
                                                           }) {
-    this->m_code = code;
+    m_code = code;
     m_lasti = m_il.define_local(Parameter(CORINFO_TYPE_NATIVEINT));
     m_compileDebug = g_pyjionSettings.debug;
 }
@@ -2677,6 +2677,33 @@ void PythonCompiler::emit_escape_edges(vector<Edge> edges, Local success) {
 
 void PythonCompiler::emit_store_subscr_unboxed(AbstractValueWithSources value, AbstractValueWithSources container, AbstractValueWithSources key){
     m_il.emit_call(METHOD_STORE_SUBSCR_BYTEARRAY_UB);
+}
+
+void PythonCompiler::emit_return_value(Local retValue, Label retLabel){
+    emit_store_local(retValue);
+    emit_set_frame_state(PY_FRAME_RETURNED);
+    emit_set_frame_stackdepth(0);
+    emit_branch(BranchAlways, retLabel);
+}
+
+void PythonCompiler::emit_yield_value(Local retValue, Label retLabel, py_opindex index, size_t stackSize, offsetLabels& yieldOffsets) {
+    emit_lasti_update(index);
+
+    emit_store_local(retValue);
+    emit_set_frame_state(PY_FRAME_SUSPENDED);
+
+    // Stack has submitted result back. Store any other variables
+    for (uint32_t i = (stackSize - 1); i > 0; --i) {
+        emit_store_in_frame_value_stack(i - 1);
+    }
+    emit_set_frame_stackdepth(stackSize - 1);
+    emit_branch(BranchAlways, retLabel);
+    // ^ Exit Frame || 🔽 Enter frame from next()
+    emit_mark_label(yieldOffsets[index]);
+    for (uint32_t i = 0; i < stackSize; i++) {
+        emit_load_from_frame_value_stack(i);
+    }
+    emit_dec_frame_stackdepth(stackSize);
 }
 
 /************************************************************************

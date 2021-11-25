@@ -88,6 +88,7 @@ PyjionJittedCode& PyjionJittedCode::operator = (const PyjionJittedCode& code) {
     j_compileResult = code.j_compileResult;
     j_optimizations = code.j_optimizations;
     j_addr = code.j_addr;
+    j_genericAddr = code.j_genericAddr;
     j_threshold = code.j_threshold;
     j_ilLen = code.j_ilLen;
     j_nativeSize = code.j_nativeSize;
@@ -239,8 +240,7 @@ bool JitInit(const wchar_t* path) {
 
 PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
     // Compile and run the now compiled code...
-    PythonCompiler jitter((PyCodeObject*) state->j_code);
-    AbstractInterpreter interp((PyCodeObject*) state->j_code, &jitter);
+    AbstractInterpreter interp((PyCodeObject*) state->j_code);
     int argCount = frame->f_code->co_argcount + frame->f_code->co_kwonlyargcount;
 
     // provide the interpreter information about the specialized types
