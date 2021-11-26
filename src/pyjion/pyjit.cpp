@@ -69,19 +69,31 @@ void setOptimizationLevel(unsigned short level) {
 
 PyjionJittedCode::~PyjionJittedCode() {
     delete j_profile;
+    this->reset();
+    Py_XDECREF(this->j_code);
+    // TODO : Look at other fields and ensure memory is deallocated.
 }
 
+void PyjionJittedCode::reset() {
+    free(this->j_il);
+    this->j_il = nullptr;
+    this->j_ilLen = 0;
+    Py_XDECREF(this->j_graph);
+}
 
-void PyjionJittedCode::operator = (const PyjionJittedCode& code) {
-    j_run_count = code.j_run_count;
+PyjionJittedCode& PyjionJittedCode::operator = (const PyjionJittedCode& code) {
+    if(this == &code)
+        return *this;
+    j_runCount = code.j_runCount;
     j_failed = code.j_failed;
-    j_compile_result = code.j_compile_result;
+    j_compileResult = code.j_compileResult;
     j_optimizations = code.j_optimizations;
     j_addr = code.j_addr;
-    j_specialization_threshold = code.j_specialization_threshold;
+    j_genericAddr = code.j_genericAddr;
+    j_threshold = code.j_threshold;
     j_ilLen = code.j_ilLen;
     j_nativeSize = code.j_nativeSize;
-    j_pgc_status = code.j_pgc_status;
+    j_pgcStatus = code.j_pgcStatus;
     j_sequencePointsLen = code.j_sequencePointsLen;
     j_callPointsLen = code.j_callPointsLen;
     j_symbols = code.j_symbols;
@@ -93,6 +105,7 @@ void PyjionJittedCode::operator = (const PyjionJittedCode& code) {
     *j_sequencePoints = *(code.j_sequencePoints);
     *j_callPoints = *(code.j_callPoints);
     *j_graph = *(code.j_graph);
+    return *this;
 }
 
 int Pyjit_CheckRecursiveCall(PyThreadState* tstate, const char* where) {
@@ -228,13 +241,17 @@ bool JitInit(const wchar_t* path) {
 
 PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* frame, PyThreadState* tstate, PyjionCodeProfile* profile) {
     // Compile and run the now compiled code...
-    PythonCompiler jitter((PyCodeObject*) state->j_code);
-    AbstractInterpreter interp((PyCodeObject*) state->j_code, &jitter);
+    AbstractInterpreter interp((PyCodeObject*) state->j_code);
     int argCount = frame->f_code->co_argcount + frame->f_code->co_kwonlyargcount;
-
+    vector<AbstractValueKind> argTypes = vector<AbstractValueKind>(argCount);
     // provide the interpreter information about the specialized types
     for (int i = 0; i < argCount; i++) {
         interp.setLocalType(i, frame->f_localsplus[i]);
+        if (frame->f_localsplus[i] == nullptr) {
+            argTypes[i] = AVK_Any;
+        } else {
+            argTypes[i] = GetAbstractType(Py_TYPE(frame->f_localsplus[i]), frame->f_localsplus[i]);
+        }
     }
 
     if (tstate->cframe->use_tracing && tstate->c_tracefunc) {
@@ -252,8 +269,8 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
         state->j_profilingHooks = false;
     }
 
-    auto res = interp.compile(frame->f_builtins, frame->f_globals, profile, state->j_pgc_status);
-    state->j_compile_result = res.result;
+    auto res = interp.compile(frame->f_builtins, frame->f_globals, profile, state->j_pgcStatus);
+    state->j_compileResult = res.result;
     state->j_optimizations = res.optimizations;
     if (g_pyjionSettings.graph) {
         if (state->j_graph != nullptr)
@@ -266,8 +283,10 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
         return _PyEval_EvalFrameDefault(tstate, frame, 0);
     }
 
-    // Update the jitted information for this tree node
     state->j_addr = (Py_EvalFunc) res.compiledCode->get_code_addr();
+    if (res.genericCompiledCode != nullptr) {
+        state->j_genericAddr = (Py_EvalFunc) res.genericCompiledCode->get_code_addr();
+    }
     assert(state->j_addr != nullptr);
     state->j_il = res.compiledCode->get_il();
     state->j_ilLen = res.compiledCode->get_il_len();
@@ -278,6 +297,8 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_sequencePointsLen = res.compiledCode->get_sequence_points_length();
     state->j_callPoints = res.compiledCode->get_call_points();
     state->j_callPointsLen = res.compiledCode->get_call_points_length();
+    state->j_specializedKinds = &argTypes[0];
+    state->j_specializedKindsLen = argCount;
 
 #ifdef DUMP_SEQUENCE_POINTS
     printf("Method disassembly for %s\n", PyUnicode_AsUTF8(frame->f_code->co_name));
@@ -336,12 +357,28 @@ PyjionJittedCode* PyJit_EnsureExtra(PyObject* codeObject) {
 PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
     auto jitted = PyJit_EnsureExtra((PyObject*) f->f_code);
     if (jitted != nullptr && !throwflag) {
-        if (jitted->j_addr != nullptr && !jitted->j_failed && (!g_pyjionSettings.pgc || jitted->j_pgc_status == Optimized)) {
-            jitted->j_run_count++;
+        if (jitted->j_addr != nullptr && jitted->j_genericAddr != nullptr &&
+            !jitted->j_failed && (!g_pyjionSettings.pgc || jitted->j_pgcStatus == Optimized)) {
+            jitted->j_runCount++;
+
+            // Check specialized types.
+            int argCount = f->f_code->co_argcount + f->f_code->co_kwonlyargcount;
+            for (int i = 0; i < argCount; i++) {
+                if (f->f_localsplus[i] != nullptr) {
+                    if (argCount <= jitted->j_specializedKindsLen &&
+                        jitted->j_specializedKinds[i] != GetAbstractType(Py_TYPE(f->f_localsplus[i]), f->f_localsplus[i])){
+#ifdef DEBUG_VERBOSE
+                        printf("Running generic path because of changed types\n");
+#endif
+                        return PyJit_ExecuteJittedFrame((void*) jitted->j_genericAddr, f, ts, jitted);
+                    }
+                }
+            }
+
             return PyJit_ExecuteJittedFrame((void*) jitted->j_addr, f, ts, jitted);
-        } else if (!jitted->j_failed && jitted->j_run_count++ >= jitted->j_specialization_threshold) {
+        } else if (!jitted->j_failed && jitted->j_runCount++ >= jitted->j_threshold) {
             auto result = PyJit_ExecuteAndCompileFrame(jitted, f, ts, jitted->j_profile);
-            jitted->j_pgc_status = nextPgcStatus(jitted->j_pgc_status);
+            jitted->j_pgcStatus = nextPgcStatus(jitted->j_pgcStatus);
             return result;
         }
     }
@@ -401,12 +438,12 @@ static PyObject* pyjion_info(PyObject* self, PyObject* func) {
     PyDict_SetItemString(res, "failed", jitted->j_failed ? Py_True : Py_False);
     PyDict_SetItemString(res, "tracing", jitted->j_tracingHooks ? Py_True : Py_False);
     PyDict_SetItemString(res, "profiling", jitted->j_profilingHooks ? Py_True : Py_False);
-    PyDict_SetItemString(res, "compile_result", PyLong_FromLong(jitted->j_compile_result));
+    PyDict_SetItemString(res, "compile_result", PyLong_FromLong(jitted->j_compileResult));
     PyDict_SetItemString(res, "compiled", jitted->j_addr != nullptr ? Py_True : Py_False);
     PyDict_SetItemString(res, "optimizations", PyLong_FromLong(jitted->j_optimizations));
-    PyDict_SetItemString(res, "pgc", PyLong_FromLong(jitted->j_pgc_status));
+    PyDict_SetItemString(res, "pgc", PyLong_FromLong(jitted->j_pgcStatus));
 
-    auto runCount = PyLong_FromUnsignedLongLong(jitted->j_run_count);
+    auto runCount = PyLong_FromUnsignedLongLong(jitted->j_runCount);
     PyDict_SetItemString(res, "run_count", runCount);
     Py_DECREF(runCount);
 

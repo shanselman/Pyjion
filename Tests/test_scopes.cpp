@@ -61,6 +61,7 @@ private:
         Py_DECREF(frame);
         size_t collected = PyGC_Collect();
         REQUIRE(!m_jittedcode->j_failed);
+        REQUIRE(m_jittedcode->j_genericAddr != nullptr);
         return res;
     }
 
