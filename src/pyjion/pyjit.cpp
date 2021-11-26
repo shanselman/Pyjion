@@ -298,6 +298,7 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_callPoints = res.compiledCode->get_call_points();
     state->j_callPointsLen = res.compiledCode->get_call_points_length();
     state->j_specializedKinds = &argTypes[0];
+    state->j_specializedKindsLen = argCount;
 
 #ifdef DUMP_SEQUENCE_POINTS
     printf("Method disassembly for %s\n", PyUnicode_AsUTF8(frame->f_code->co_name));
@@ -361,9 +362,11 @@ PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
             jitted->j_runCount++;
 
             // Check specialized types.
-            for (int i = 0; i < (f->f_code->co_argcount + f->f_code->co_kwonlyargcount); i++) {
+            int argCount = f->f_code->co_argcount + f->f_code->co_kwonlyargcount;
+            for (int i = 0; i < argCount; i++) {
                 if (f->f_localsplus[i] != nullptr) {
-                    if (jitted->j_specializedKinds[i] != GetAbstractType(Py_TYPE(f->f_localsplus[i]), f->f_localsplus[i])){
+                    if (argCount <= jitted->j_specializedKindsLen &&
+                        jitted->j_specializedKinds[i] != GetAbstractType(Py_TYPE(f->f_localsplus[i]), f->f_localsplus[i])){
 #ifdef DEBUG_VERBOSE
                         printf("Running generic path because of changed types\n");
 #endif
