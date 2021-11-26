@@ -394,6 +394,7 @@ void PyjionJitFree(void* obj) {
     code_obj->j_il = nullptr;
     delete code_obj->j_profile;
     Py_XDECREF(code_obj->j_graph);
+    Py_XDECREF(code_obj->j_genericGraph);
 }
 
 static PyInterpreterState* inter() {

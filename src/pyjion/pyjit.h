@@ -189,6 +189,7 @@ public:
         j_nativeSize = 0;
         j_profile = new PyjionCodeProfile();
         j_graph = Py_None;
+        j_genericGraph = Py_None;
         j_pgcStatus = Uncompiled;
         j_sequencePoints = nullptr;
         j_sequencePointsLen = 0;
@@ -196,6 +197,8 @@ public:
         j_callPointsLen = 0;
         j_tracingHooks = false;
         j_profilingHooks = false;
+        j_specializedKinds = nullptr;
+        j_specializedKindsLen = 0;
         Py_INCREF(code);
     }
 
