@@ -168,6 +168,7 @@ public:
     CallPoint* j_callPoints;
     unsigned int j_callPointsLen;
     PyObject* j_graph;
+    PyObject* j_genericGraph;
     SymbolTable j_symbols;
     bool j_tracingHooks;
     bool j_profilingHooks;

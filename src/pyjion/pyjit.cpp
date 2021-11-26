@@ -273,20 +273,20 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_compileResult = res.result;
     state->j_optimizations = res.optimizations;
     if (g_pyjionSettings.graph) {
-        if (state->j_graph != nullptr)
+        if (state->j_graph != nullptr) // discard the old one
             Py_DECREF(state->j_graph);
         state->j_graph = res.instructionGraph;
+        if (state->j_genericGraph != nullptr) // discard the old one
+            Py_DECREF(state->j_genericGraph);
+        state->j_genericGraph = res.genericGraph;
     }
-    if (res.compiledCode == nullptr || res.result != Success) {
+    if (res.compiledCode == nullptr || res.result != Success || res.genericCompiledCode == nullptr) {
         state->j_failed = true;
         state->j_addr = nullptr;// TODO : Raise specific warning when it used to compile and then it didnt the second time.
         return _PyEval_EvalFrameDefault(tstate, frame, 0);
     }
-
     state->j_addr = (Py_EvalFunc) res.compiledCode->get_code_addr();
-    if (res.genericCompiledCode != nullptr) {
-        state->j_genericAddr = (Py_EvalFunc) res.genericCompiledCode->get_code_addr();
-    }
+    state->j_genericAddr = (Py_EvalFunc) res.genericCompiledCode->get_code_addr();
     assert(state->j_addr != nullptr);
     state->j_il = res.compiledCode->get_il();
     state->j_ilLen = res.compiledCode->get_il_len();
