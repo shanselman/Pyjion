@@ -2798,7 +2798,7 @@ void PyJit_PgcGuardException(PyObject* obj, const char* expected) {
     if (PyErr_Occurred())
         return;
     PyErr_Format(PyjionUnboxingError,
-                 "Pyjion PGC expected %s, but %s is a %s. Try disabling PGC pyjion.config(pgc=False) to avoid hitting this error.",
+                 "Optimizations are invalid. Pyjion PGC expected %s, but %s is a %s. Try disabling PGC pyjion.config(pgc=False) or lowering the optimization level to avoid hitting this error.",
                  expected,
                  PyUnicode_AsUTF8(PyObject_Repr(obj)),
                  obj->ob_type->tp_name);
