@@ -152,7 +152,6 @@ public:
         if (res.get() == nullptr || PyErr_Occurred()) {
             PyErr_PrintEx(-1);
             FAIL("Error on Python execution");
-            return nullptr;
         }
 
         auto repr = PyUnicode_AsUTF8(PyObject_Repr(res.get()));
@@ -262,7 +261,6 @@ public:
         if (PyErr_Occurred()) {
             PyErr_PrintEx(-1);
             FAIL("Error on Python execution");
-            return nullptr;
         }
         REQUIRE(res.get() != nullptr);
         PyObject* v = res.get();
