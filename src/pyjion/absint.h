@@ -187,14 +187,9 @@ public:
             return existing;
         if (existing.hasValue() && !existing.Value->needsGuard() && existing.Value->known())
             return existing;
-        if (pyTypeObject == nullptr)
+        if (pyTypeObject == nullptr) {
             return existing;
-#ifdef DEBUG_VERBOSE
-        if (existing.Value->kind() == AVK_Integer && kind == AVK_BigInteger){
-            printf("Warning: downcast to big integer;\n");
-        }
-#endif
-        else {
+        } else {
             return {
                     new PgcValue(pyTypeObject, kind),
                     existing.Sources};
