@@ -297,7 +297,11 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_sequencePointsLen = res.compiledCode->get_sequence_points_length();
     state->j_callPoints = res.compiledCode->get_call_points();
     state->j_callPointsLen = res.compiledCode->get_call_points_length();
-    state->j_specializedKinds = &argTypes[0];
+    if (argCount > 0) {
+        state->j_specializedKinds = &argTypes[0];
+    } else {
+        state->j_specializedKinds = nullptr;
+    }
     state->j_specializedKindsLen = argCount;
 
 #ifdef DUMP_SEQUENCE_POINTS
