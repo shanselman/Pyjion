@@ -129,7 +129,6 @@ PyObject* PyJit_Subscr(PyObject* left, PyObject* right) {
 }
 
 PyObject* PyJit_SubscrIndex(PyObject* o, PyObject* key, Py_ssize_t index) {
-    PyMappingMethods* m;
     PySequenceMethods* ms;
     PyObject* res;
 
@@ -1691,7 +1690,8 @@ PyObject* PyJit_IterNextUnboxed(PyObject* iter) {
         return (PyObject*)PyLong_AsLongLong(next); // Unbox the value
     } else {
         // Err.. I'm outta ideas
-        assert(false);
+        PyErr_SetString(PyExc_ValueError, "Invalid type in PyJit_IterNextUnboxed");
+        return 0;
     }
 }
 
