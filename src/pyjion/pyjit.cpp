@@ -371,9 +371,6 @@ PyObject* PyJit_EvalFrame(PyThreadState* ts, PyFrameObject* f, int throwflag) {
                 if (f->f_localsplus[i] != nullptr) {
                     if (argCount <= jitted->j_specializedKindsLen &&
                         jitted->j_specializedKinds[i] != GetAbstractType(Py_TYPE(f->f_localsplus[i]), f->f_localsplus[i])){
-#ifdef DEBUG_VERBOSE
-                        printf("Running generic path because of changed types\n");
-#endif
                         return PyJit_ExecuteJittedFrame((void*) jitted->j_genericAddr, f, ts, jitted);
                     }
                 }
