@@ -298,7 +298,8 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_callPoints = res.compiledCode->get_call_points();
     state->j_callPointsLen = res.compiledCode->get_call_points_length();
     if (argCount > 0) {
-        state->j_specializedKinds = &argTypes[0];
+        state->j_specializedKinds = new AbstractValueKind[argCount];
+        std::copy(argTypes.begin(), argTypes.end(), state->j_specializedKinds);
     } else {
         state->j_specializedKinds = nullptr;
     }
