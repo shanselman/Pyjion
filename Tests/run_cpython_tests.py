@@ -21,7 +21,7 @@ def run_test(test, level, pgc):
     fail_count = 0
     for case in test_cases:
         pyjion.enable()
-        pyjion.config(level=level, pgc=pgc, graph=True)
+        pyjion.config(level=level, pgc=pgc, graph=True, debug=True)
         r = unittest.result.TestResult()
         with redirect_stderr(io.StringIO()) as _:
             with redirect_stdout(io.StringIO()) as _:

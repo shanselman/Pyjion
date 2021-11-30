@@ -7,7 +7,7 @@ on:
     branches: [ develop/main, develop/3.10 ]
 
 env:
-  BUILD_TYPE: Debug
+  BUILD_TYPE: Release
 
 jobs:
   build-linux:
@@ -42,7 +42,7 @@ jobs:
       - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS=ON
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
@@ -165,7 +165,7 @@ jobs:
       - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/build
-        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCODE_COVERAGE=ON
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DBUILD_TESTS=ON
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
@@ -180,16 +180,6 @@ jobs:
         working-directory: ${{runner.workspace}}/build
         shell: bash
         run: ./unit_tests --out test.log -s --use-colour yes
-        
-      - name: Run gcov
-        shell: bash
-        run: gcov Tests/
-
-      - name: Codecov
-        uses: codecov/codecov-action@v1.0.15
-        with:
-          directory: Tests/
-
       - name: Setup Python tests
         shell: bash
         run: pip install -r Tests/requirements_test.txt

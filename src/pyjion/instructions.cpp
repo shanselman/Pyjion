@@ -279,9 +279,6 @@ void InstructionGraph::fixLocals(py_oparg startIdx, py_oparg endIdx) {
 
 PyObject* InstructionGraph::makeGraph(const char* name) {
     if (PyErr_Occurred()) {
-#ifdef DEBUG_VERBOSE
-        PyErr_Print();
-#endif
         PyErr_Clear();
     }
 

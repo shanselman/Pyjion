@@ -2688,10 +2688,6 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
                 result.genericGraph = genericGraph->makeGraph(PyUnicode_AsUTF8(mCode->co_name));
             }
             result.genericCompiledCode = genericResult.compiledCode;
-        } else {
-#ifdef DEBUG
-            printf("Failed to compiled generic version\n");
-#endif
         }
         delete genericGraph;
         delete boxedGraph;
