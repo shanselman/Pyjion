@@ -110,14 +110,11 @@ class JittedCode {
 public:
     virtual ~JittedCode() = default;
     virtual void* get_code_addr() = 0;
-    virtual unsigned char* get_il() = 0;
-    virtual size_t get_il_len() = 0;
     virtual size_t get_native_size() = 0;
     virtual SymbolTable get_symbol_table() = 0;
-    virtual SequencePoint* get_sequence_points() = 0;
-    virtual size_t get_sequence_points_length() = 0;
-    virtual CallPoint* get_call_points() = 0;
-    virtual size_t get_call_points_length() = 0;
+    virtual void get_il(unsigned char** out, unsigned int * outLen) = 0;
+    virtual void get_sequence_points(SequencePoint**, unsigned int*) = 0;
+    virtual void get_call_points(CallPoint**, unsigned int*) = 0;
 };
 
 // Defines the interface between the abstract compiler and code generator

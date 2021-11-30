@@ -71,7 +71,6 @@ PyjionJittedCode::~PyjionJittedCode() {
     delete j_profile;
     this->reset();
     Py_XDECREF(this->j_code);
-    // TODO : Look at other fields and ensure memory is deallocated.
 }
 
 void PyjionJittedCode::reset() {
@@ -79,6 +78,15 @@ void PyjionJittedCode::reset() {
     this->j_il = nullptr;
     this->j_ilLen = 0;
     Py_XDECREF(this->j_graph);
+    delete [] j_specializedKinds;
+    j_specializedKinds = nullptr;
+    j_specializedKindsLen = 0;
+    delete [] j_sequencePoints;
+    j_sequencePoints = nullptr;
+    j_sequencePointsLen = 0;
+    delete [] j_callPoints;
+    j_callPoints = nullptr;
+    j_callPointsLen = 0;
 }
 
 PyjionJittedCode& PyjionJittedCode::operator = (const PyjionJittedCode& code) {
@@ -102,9 +110,11 @@ PyjionJittedCode& PyjionJittedCode::operator = (const PyjionJittedCode& code) {
     *j_code = *(code.j_code);
     *j_profile = *(code.j_profile);
     *j_il = *(code.j_il);
-    *j_sequencePoints = *(code.j_sequencePoints);
+    *j_sequencePoints = *(code.j_sequencePoints); // TODO: Copy vector, not copy pointer. 
     *j_callPoints = *(code.j_callPoints);
     *j_graph = *(code.j_graph);
+    *j_specializedKinds = *(code.j_specializedKinds);
+    j_specializedKindsLen = code.j_specializedKindsLen;
     return *this;
 }
 
@@ -288,15 +298,12 @@ PyObject* PyJit_ExecuteAndCompileFrame(PyjionJittedCode* state, PyFrameObject* f
     state->j_addr = (Py_EvalFunc) res.compiledCode->get_code_addr();
     state->j_genericAddr = (Py_EvalFunc) res.genericCompiledCode->get_code_addr();
     assert(state->j_addr != nullptr);
-    state->j_il = res.compiledCode->get_il();
-    state->j_ilLen = res.compiledCode->get_il_len();
+    res.compiledCode->get_il(&state->j_il, &state->j_ilLen);
     state->j_nativeSize = res.compiledCode->get_native_size();
     state->j_profile = profile;
     state->j_symbols = res.compiledCode->get_symbol_table();
-    state->j_sequencePoints = res.compiledCode->get_sequence_points();
-    state->j_sequencePointsLen = res.compiledCode->get_sequence_points_length();
-    state->j_callPoints = res.compiledCode->get_call_points();
-    state->j_callPointsLen = res.compiledCode->get_call_points_length();
+    res.compiledCode->get_sequence_points(&state->j_sequencePoints, &state->j_sequencePointsLen);
+    res.compiledCode->get_call_points(&state->j_callPoints, &state->j_callPointsLen);
     if (argCount > 0) {
         state->j_specializedKinds = new AbstractValueKind[argCount];
         std::copy(argTypes.begin(), argTypes.end(), state->j_specializedKinds);
