@@ -1,43 +1,26 @@
 import runpy
 import pyjion
-import argparse
+import sys
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='pyjion', description='Python JIT Compiler')
-
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('script', help='script file', nargs='?')
-
-    group.add_argument('-m', action='store', type=str, dest="module", help="Execute module")
-
-    parser.add_argument('--graph',
-                        action='store_true',
-                        help='Enable instruction graph generation')
-
-    parser.add_argument('--debug',
-                        action='store_true',
-                        help='Enable debuggable JIT methods')
-
-    parser.add_argument('--no-pgc',
-                        action='store_true',
-                        help='Disable PGC')
-
-    parser.add_argument('-o',
-                    '--opt-level',
-                    action='store', type=int, default=1,
-                    help='Optimization level (default 1)')
-
-    args = parser.parse_args()
-
+    if len(sys.argv) < 2:
+        print(
+            """
+    Usage: python -m pyjion <script.py> or python -m pyjion -m module ...args
+            """
+        )
+        exit(1)
     pyjion.enable()
-
-    pyjion.config(graph=args.graph, debug=args.debug, pgc=not args.no_pgc, level=args.opt_level)
-
-    if args.module:
-        runpy.run_module(args.module, alter_sys=True)
+    if sys.argv[1] == "-m":
+        mod = sys.argv[2]
+        del sys.argv[1]  # Drop -m
+        del sys.argv[1]  # Drop module
+        runpy.run_module(mod, run_name="__main__", alter_sys=True)
     else:
-        runpy.run_path(args.script, run_name="__main__")
+        script = sys.argv[1]
+        del sys.argv[1]  # Drop script
+        runpy.run_path(script, run_name="__main__")
     pyjion.disable()
 
 

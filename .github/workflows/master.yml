@@ -92,12 +92,13 @@ jobs:
           pip install ipython
           python -X dev -m IPython -c="import pyjion;pyjion.enable();a=1+1;a"
 
-      - name: Test mod
+      - name: Test module entry point
         shell: bash
         run: |
           python -m pyjion -m calendar
+          python -m pyjion -m calendar 1999
           python -m pyjion Tests/hello.py
-          pyjion -m calendar
+          pyjion -m calendar 1999
           pyjion Tests/hello.py
 
       - name: Install scikit-build for wheel
@@ -199,10 +200,14 @@ jobs:
         shell: bash
         run: python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
-      - name: Test mod
+      - name: Test module entry point
         shell: bash
         run: |
-          pyjion -m calendar
+          python -m pyjion -m calendar
+          python -m pyjion -m calendar 1999
+          python -m pyjion Tests/hello.py
+          pyjion -m calendar 1999
+          pyjion Tests/hello.py
 
       - name: Run smoke tests
         shell: bash
@@ -323,10 +328,14 @@ jobs:
         shell: bash
         run: python -X dev -m pytest Tests/ -v --opt-level 1 --external
 
-      - name: Test mod
+      - name: Test module entry point
         shell: bash
         run: |
-          pyjion -m calendar
+          python -m pyjion -m calendar
+          python -m pyjion -m calendar 1999
+          python -m pyjion Tests/hello.py
+          pyjion -m calendar 1999
+          pyjion Tests/hello.py
 
       - name: Run smoke tests
         shell: bash
