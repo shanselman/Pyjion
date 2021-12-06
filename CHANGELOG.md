@@ -7,6 +7,7 @@
 * LOAD_METHOD will use cached pointers for builtin types like `dict`, `list`, etc. meaning LOAD_METHOD is faster in many cases
 * Dictionary merge operators, `|` and `|=` will assert the return type as dict
 * Fixes a crash on Windows when referencing call points or sequence points for a free'd module
+* Fixes an issue running `pyjion -m module` with arguments
 
 ## 1.1.1
 
