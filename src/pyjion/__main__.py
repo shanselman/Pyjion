@@ -1,6 +1,7 @@
 import runpy
 import pyjion
 import sys
+import os
 
 
 def main():
@@ -12,6 +13,16 @@ def main():
         )
         exit(1)
     pyjion.enable()
+    if 'PYJION_PGC' in os.environ:
+        pyjion.config(pgc=bool(os.environ['PYJION_PGC']))
+    else:
+        pyjion.config(pgc=False)
+
+    if 'PYJION_LEVEL' in os.environ:
+        pyjion.config(level=int(os.environ['PYJION_LEVEL']))
+    else:
+        pyjion.config(level=1)
+
     if sys.argv[1] == "-m":
         mod = sys.argv[2]
         del sys.argv[1]  # Drop -m

@@ -20,6 +20,9 @@ You can run ``pyjion`` as a standalone command-line program, similar to how you 
    optional arguments:
    -m MODULE             Execute module
 
+You can enable PGC by setting the ``PYJION_PGC`` environment variable to 1.
+You can override the optimization level (default 1) by setting the ``PYJION_LEVEL`` environment variable.
+
 Core module
 -----------
 
