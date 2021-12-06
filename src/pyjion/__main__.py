@@ -19,5 +19,5 @@ if __name__ == "__main__":
     else:
         script = sys.argv[1]
         del sys.argv[1]  # Drop script
-        runpy.run_path(sys.argv[1], run_name="__main__")
+        runpy.run_path(script, run_name="__main__")
     pyjion.disable()
