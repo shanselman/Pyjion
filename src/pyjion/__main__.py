@@ -2,14 +2,15 @@ import runpy
 import pyjion
 import sys
 
-if __name__ == "__main__":
+
+def main():
     if len(sys.argv) < 2:
         print(
             """
     Usage: python -m pyjion <script.py> or python -m pyjion -m module ...args
             """
         )
-        exit(1)
+    exit(1)
     pyjion.enable()
     if sys.argv[1] == "-m":
         mod = sys.argv[2]
@@ -21,3 +22,7 @@ if __name__ == "__main__":
         del sys.argv[1]  # Drop script
         runpy.run_path(script, run_name="__main__")
     pyjion.disable()
+
+
+if __name__ == "__main__":
+    main()
