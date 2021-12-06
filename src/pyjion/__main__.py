@@ -10,7 +10,7 @@ def main():
     Usage: python -m pyjion <script.py> or python -m pyjion -m module ...args
             """
         )
-    exit(1)
+        exit(1)
     pyjion.enable()
     if sys.argv[1] == "-m":
         mod = sys.argv[2]
