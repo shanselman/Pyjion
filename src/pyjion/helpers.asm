@@ -1,6 +1,6 @@
 .code
 PAGE_SIZE equ 1000h
-JIT_StackProbe PROC
+stackProbeHelper PROC
 
         ; On entry:
         ;   r11 - points to the lowest address on the stack frame being allocated (i.e. [InitialSp - FrameSize])
@@ -23,6 +23,6 @@ ProbeLoop:
 
         ret
 
-JIT_StackProbe ENDP
+stackProbeHelper ENDP
 
 end
