@@ -86,7 +86,12 @@ if(REPORT_CLR_FAULTS)
     add_definitions(-DREPORT_CLR_FAULTS)
 endif()
 if(ASAN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+    message(STATUS "Enabling address sanitizer")
+    if (WIN32)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fsanitize=address")
+    else()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+    endif()
 endif()
 
 
