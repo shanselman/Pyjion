@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.2.2
+
+* enable ASAN for Windows
+* Map short branch equivalent and patch out 3 bytes to a nop
+* Fix offset calculation
+* Create a simple loop test and check for 1 byte signed size
+* Show effective branch target on CIL disassembly output
+
 ## 1.2.1
 
 * Fixes a bug in OPT-12 (method caching) where it would store the incorrect cache address for a global type of subclass. Bug seen in SQLalchemy.
