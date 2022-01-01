@@ -132,8 +132,8 @@ class OptimizationFlags(IntFlag):
 
 
 class CompilationResult(IntEnum):
-    NoResult = (0,)
-    Success = (1,)
+    NoResult = 0
+    Success = 1
     CompilationException = 10
     CompilationJitFailure = 11
     CompilationStackEffectFault = 12
