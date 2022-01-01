@@ -1,9 +1,12 @@
 from dis import get_instructions
+from typing import Any, Dict, List, Optional, Set
 from pyjion import il, native, offsets as get_offsets, symbols
 from collections import namedtuple
 from warnings import warn
 import struct
 from platform import machine
+import dataclasses
+
 
 __all__ = [
     "dis",
@@ -369,13 +372,127 @@ OPDEF("CEE_UNUSED55",                   "unused",           Pop0,               
 OPDEF("CEE_UNUSED70",                   "unused",           Pop0,               Push0,       InlineNone,         IPrimitive,  2,  0xFE,    0x22,    NEXT),
 ]
 
-opcode_map = {}
+@dataclasses.dataclass
+class CILInstruction:
+    offset: int
+    opcode: OPDEF
+    argument: Optional[Any]
+    jump_offset: Optional[int]
+
+    def __str__(self):
+        if self.jump_offset:
+            return f"{self.opcode.name} {self.argument} (IL_{self.jump_offset:04x})"
+        if self.argument:
+            return f"{self.opcode.name} {self.argument}"
+        return f"{self.opcode.name}"
+
+
+
+opcode_map: Dict[int, OPDEF] = {}
 for opcode in opcodes:
     if opcode.first_byte == 0xFF:
         # single byte opcode
         opcode_map[opcode.second_byte] = opcode
     else:
         opcode_map[opcode.first_byte + opcode.second_byte] = opcode
+
+
+def cil_instructions(il, symbols) -> List[CILInstruction]:
+    i = iter(il)
+    instructions: List[CILInstruction] = []
+    try:
+        pc = 0
+        while True:
+            first = next(i)
+            if first == 0 and pc == 0:
+                raise NotImplementedError(f"CorILMethod_FatFormat not yet supported")
+
+            op = opcode_map[first]
+            if op.size == InlineNone:
+                if op.cee_code != "CEE_NOP":
+                    instructions.append(CILInstruction(pc, op, None, None))
+                pc += 1
+                continue
+            elif op.size == ShortInlineBrTarget:
+                target = int.from_bytes((next(i),), byteorder='little', signed=True)
+                effective_target = (pc + 2) + target # What is the actual destination address
+                instructions.append(CILInstruction(pc, op, target, effective_target))
+                pc += 2
+                continue
+            elif op.size == ShortInlineVar:
+                target = int.from_bytes((next(i),), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 2
+                continue
+            elif op.size == ShortInlineI:
+                target = int.from_bytes((next(i),), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 2
+                continue
+            elif op.size == ShortInlineR:
+                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 5
+                continue
+            elif op.size == InlineBrTarget:
+                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                effective_target = (pc + 5) + target # What is the actual destination address
+                instructions.append(CILInstruction(pc, op, target, effective_target))
+                pc += 5
+                continue
+            elif op.size == InlineField:
+                field = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, field, None))
+                pc += 5
+                continue
+            elif op.size == InlineR:
+                [target] = struct.unpack('f', bytes((next(i), next(i), next(i), next(i))))
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 5
+                continue
+            elif op.size == InlineI:
+                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 5
+                continue
+            elif op.size == InlineI8:
+                target = int.from_bytes((next(i), next(i), next(i), next(i), next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 9
+                continue
+            elif op.size == InlineMethod:
+                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                meth = symbols.get(target, target)
+                instructions.append(CILInstruction(pc, op, meth, None))
+                pc += 5
+                continue
+            elif op.size == InlineSig:
+                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 5
+                continue
+            elif op.size == InlineTok:
+                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 5
+                continue
+            elif op.size == InlineString:
+                target = bytearray((next(i), next(i), next(i), next(i))).decode('utf-8')
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 5
+                continue
+            elif op.size == InlineVar:
+                target = int.from_bytes((next(i), next(i)), byteorder='little', signed=True)
+                instructions.append(CILInstruction(pc, op, target, None))
+                pc += 3
+                continue
+            else:
+                raise NotImplementedError(f"Haven't implemented IL Opcode {op.name} with size {op.size}")
+
+    except StopIteration:
+        pass
+
+    return instructions
 
 
 def print_il(il: bytearray, symbols, offsets=None, bytecodes=None, print_pc=True) -> None:
@@ -387,105 +504,95 @@ def print_il(il: bytearray, symbols, offsets=None, bytecodes=None, print_pc=True
     :param bytecodes: The dictionary of Python bytecode instructions
     :param print_pc: Flag to include the PC offsets in the print
     """
-    i = iter(il)
-    try:
-        pc = 0
-        while True:
-            # See if this is the offset of a matching Python instruction
-            if offsets and bytecodes:
-                for py_offset, il_offset, native_offset, offset_type in offsets:
-                    if il_offset == pc and offset_type == 'instruction':
-                        try:
-                            instruction = bytecodes[py_offset]
-                            print(f'// {instruction.offset} {instruction.opname} - {instruction.arg} ({instruction.argval})', )
-                        except KeyError:
-                            warn("Invalid offset {0}".format(offsets))
-            first = next(i)
-            if first == 0 and pc == 0:
-                raise NotImplementedError(f"CorILMethod_FatFormat not yet supported")
+    instructions = cil_instructions(il, symbols)
+    for instruction in instructions:
+        # See if this is the offset of a matching Python instruction
+        if offsets and bytecodes:
+            for py_offset, il_offset, _, offset_type in offsets:
+                if il_offset == instruction.offset and offset_type == 'instruction':
+                    try:
+                        python_instruction = bytecodes[py_offset]
+                        print(f'// {python_instruction.offset} {python_instruction.opname} - {python_instruction.arg} ({python_instruction.argval})', )
+                    except KeyError:
+                        warn("Invalid offset {0}".format(offsets))
 
-            op = opcode_map[first]
-            pc_label = f"IL_{pc:04x}: " if print_pc else ""
-            if op.size == InlineNone:
-                print(f"{pc_label}{op.name}")
-                pc += 1
-                continue
-            elif op.size == ShortInlineBrTarget:
-                target = int.from_bytes((next(i),), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 2
-                continue
-            elif op.size == ShortInlineVar:
-                target = int.from_bytes((next(i),), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 2
-                continue
-            elif op.size == ShortInlineI:
-                target = int.from_bytes((next(i),), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 2
-                continue
-            elif op.size == ShortInlineR:
-                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 5
-                continue
-            elif op.size == InlineBrTarget:
-                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 5
-                continue
-            elif op.size == InlineField:
-                field = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {field}")
-                pc += 5
-                continue
-            elif op.size == InlineR:
-                [target] = struct.unpack('f', bytes((next(i), next(i), next(i), next(i))))
-                print(f"{pc_label}{op.name} {target}")
-                pc += 5
-                continue
-            elif op.size == InlineI:
-                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 5
-                continue
-            elif op.size == InlineI8:
-                target = int.from_bytes((next(i), next(i), next(i), next(i), next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 9
-                continue
-            elif op.size == InlineMethod:
-                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                meth = symbols.get(target, target)
-                print(f"{pc_label}{op.name} {meth}")
-                pc += 5
-                continue
-            elif op.size == InlineSig:
-                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 5
-                continue
-            elif op.size == InlineTok:
-                target = int.from_bytes((next(i), next(i), next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 5
-                continue
-            elif op.size == InlineString:
-                target = bytearray((next(i), next(i), next(i), next(i))).decode('utf-8')
-                print(f"{pc_label}{op.name} {target}")
-                pc += 5
-                continue
-            elif op.size == InlineVar:
-                target = int.from_bytes((next(i), next(i)), byteorder='little', signed=True)
-                print(f"{pc_label}{op.name} {target}")
-                pc += 3
-                continue
-            else:
-                raise NotImplementedError(f"Haven't implemented IL Opcode {op.name} with size {op.size}")
+        pc_label = f"IL_{instruction.offset:04x}: " if print_pc else ""
+        print(f"{pc_label}{instruction}")
 
-    except StopIteration:
-        pass
+
+def flow_graph(f):
+    """
+    Return a control flow-graph in DOT syntax for the CIL instructions for f
+
+    :param f: The compiled function or code object
+    :returns: The Graph in DOT format
+    :rtype: ``str``
+    """
+    _il = il(f)
+    result = ""
+    if not _il:
+        print("No IL for this function, it may not have compiled correctly.")
+        return
+    instructions = cil_instructions(_il, symbols(f))
+    result += """
+digraph g {
+graph [
+rankdir = "LR"
+];
+node [
+fontsize = "16"
+shape = "ellipse"
+];
+edge [
+];\n
+"""
+    block_starts: Set[int] = {0}
+    block_jumps = []  # list of tuples (from, to)
+    jump_to_block = {}
+
+    # Compile a list of basic block starts
+    for idx, instruction in enumerate(instructions):
+        if instruction.jump_offset:
+            block_starts.add(instruction.jump_offset)
+            block_jumps.append((instruction.offset, instruction.jump_offset))
+            if instruction.opcode.cee_code not in ["CEE_BR", "CEE_BR_S"]:
+                block_starts.add(instructions[idx+1].offset)
+                block_jumps.append((instruction.offset, instructions[idx+1].offset))
+
+    in_block = False
+    cur_block = None
+    labels = []
+    for idx, instruction in enumerate(instructions):
+        if instruction.offset in block_starts:
+            if in_block:
+                result += "label = \"" + ' | '.join(labels) + "\"\n"
+                labels.clear()
+                result += 'shape = "record"\n];\n'
+                # Add fall-through jumps
+                if instructions[idx-1].opcode.size not in [InlineBrTarget, ShortInlineBrTarget]:
+                    if (instructions[idx-1].offset, instruction.offset) not in block_jumps:
+                        block_jumps.append((instructions[idx-1].offset, instruction.offset))
+                        jump_to_block[instructions[idx-1].offset] = cur_block
+
+            result += f'"block_{instruction.offset:04x}" [\n'
+            in_block = True
+            cur_block = f"block_{instruction.offset:04x}"
+        if instruction.jump_offset:
+            jump_to_block[instruction.offset] = cur_block
+
+        labels.append(f"<IL{instruction.offset:04x}> {instruction.offset:04x} : {instruction}")
+
+    if in_block:
+        result += "label = \"" + ' | '.join(labels) + "\"\n"
+        labels.clear()
+        result += 'shape = "record"\n];\n'
+
+    for from_, to in block_jumps:
+        resolved_block = jump_to_block[from_]
+        result += f'{resolved_block}:IL{from_:04x} -> "block_{to:04x}":IL{to:04x};\n'
+
+    result += "\n}\n"
+    return result
 
 
 def dis(f, include_offsets=False, print_pc=True):

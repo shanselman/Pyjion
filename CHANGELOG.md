@@ -1,5 +1,13 @@
 # Release notes
 
+## 1.2.2
+
+* Added `pyjion.dis.flow_graph()` function to get a DOT control flow-graph of CIL basic blocks
+* Added `pyjion.dis.cil_instructions()` function to get a list of CIL instructions from a compiled function
+* Enable ASAN for Windows (compile-time option)
+* CIL compiles to short branch opcodes when target is within 1 byte
+* Show effective branch target on CIL disassembly output
+
 ## 1.2.1
 
 * Fixes a bug in OPT-12 (method caching) where it would store the incorrect cache address for a global type of subclass. Bug seen in SQLalchemy.
