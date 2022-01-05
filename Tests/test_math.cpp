@@ -1261,3 +1261,36 @@ TEST_CASE("Test negatives") {
         CHECK(t.returns() == "-27.0");
     };
 }
+
+TEST_CASE("Test float modulo") {
+    SECTION("test 1") {
+        auto t = EmissionTest(
+                "def f():\n    x = 1\n    y = 2.\n    return x % y");
+        CHECK(t.returns() == "1.0");
+    };
+    SECTION("test 2") {
+        auto t = EmissionTest(
+                "def f():\n    x = 1.\n    y = 2.\n    return x % y");
+        CHECK(t.returns() == "1.0");
+    };
+    SECTION("test 3") {
+        auto t = EmissionTest(
+                "def f():\n    x = 1.4\n    y = 2.\n    return x % y");
+        CHECK(t.returns() == "1.4");
+    };
+    SECTION("test 4") {
+        auto t = EmissionTest(
+                "def f():\n    x = 1.4\n    y = 2\n    return x % y");
+        CHECK(t.returns() == "1.4");
+    };
+    SECTION("test 5") {
+        auto t = EmissionTest(
+                "def f():\n    x = 3.4\n    y = 2.\n    return x % y");
+        CHECK(t.returns() == "1.4");
+    };
+    SECTION("test 6") {
+        auto t = EmissionTest(
+                "def f():\n    x = 2\n    y = 4.\n    return x % y");
+        CHECK(t.returns() == "2.0");
+    };
+}
