@@ -210,7 +210,7 @@ it to only the platforms that the JIT supports.
 
 ### Does this help with using CPython w/ .NET or UWP?
 
-No.
+No. Use [Python.NET](http://pythonnet.github.io) if you want integration with Python and .NET 4.
 
 ## Code of Conduct
 
