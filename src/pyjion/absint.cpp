@@ -1502,11 +1502,10 @@ AbstactInterpreterCompileWorkerResult AbstractInterpreter::compileWorker(PgcStat
             m_comp->emit_fetch_err();
         }
 
-        if (!canSkipLastiUpdate(op.opcode)) {
-            m_comp->emit_lasti_update(op.index);
-            if (mTracingEnabled) {
+        if (!canSkipLastiUpdate(op.opcode, (CAN_UNBOX() && op.escape))) {
+            m_comp->emit_lasti_update(op.index); // TODO: See if it makes more sense to put this in branchRaise()
+            if (mTracingEnabled)
                 m_comp->emit_trace_line(mTracingLastInstr);
-            }
         }
         auto stackInfo = getStackInfo(curByte);
 
@@ -1970,7 +1969,7 @@ AbstactInterpreterCompileWorkerResult AbstractInterpreter::compileWorker(PgcStat
                     // And if the last one failed, then all of the values have been
                     // decref'd
                     m_comp->emit_mark_label(frees[op.oparg - 1]);
-                    branchRaise(CUR_HANDLER, "build set failed");
+                    branchRaise(CUR_HANDLER, "build set failed", "", op.index);
 
                     m_comp->emit_mark_label(noErr);
                     delete[] frees;
@@ -2077,6 +2076,7 @@ AbstactInterpreterCompileWorkerResult AbstractInterpreter::compileWorker(PgcStat
                         auto retKind = m_comp->emit_unboxed_binary_object(byte, stackInfo.second(), stackInfo.top());
                         decStack(2);
                         if (canReturnInfinity(byte)) {
+                            m_comp->emit_lasti_update(op.index);
                             switch (retKind) {
                                 case LK_Float:
                                     invalidFloatErrorCheck(CUR_HANDLER, "unboxed binary op failed", op.index, byte);
@@ -2225,7 +2225,7 @@ AbstactInterpreterCompileWorkerResult AbstractInterpreter::compileWorker(PgcStat
                     m_comp->emit_ptr((void*) SIG_ITER_ERROR);
                     m_comp->emit_branch(BranchNotEqual, noErr);
 
-                    branchRaise(CUR_HANDLER, "failed to fetch iter", "", 0);
+                    branchRaise(CUR_HANDLER, "failed to fetch iter", "", op.index);
                     m_comp->emit_mark_label(noErr);
                     m_comp->emit_load_local(mErrorCheckLocal);
 
@@ -2700,8 +2700,38 @@ AbstactInterpreterCompileResult AbstractInterpreter::compile(PyObject* builtins,
     }
 }
 
-bool AbstractInterpreter::canSkipLastiUpdate(py_opcode opcode) {
+bool AbstractInterpreter::canSkipLastiUpdate(py_opcode opcode, bool unboxed) {
     switch (opcode) {
+        case COMPARE_OP:
+        case BINARY_POWER:
+        case INPLACE_POWER:
+        case INPLACE_MULTIPLY:
+        case BINARY_MULTIPLY:
+        case INPLACE_MODULO:
+        case BINARY_MODULO:
+        case INPLACE_ADD:
+        case BINARY_ADD:
+        case BINARY_FLOOR_DIVIDE:
+        case INPLACE_FLOOR_DIVIDE:
+        case INPLACE_TRUE_DIVIDE:
+        case BINARY_TRUE_DIVIDE:
+        case INPLACE_SUBTRACT:
+        case BINARY_SUBTRACT:
+        case LOAD_CONST:
+        case STORE_FAST:
+        case LOAD_FAST:
+        case DELETE_FAST:
+        case BINARY_LSHIFT:
+        case BINARY_RSHIFT:
+        case BINARY_AND:
+        case BINARY_OR:
+        case BINARY_XOR:
+        case UNARY_NOT:
+        case UNARY_POSITIVE:
+        case UNARY_NEGATIVE:
+        case UNARY_INVERT:
+            return unboxed;
+
         case DUP_TOP:
         case DUP_TOP_TWO:
         case NOP:
