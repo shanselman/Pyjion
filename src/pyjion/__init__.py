@@ -5,7 +5,7 @@ import platform
 from enum import IntFlag, IntEnum
 from dataclasses import dataclass
 
-__version__ = '1.2.4'
+__version__ = '1.2.5'
 
 
 def _no_dotnet(path):
@@ -150,6 +150,12 @@ class PgcStatus(IntEnum):
     Uncompiled = 0
     CompiledWithProbes = 1
     Optimized = 2
+
+
+class CompileMode(IntEnum):
+    Release = 0
+    Debug = 1
+    ReleaseWithDebugInfo = 2
 
 
 @dataclass()

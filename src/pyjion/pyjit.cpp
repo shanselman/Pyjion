@@ -659,11 +659,23 @@ pyjion_config(PyObject* self, PyObject* args, PyObject* kwargs) {
     debug = PyDict_GetItemString(kwargs, "debug");
     if (debug != nullptr) {
         // debug
-        if (!PyBool_Check(debug)) {
-            PyErr_SetString(PyExc_TypeError, "Expected bool for debug flag");
+        if (PyBool_Check(debug)) {
+            g_pyjionSettings.debug = debug == Py_True ? DebugMode::Debug : DebugMode::Release;
+        }
+        else if (PyLong_Check(debug)){
+            auto debugEnum = PyLong_AsLong(debug);
+            switch (debugEnum){
+                case 0: g_pyjionSettings.debug = DebugMode::Release; break;
+                case 1: g_pyjionSettings.debug = DebugMode::Debug; break;
+                case 2: g_pyjionSettings.debug = DebugMode::ReleaseWithDebugInfo; break;
+                default:
+                    PyErr_SetString(PyExc_ValueError, "Debug mode not in range of 0-2");
+                    return nullptr;
+            }
+        } else {
+            PyErr_SetString(PyExc_TypeError, "Expected bool or int for debug flag");
             return nullptr;
         }
-        g_pyjionSettings.debug = debug == Py_True ? true : false;
     }
     graph = PyDict_GetItemString(kwargs, "graph");
     if (graph) {
@@ -699,7 +711,17 @@ return_result:
     PyDict_SetItemString(res, "clrjitpath", PyUnicode_FromWideChar(g_pyjionSettings.clrjitpath, -1));
     PyDict_SetItemString(res, "pgc", g_pyjionSettings.pgc ? Py_True : Py_False);
     PyDict_SetItemString(res, "graph", g_pyjionSettings.graph ? Py_True : Py_False);
-    PyDict_SetItemString(res, "debug", g_pyjionSettings.debug ? Py_True : Py_False);
+    switch (g_pyjionSettings.debug){
+        case DebugMode::Release:
+            PyDict_SetItemString(res, "debug", PyLong_FromLong(0));
+            break;
+        case DebugMode::Debug:
+            PyDict_SetItemString(res, "debug", PyLong_FromLong(1));
+            break;
+        case DebugMode::ReleaseWithDebugInfo:
+            PyDict_SetItemString(res, "debug", PyLong_FromLong(2));
+            break;
+    }
     PyDict_SetItemString(res, "level", PyLong_FromLong(g_pyjionSettings.optimizationLevel));
     PyDict_SetItemString(res, "threshold", PyLong_FromLong(g_pyjionSettings.threshold));
 
