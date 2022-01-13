@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.6
+
+* Extend optimizations in `RelWithDebInfo` mode
+
 ## 1.2.5
 
 * Changed the `pyjion.config(debug=)` setting to allow True or False (as before), or 0 (Release), 1 (Debug), 2 (ReleaseWithDebugInfo)
