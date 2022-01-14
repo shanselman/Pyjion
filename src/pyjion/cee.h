@@ -51,6 +51,14 @@
 
 using namespace std;
 
+#ifdef WINDOWS
+#define STRSETTING(setting, value) strSettings.insert(Str_Str_Pair(L"##setting", L"##value"));
+#define INTSETTING(setting, value) intSettings.insert(Str_Int_Pair(L"##setting", value));
+#else
+#define STRSETTING(setting, value) strSettings[u"##setting"] = u"##value";
+#define INTSETTING(setting, value) intSettings[u"##setting"] = value;
+#endif
+
 class CCorJitHost : public ICorJitHost {
 protected:
 #ifdef WINDOWS
@@ -67,15 +75,13 @@ public:
     CCorJitHost() {
 
 #ifdef DUMP_JIT_TRACES
-#ifndef WINDOWS
-        intSettings[u"DumpJittedMethods"] = 1;
-        intSettings[u"JitDumpIR"] = 1;
-        strSettings[u"JitDump"] = u"*";
-#else
-        intSettings.insert(Str_Int_Pair(L"DumpJittedMethods", 1));
-        intSettings.insert(Str_Int_Pair(L"JitDumpIR", 1));
-        strSettings.insert(Str_Str_Pair(L"JitDump", L"*"));
+        INTSETTING("DumpJittedMethods", 1);
+        INTSETTING("JitDumpIR", 1);
+        STRSETTING("JitDump", "*");
 #endif
+
+#ifdef DEBUG
+        INTSETTING("JitEnableNoWayAssert", 1);
 #endif
     }
 
