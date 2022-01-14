@@ -77,6 +77,14 @@ public:
         strSettings.insert(Str_Str_Pair(L"JitDump", L"*"));
 #endif
 #endif
+
+#ifdef DEBUG
+#ifndef WINDOWS
+        intSettings[u"JitEnableNoWayAssert"] = 1;
+#else
+        intSettings.insert(Str_Int_Pair(L"JitEnableNoWayAssert", 1));
+#endif
+#endif
     }
 
     void* allocateMemory(size_t size) override {
