@@ -1,4 +1,4 @@
-![](https://github.com/tonybaloney/Pyjion/raw/master/Docs/source/_static/pyjion_logo.png)
+![Pyjion logo](https://github.com/tonybaloney/Pyjion/raw/develop/main/Docs/source/_static/pyjion_logo.png)
 
 Pyjion, a JIT extension for CPython that compiles your Python code into native CIL and executes it using the .NET CLR.
 
