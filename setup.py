@@ -23,9 +23,10 @@ setup(
     description='A JIT compiler wrapper for CPython',
     author='Anthony Shaw',
     author_email='anthonyshaw@apache.org',
-    url='https://github.com/tonybaloney/Pyjion',
+    url='https://www.trypyjion.com/',
     project_urls={
         'Documentation': 'https://pyjion.readthedocs.io/',
+        'Repository': 'https://github.com/tonybaloney/Pyjion',
     },
     license='MIT',
     packages=['pyjion'],
