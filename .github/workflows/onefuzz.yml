@@ -60,7 +60,7 @@ jobs:
       - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/build
-        run: CC=/usr/bin/clang CXX=/usr/bin/clang++ cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DFUZZER=ON
+        run: CC=/usr/bin/clang-13 CXX=/usr/bin/clang++-13 cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF -DFUZZER=ON
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
