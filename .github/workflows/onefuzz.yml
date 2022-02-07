@@ -72,4 +72,4 @@ jobs:
           onefuzz config --endpoint $ONEFUZZ_ENDPOINT --client_id $ONEFUZZ_CLIENT_ID --client_secret $ONEFUZZ_CLIENT_SECRET
           sed -i s/INSERT_TEAMS_WEBHOOK_URL_HERE/${ONEFUZZ_TEAMS_URL}/ notifications/teams-message.json
           cd ${{runner.workspace}}/build
-          onefuzz template libfuzzer basic samples sample-1 $GITHUB_SHA --target_exe fuzz_target --notification_config @../../notifications/teams-message.json
+          onefuzz template libfuzzer basic pyjion sample-1 $GITHUB_SHA linux-pool --target_exe fuzz_target --notification_config @../../notifications/teams-message.json
