@@ -20,6 +20,7 @@ option(DUMP_INSTRUCTION_GRAPHS "Dump graphviz instruction graphs during compilat
 option(DEBUG_VERBOSE "Verbose messages during execution" OFF)
 option(ASAN "Compile with address sanitizer" OFF)
 option(NET_SRC_LIB "Use .NET source library" OFF)
+option(FUZZER "Build a test fuzzer" OFF)
 include(eng/CMakeOptimizations.txt)
 include(eng/CMakeProfiling.txt)
 
@@ -97,10 +98,6 @@ endif()
 if(FUZZER)
     message(STATUS "Enabling address sanitizer and libfuzzer")
     set(BUILD_FUZZER ON)
-    if (NOT WIN32)
-        add_compile_options(-fsanitize=address,fuzzer)
-        add_link_options(-fsanitize=address,fuzzer)
-    endif()
 endif()
 
 
@@ -301,9 +298,10 @@ endif(BUILD_TESTS)
 if (BUILD_FUZZER)
     # Testing
     set(FUZZ_SOURCES Tests/fuzzing/fuzz_target.cpp)
-
     add_executable(fuzz_target ${FUZZ_SOURCES} $<TARGET_OBJECTS:pyjionlib>)
     if (NOT WIN32)
+        target_compile_options(fuzz_target PRIVATE -fsanitize=address,fuzzer)
+        target_link_options(fuzz_target PRIVATE -fsanitize=address,fuzzer)
         set_property(TARGET fuzz_target PROPERTY CXX_STANDARD 17)
         set_property(TARGET fuzz_target PROPERTY CXX_EXTENSIONS OFF)
     endif(NOT WIN32)
