@@ -76,6 +76,6 @@ jobs:
         run: |
           set -ex
           pip install onefuzz
-          onefuzz config --endpoint $ONEFUZZ_ENDPOINT --client_id $ONEFUZZ_CLIENT_ID --client_secret $ONEFUZZ_CLIENT_SECRET
+          onefuzz config --endpoint $ONEFUZZ_ENDPOINT --client_id $ONEFUZZ_CLIENT_ID --client_secret $ONEFUZZ_CLIENT_SECRET --authority https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47
           cd ${{runner.workspace}}/build
           onefuzz template libfuzzer basic pyjion sample-1 $GITHUB_SHA linux-pool --target_exe fuzz_target
