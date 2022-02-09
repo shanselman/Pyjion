@@ -53,7 +53,6 @@ PyCodeObject* CompileCode(const char* code) {
     auto locals = PyObject_ptr(PyDict_New());
     PyRun_String(code, Py_file_input, globals.get(), locals.get());
     if (PyErr_Occurred()) {
-        PyErr_Print();
         PyErr_Clear();
         return nullptr;
     }
