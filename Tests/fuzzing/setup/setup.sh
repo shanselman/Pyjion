@@ -9,3 +9,4 @@ apt-get -y update && apt-get install -y software-properties-common && apt-get -y
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 wget https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_VERSION}/dotnet-sdk-${DOTNET_VERSION}-linux-x64.tar.gz
 mkdir -p dotnet && tar zxf dotnet-sdk-${DOTNET_VERSION}-linux-x64.tar.gz -C dotnet
+cp dotnet/shared/Microsoft.NETCore.App.app/${DOTNET_VERSION}/libclrjit.so .
