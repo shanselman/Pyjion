@@ -79,5 +79,5 @@ jobs:
           onefuzz config --endpoint $ONEFUZZ_ENDPOINT --client_id $ONEFUZZ_CLIENT_ID --client_secret $ONEFUZZ_CLIENT_SECRET --authority https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47
           sed -i s/INSERT_YOUR_PERSONAL_ACCESS_TOKEN_HERE/${ONEFUZZ_GITHUB_PAT}/ .github/onefuzz-notifications.json
           python3.10 -m sysconfig
-          cp /opt/hostedtoolcache/Python/3.10.0/x64/lib/libpython3.10.so.1.0 ${{runner.workspace}}/build/
+          cp /opt/hostedtoolcache/Python/3.10.2/x64/lib/libpython3.10.so.1.0 ${{runner.workspace}}/build/
           onefuzz template libfuzzer basic pyjion sample-1 $GITHUB_SHA linux-pool --target_exe ${{runner.workspace}}/build/fuzz_target --inputs Tests/fuzzing/corpus/ --notification_config @.github/onefuzz-notifications.json
