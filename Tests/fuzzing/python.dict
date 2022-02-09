@@ -1,0 +1,43 @@
+# Keywords
+" "
+":"
+"def"
+"while"
+"await"
+"for"
+"with"
+"if"
+"else"
+"elif"
+"import"
+"return"
+"pass"
+"del"
+"yield"
+"break"
+"continue"
+"class"
+
+# Augassigns
+"+="
+"-="
+"*="
+"@="
+"/="
+"%="
+"&="
+"|="
+"^="
+"<<="
+">>="
+"**="
+"//="
+
+# variable named_expression
+
+"x"
+"Y"
+"z"
+"a"
+
+# numbers
