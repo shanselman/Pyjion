@@ -72,10 +72,10 @@ jobs:
           ONEFUZZ_ENDPOINT: ${{ secrets.onefuzz_endpoint }}
           ONEFUZZ_CLIENT_ID: ${{ secrets.onefuzz_client_id }}
           ONEFUZZ_CLIENT_SECRET: ${{ secrets.onefuzz_client_secret }}
-          ONEFUZZ_TEAMS_URL: ${{ secrets.teams_url }}
+          ONEFUZZ_GITHUB_PAT: ${{ secrets.onefuzz_github_pat }}
         run: |
           set -ex
           pip install onefuzz
           onefuzz config --endpoint $ONEFUZZ_ENDPOINT --client_id $ONEFUZZ_CLIENT_ID --client_secret $ONEFUZZ_CLIENT_SECRET --authority https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47
-          cd ${{runner.workspace}}/build
-          onefuzz template libfuzzer basic pyjion sample-1 $GITHUB_SHA linux-pool --target_exe fuzz_target
+          sed -i s/INSERT_YOUR_PERSONAL_ACCESS_TOKEN_HERE/${ONEFUZZ_GITHUB_PAT}/ .github/onefuzz-notifications.json
+          onefuzz template libfuzzer basic pyjion sample-1 $GITHUB_SHA linux-pool --target_exe ${{runner.workspace}}/build/fuzz_target --inputs Tests/fuzzing/corpus/ --notification_config @.github/onefuzz-notifications.json
