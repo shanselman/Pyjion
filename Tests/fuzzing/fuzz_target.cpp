@@ -40,7 +40,7 @@ bool InitializePyjion() {
     g_pyjionSettings.codeObjectSizeLimit = 1000000;
     g_pyjionSettings.exceptionHandling = true;
     setOptimizationLevel(2);
-    Py_Finalize();
+    //Py_Finalize();
     return true;
 }
 
@@ -58,8 +58,10 @@ PyCodeObject* CompileCode(const char* code) {
         return nullptr;
     }
     auto func = PyObject_ptr(PyObject_GetItem(locals.get(), PyUnicode_FromString("f")));
-    auto codeObj = (PyCodeObject*) PyObject_GetAttrString(func.get(), "__code__");
-    return codeObj;
+    if (func.get() == nullptr){
+        return nullptr;
+    }
+    return (PyCodeObject*) PyObject_GetAttrString(func.get(), "__code__");;
 }
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
