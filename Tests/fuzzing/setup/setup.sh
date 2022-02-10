@@ -12,4 +12,7 @@ apt-get -y update && apt-get install -y software-properties-common && apt-get -y
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 wget https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_VERSION}/dotnet-sdk-${DOTNET_VERSION}-linux-x64.tar.gz -q -O dotnet.tar.gz
 tar zxf dotnet.tar.gz
-cp shared/Microsoft.NETCore.App/6.0.1/libclrjit.so .
+cp shared/Microsoft.NETCore.App/6.0.1/libclrjit.so /onefuzz/bin/
+ls -la /onefuzz/
+ls -la /onefuzz/bin
+ls -la /onefuzz/setup
