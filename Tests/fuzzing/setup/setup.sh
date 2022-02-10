@@ -1,6 +1,9 @@
 #!/bin/bash
+set -e
 DOTNET_VERSION=6.0.101
 export TZ=Europe/London
+export DEBIAN_FRONTEND=noninteractive
+echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 apt-get -y update && apt-get install -y software-properties-common && apt-get -y update \
