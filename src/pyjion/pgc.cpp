@@ -45,6 +45,8 @@ PyjionCodeProfile::~PyjionCodeProfile() {
     //            Py_XDECREF(observed.second);
     //        }
     //    }
+    stackTypes.clear();
+    stackKinds.clear();
 }
 
 void PyjionCodeProfile::record(size_t opcodePosition, size_t stackPosition, PyObject* value) {

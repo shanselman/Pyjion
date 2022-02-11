@@ -91,20 +91,20 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     
     auto globals = PyObject_ptr(PyDict_New());
     auto locals = PyObject_ptr(PyDict_New());
-    auto co = CompileCode(input.c_str(), globals, locals);
-    if (co == nullptr) {
-    return 0;
+    auto co = PyObject_ptr((PyObject*)CompileCode(input.c_str(), globals, locals));
+    if (co.get() == nullptr) {
+        return 0;
     }
-    auto jitted = PyJit_EnsureExtra((PyObject*) co);
-    auto res = PyObject_ptr(run(jitted, co, globals, locals));
+    auto jitted = PyJit_EnsureExtra((PyObject*) co.get());
+    auto res = PyObject_ptr(run(jitted, (PyCodeObject*)co.get(), globals, locals));
     if (res.get() == nullptr || PyErr_Occurred()) {
         PyErr_PrintEx(-1);
         PyErr_Clear();
-        return 0;
+    } else {
+        printf("Returned: %s \n", PyUnicode_AsUTF8(PyObject_Repr(res.get())));
+        delete jitted;
     }
 
-    auto repr = PyUnicode_AsUTF8(PyObject_Repr(res.get()));
-    printf("Returned: %s \n", repr);
-
-  return 0;  // Non-zero return values are reserved for future use.
+    
+    return 0;  // Non-zero return values are reserved for future use.
 }
