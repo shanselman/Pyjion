@@ -80,4 +80,4 @@ jobs:
           sed -i s/INSERT_YOUR_PERSONAL_ACCESS_TOKEN_HERE/${ONEFUZZ_GITHUB_PAT}/ .github/onefuzz-notifications.json
           cp ${{runner.workspace}}/build/fuzz_target Tests/fuzzing/setup/
           cp ${{runner.workspace}}/build/_pyjion.so Tests/fuzzing/setup/
-          onefuzz template libfuzzer basic pyjion gha-main $GITHUB_SHA linux-pool --target_exe Tests/fuzzing/setup/fuzz_target --inputs Tests/fuzzing/corpus/ --notification_config @.github/onefuzz-notifications.json --setup_dir Tests/fuzzing/setup/
+          onefuzz template libfuzzer basic pyjion gha-main $GITHUB_SHA linux-pool --target_exe Tests/fuzzing/setup/fuzz_target --inputs Tests/fuzzing/corpus/ --notification_config @.github/onefuzz-notifications.json --setup_dir Tests/fuzzing/setup/ --target_options="-dict={setup_dir}/python.dict,-only_ascii=1"

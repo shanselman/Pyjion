@@ -26,6 +26,7 @@
 #include <Python.h>
 #include <pyjit.h>
 #include <util.h>
+#include <string>
 
 bool InitializePyjion() {
     Py_Initialize();
@@ -65,6 +66,7 @@ PyCodeObject* CompileCode(const char* code) {
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   static bool Initialized = InitializePyjion();
-  CompileCode(reinterpret_cast<const char*>(Data));
+  auto input = string(reinterpret_cast<const char*>(Data), Size);
+  CompileCode(input.c_str());
   return 0;  // Non-zero return values are reserved for future use.
 }
