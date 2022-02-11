@@ -102,9 +102,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
         PyErr_Clear();
     } else {
         printf("Returned: %s \n", PyUnicode_AsUTF8(PyObject_Repr(res.get())));
-        delete jitted;
     }
 
-    
     return 0;  // Non-zero return values are reserved for future use.
 }
