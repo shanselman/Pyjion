@@ -1,5 +1,9 @@
 # Release notes
 
+## 1.2.7 
+
+* Fix a bug in the native x86_64 disassembler giving an error about compatibility on Windows Intel CPUs
+
 ## 1.2.6
 
 * Extend optimizations in `RelWithDebInfo` mode
