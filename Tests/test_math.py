@@ -176,6 +176,7 @@ def test_strides_from_shape():
     assert strides == [10, 5, 1]
 
 
+@pytest.mark.optimization(1)
 def test_ema():
     class EMA:
         """
