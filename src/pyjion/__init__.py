@@ -5,12 +5,12 @@ import platform
 from enum import IntFlag, IntEnum
 from dataclasses import dataclass
 
-__version__ = '1.2.7'
+__version__ = '2.0.0'
 
 
 def _no_dotnet(path):
     raise ImportError(
-        f"Can't find a .NET 6 installation in {path}, "
+        f"Can't find a .NET 7 installation in {path}, "
         "provide the DOTNET_ROOT environment variable "
         "if it's installed somewhere unusual"
     )
@@ -34,7 +34,7 @@ def _which_dotnet() -> str:
             if not _dotnet_root.exists():
                 _no_dotnet(_dotnet_root)
         lib_path = list(
-            _dotnet_root.glob("shared/Microsoft.NETCore.App*/6.0.*/libclrjit.dylib")
+            _dotnet_root.glob("shared/Microsoft.NETCore.App*/7.0.*/libclrjit.dylib")
         )
         if len(lib_path) > 0:
             clrjitlib = str(lib_path[0])
@@ -56,7 +56,7 @@ def _which_dotnet() -> str:
         if not _dotnet_root:
             _no_dotnet(_dotnet_root)
         lib_path = list(
-            _dotnet_root.glob("shared/Microsoft.NETCore.App*/6.0.*/libclrjit.so")
+            _dotnet_root.glob("shared/Microsoft.NETCore.App*/7.0.*/libclrjit.so")
         )
         if len(lib_path) > 0:
             clrjitlib = str(lib_path[0])
@@ -72,7 +72,7 @@ def _which_dotnet() -> str:
             if not _dotnet_root.exists():
                 _no_dotnet(_dotnet_root)
         lib_path = list(
-            _dotnet_root.glob("shared/Microsoft.NETCore.App*/6.0.*/clrjit.dll")
+            _dotnet_root.glob("shared/Microsoft.NETCore.App*/7.0.*/clrjit.dll")
         )
         if len(lib_path) > 0:
             clrjitlib = str(lib_path[0])
