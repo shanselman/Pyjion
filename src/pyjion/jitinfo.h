@@ -902,12 +902,13 @@ public:
     // If fAssembly=true, suffix with a comma and the full assembly qualification
     // return size of representation
     int appendClassName(
-            __deref_inout_ecount(*pnBufLen) char16_t** ppBuf,
-            int* pnBufLen,
-            CORINFO_CLASS_HANDLE cls,
-            bool fNamespace,
-            bool fFullInst,
-            bool fAssembly) override {
+            _Outptr_opt_result_buffer_(*pnBufLen) char16_t**    ppBuf,    /* IN OUT */
+            int*                                                pnBufLen, /* IN OUT */
+            CORINFO_CLASS_HANDLE                                cls,
+            bool                                                fNamespace,
+            bool                                                fFullInst,
+            bool                                                fAssembly
+            ) override {
         WARN("appendClassName not implemented\r\n");
         return 0;
     }
