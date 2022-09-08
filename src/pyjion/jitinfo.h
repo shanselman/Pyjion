@@ -1955,17 +1955,17 @@ public:
         // Not implemented
     }
 
-    // Obtains a list of exact classes for a given base type. Returns 0 if the number of 
-    // the exact classes is greater than maxExactClasses or if more types might be loaded
-    // in future.
-    int getExactClasses(
-                CORINFO_CLASS_HANDLE  baseType,            /* IN */
-                int                   maxExactClasses,     /* IN */
-                CORINFO_CLASS_HANDLE* exactClsRet          /* OUT */
-                ) override {
-        exactClsRet = nullptr;
-        return 0;
-    }
+    // // Obtains a list of exact classes for a given base type. Returns 0 if the number of 
+    // // the exact classes is greater than maxExactClasses or if more types might be loaded
+    // // in future.
+    // int getExactClasses(
+    //             CORINFO_CLASS_HANDLE  baseType,            /* IN */
+    //             int                   maxExactClasses,     /* IN */
+    //             CORINFO_CLASS_HANDLE* exactClsRet          /* OUT */
+    //             ) override {
+    //     exactClsRet = nullptr;
+    //     return 0;
+    // }
 
     uint32_t getLoongArch64PassStructInRegisterFlags(CORINFO_CLASS_HANDLE cls) override {
         return 0;
