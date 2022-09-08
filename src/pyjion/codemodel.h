@@ -185,7 +185,7 @@ public:
         pResult->codePointerLookup.constLookup.accessType = IAT_PVALUE;
         pResult->codePointerLookup.constLookup.addr = &m_addr;
         if (m_hasIntrinsics) {
-            pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC | CORINFO_FLG_INTRINSIC | CORINFO_FLG_JIT_INTRINSIC;
+            pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC | CORINFO_FLG_INTRINSIC;
         } else {
             pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC;
         }
