@@ -1,7 +1,7 @@
 [submodule "dotnet"]
 	path = CoreCLR
 	url = https://github.com/dotnet/runtime
-	branch = v7.0.0-preview.7.22375.6
+	branch = v7.0.0-rc.1.22426.10
 [submodule "Tests/Catch"]
 	path = Tests/Catch
 	url = https://github.com/philsquared/Catch.git
