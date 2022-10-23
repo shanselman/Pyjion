@@ -31,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'cpp' ]
-        dot-net-version: [ "7.0.100-rc.1.22431.12" ]
+        dot-net-version: [ "7.0.100-rc.2.22477.23" ]
 
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python' ]
         # Learn more:
