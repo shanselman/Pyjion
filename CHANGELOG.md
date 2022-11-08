@@ -2,7 +2,7 @@
 
 ## 2.0.0
 
-* Updated to .NET 7 preview 7
+* Updated to .NET 7
 
 ## 1.2.7
 

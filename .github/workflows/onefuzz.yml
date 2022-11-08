@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
-        dot-net-version: [ "7.0.100-rc.2.22477.23" ]
+        dot-net-version: [ "7.0.100" ]
     steps:
       - uses: actions/checkout@v2
         with:
