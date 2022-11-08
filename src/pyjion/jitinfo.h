@@ -1561,17 +1561,6 @@ public:
         return false;
     }
 
-    int getStringLiteral (
-            CORINFO_MODULE_HANDLE       module,     /* IN  */
-            unsigned                    metaTOK,    /* IN  */
-            char16_t*                   buffer,     /* OUT */
-            int                         bufferSize  /* IN  */
-            ) override {
-        WARN("getStringLiteral not defined\r\n");
-        buffer = nullptr;
-        return 0;
-    }
-
     const char* getClassNameFromMetadata(CORINFO_CLASS_HANDLE cls, const char** namespaceName) override {
         WARN("getClassNameFromMetadata not defined\r\n");
         return nullptr;
