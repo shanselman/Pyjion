@@ -30,7 +30,6 @@
 #include <frameobject.h>
 #include <opcode.h>
 #include <windows.h>
-#include <share.h>
 #include <intrin.h>
 
 #include <vector>
@@ -435,8 +434,9 @@ public:
     // value returned by getFunctionEntryPoint() except that it is
     // guaranteed to be multi callable entrypoint.
     void getFunctionFixedEntryPoint(
-            CORINFO_METHOD_HANDLE ftn,
-            CORINFO_CONST_LOOKUP* pResult) override {
+        CORINFO_METHOD_HANDLE   ftn,
+        bool                    isUnsafeFunctionPointer,
+        CORINFO_CONST_LOOKUP *  pResult) override {
         WARN("getFunctionFixedEntryPoint not implemented\r\n");
     }
 
@@ -670,8 +670,7 @@ public:
 
     CorInfoInline canInline(
             CORINFO_METHOD_HANDLE callerHnd, /* IN  */
-            CORINFO_METHOD_HANDLE calleeHnd, /* IN  */
-            uint32_t* pRestrictions          /* OUT */
+            CORINFO_METHOD_HANDLE calleeHnd /* IN  */
             ) override {
         WARN("canInline not implemented\r\n");
         return INLINE_PASS;
@@ -903,12 +902,13 @@ public:
     // If fAssembly=true, suffix with a comma and the full assembly qualification
     // return size of representation
     int appendClassName(
-            __deref_inout_ecount(*pnBufLen) char16_t** ppBuf,
-            int* pnBufLen,
-            CORINFO_CLASS_HANDLE cls,
-            bool fNamespace,
-            bool fFullInst,
-            bool fAssembly) override {
+            _Outptr_opt_result_buffer_(*pnBufLen) char16_t**    ppBuf,    /* IN OUT */
+            int*                                                pnBufLen, /* IN OUT */
+            CORINFO_CLASS_HANDLE                                cls,
+            bool                                                fNamespace,
+            bool                                                fFullInst,
+            bool                                                fAssembly
+            ) override {
         WARN("appendClassName not implemented\r\n");
         return 0;
     }
@@ -924,17 +924,6 @@ public:
         if (cls == PYOBJECT_PTR_TYPE)
             return CORINFO_FLG_NATIVE;
         return CORINFO_FLG_VALUECLASS;
-    }
-
-    // Returns "true" iff "cls" is a struct type such that return buffers used for returning a value
-    // of this type must be stack-allocated.  This will generally be true only if the struct
-    // contains GC pointers, and does not exceed some size limit.  Maintaining this as an invariant allows
-    // an optimization: the JIT may assume that return buffer pointers for return types for which this predicate
-    // returns true are always stack allocated, and thus, that stores to the GC-pointer fields of such return
-    // buffers do not require GC write barriers.
-    bool isStructRequiringStackAllocRetBuf(CORINFO_CLASS_HANDLE cls) override {
-        WARN("isStructRequiringStackAllocRetBuf\r\n");
-        return false;
     }
 
     CORINFO_MODULE_HANDLE getClassModule(
@@ -1416,7 +1405,7 @@ public:
     int FilterException(
             struct _EXCEPTION_POINTERS* pExceptionPointers) override {
         WARN("FilterException\r\n");
-        return 0;
+        return EXCEPTION_CONTINUE_SEARCH;
     }
 
     void ThrowExceptionForJitResult(
@@ -1481,7 +1470,9 @@ public:
             CORINFO_METHOD_HANDLE ftn, /* IN */
             const char** moduleName    /* OUT */
             ) override {
-        *moduleName = m_moduleName;
+        if (moduleName != nullptr) {
+            *moduleName = m_moduleName;
+        }
         return m_methodName;
     }
 
@@ -1511,9 +1502,6 @@ public:
 
     uint32_t getJitFlags(CORJIT_FLAGS* flags, uint32_t sizeInBytes) override {
         flags->Add(flags->CORJIT_FLAG_SKIP_VERIFICATION);
-#ifdef FEATURE_SIMD
-        flags->Add(flags->CORJIT_FLAG_FEATURE_SIMD);
-#endif
         switch (m_compileDebug) {
             case DebugMode::Debug:
                 flags->Add(flags->CORJIT_FLAG_DEBUG_CODE);
@@ -1575,14 +1563,10 @@ public:
         return false;
     }
 
-    const char16_t* getStringLiteral(CORINFO_MODULE_HANDLE module, unsigned metaTOK, int* length) override {
-        WARN("getStringLiteral not defined\r\n");
-        return nullptr;
-    }
-
     const char* getClassNameFromMetadata(CORINFO_CLASS_HANDLE cls, const char** namespaceName) override {
         WARN("getClassNameFromMetadata not defined\r\n");
-        return nullptr;
+        *namespaceName = "<namespace>";
+        return "<class>";
     }
 
     CORINFO_CLASS_HANDLE getTypeInstantiationArgument(CORINFO_CLASS_HANDLE cls, unsigned int index) override {
@@ -1612,8 +1596,13 @@ public:
         return false;
     }
 
-    void getReadyToRunDelegateCtorHelper(CORINFO_RESOLVED_TOKEN* pTargetMethod, CORINFO_CLASS_HANDLE delegateType,
-                                         CORINFO_LOOKUP* pLookup) override {
+    void getReadyToRunDelegateCtorHelper(
+            CORINFO_RESOLVED_TOKEN * pTargetMethod,
+            mdToken                  targetConstraint,
+            CORINFO_CLASS_HANDLE     delegateType,
+            CORINFO_LOOKUP *   pLookup
+            ) override {
+        // not implemented
     }
 
     CorInfoInitClassResult
@@ -1749,9 +1738,6 @@ public:
 
     uint32_t getFieldThreadLocalStoreID(CORINFO_FIELD_HANDLE field, void** ppIndirection) override {
         return 0;
-    }
-
-    void setOverride(ICorDynamicInfo* pOverride, CORINFO_METHOD_HANDLE currentMethod) override {
     }
 
     void addActiveDependency(CORINFO_MODULE_HANDLE moduleFrom, CORINFO_MODULE_HANDLE moduleTo) override {
@@ -1899,21 +1885,6 @@ public:
         return E_NOTIMPL;
     }
 
-    // If a method's attributes have (getMethodAttribs) CORINFO_FLG_INTRINSIC set,
-    // getIntrinsicID() returns the intrinsic ID.
-    CorInfoIntrinsics getIntrinsicID(
-            CORINFO_METHOD_HANDLE method,
-            bool* pMustExpand) override {
-        WARN("getIntrinsicID not implemented\r\n");
-        return CORINFO_INTRINSIC_Object_GetType;
-    }
-
-    // Quick check whether the method is a jit intrinsic. Returns the same value as getMethodAttribs(ftn) & CORINFO_FLG_JIT_INTRINSIC, except faster.
-    bool isJitIntrinsic(CORINFO_METHOD_HANDLE ftn) override {
-        // method attribs are CORINFO_FLG_STATIC | CORINFO_FLG_NATIVE - so always false.
-        return reinterpret_cast<BaseMethod*>(ftn)->isIntrinsic();
-    }
-
     bool runWithErrorTrap(
             errorTrapFunction function,// The function to run
             void* parameter            // The context parameter that will be passed to the function and the handler
@@ -1944,20 +1915,178 @@ public:
         }
     }
 
-    bool doesFieldBelongToClass(
-            CORINFO_FIELD_HANDLE fldHnd, /* IN: the field that we are checking */
-            CORINFO_CLASS_HANDLE cls     /* IN: the class that we are checking */
-            ) override {
-        // Not used
-        return false;
-    }
-
     // Is the given type in System.Private.Corelib and marked with IntrinsicAttribute?
     // This defaults to false.
     bool isIntrinsicType(
             CORINFO_CLASS_HANDLE classHnd) override {
         return false;
     }
+
+    bool isIntrinsic(CORINFO_METHOD_HANDLE ftn) override {
+        return false;
+    }
+
+    void beginInlining (CORINFO_METHOD_HANDLE inlinerHnd,
+                        CORINFO_METHOD_HANDLE inlineeHnd) override {
+        // Not implemented
+    }
+
+    // Get the index of runtime provided array method
+    CorInfoArrayIntrinsic getArrayIntrinsicID(
+            CORINFO_METHOD_HANDLE        ftn
+            ) override {
+        return CorInfoArrayIntrinsic::ILLEGAL;
+    };
+
+    void reportRichMappings(
+            ICorDebugInfo::InlineTreeNode*    inlineTreeNodes,    // [IN] Nodes of the inline tree
+            uint32_t                          numInlineTreeNodes, // [IN] Number of nodes in the inline tree
+            ICorDebugInfo::RichOffsetMapping* mappings,           // [IN] Rich mappings
+            uint32_t                          numMappings         // [IN] Number of rich mappings
+            ) override {
+        // Not implemented
+    }
+
+    // Obtains a list of exact classes for a given base type. Returns 0 if the number of 
+    // the exact classes is greater than maxExactClasses or if more types might be loaded
+    // in future.
+    int getExactClasses(
+                CORINFO_CLASS_HANDLE  baseType,            /* IN */
+                int                   maxExactClasses,     /* IN */
+                CORINFO_CLASS_HANDLE* exactClsRet          /* OUT */
+                ) override {
+        exactClsRet = nullptr;
+        return 0;
+    }
+
+    uint32_t getLoongArch64PassStructInRegisterFlags(CORINFO_CLASS_HANDLE cls) override {
+        return 0;
+    }
+
+    void updateEntryPointForTailCall(CORINFO_CONST_LOOKUP* entryPoint) override {
+        // Not implemented
+    }
+
+    // // Returns string length and content (can be null for dynamic context)
+    // // for given metaTOK and module, length `-1` means input is incorrect
+    int getStringLiteral (
+            CORINFO_MODULE_HANDLE       module,     /* IN  */
+            unsigned                    metaTOK,    /* IN  */
+            char16_t*                   buffer,     /* OUT */
+            int                         bufferSize  /* IN  */
+            ) override {
+        WARN("getStringLiteral not defined\r\n");
+        buffer = nullptr;
+        return 0;
+    }
+
+    // // Returns string length and content (can be null for dynamic context)
+    // // for given metaTOK and module, length `-1` means input is incorrect
+    // int getStringLiteral (
+    //         CORINFO_MODULE_HANDLE       module,     /* IN  */
+    //         unsigned                    metaTOK,    /* IN  */
+    //         char16_t*                   buffer,     /* OUT */
+    //         int                         bufferSize, /* IN  */
+    //         int                         startIndex = 0 /* IN  */
+    //         ) override {
+    //     WARN("getStringLiteral not defined\r\n");
+    //     buffer = nullptr;
+    //     return 0;
+    // }
+
+    //------------------------------------------------------------------------------
+    // printObjectDescription: Prints a (possibly truncated) textual UTF8 representation of the given
+    //    object to a preallocated buffer. It's intended to be used only for debug/diagnostic 
+    //    purposes such as JitDisasm. The buffer is null-terminated (even if truncated).
+    //
+    // Arguments:
+    //    handle     -          Direct object handle
+    //    buffer     -          Pointer to buffer
+    //    bufferSize -          Buffer size
+    //    pRequiredBufferSize - Full length of the textual UTF8 representation, can be used to call this
+    //                          API again with a bigger buffer to get the full string if the first buffer
+    //                          from that first attempt was not big enough.
+    //
+    // Return Value:
+    //    Bytes written to the given buffer, the range is [0..bufferSize)
+    //
+    // size_t printObjectDescription (
+    //         CORINFO_OBJECT_HANDLE       handle,                       /* IN  */
+    //         char*                       buffer,                       /* OUT */
+    //         size_t                      bufferSize,                   /* IN  */
+    //         size_t*                     pRequiredBufferSize = nullptr /* OUT */
+    //         ) override {
+    //     WARN("printObjectDescription not defined\r");
+    //     buffer = nullptr;
+    //     return 0;
+    // }   
+
+    // CORINFO_OBJECT_HANDLE getRuntimeTypePointer(
+    //         CORINFO_CLASS_HANDLE        cls
+    //         ) override {
+    //     WARN("getRuntimeTypePointer not defined\r");
+    //     return nullptr;
+    // }
+
+    //------------------------------------------------------------------------------
+    // isObjectImmutable: checks whether given object is known to be immutable or not
+    //
+    // Arguments:
+    //    objPtr - Direct object handle
+    //
+    // Return Value:
+    //    Returns true if object is known to be immutable
+    //
+    // bool isObjectImmutable(
+    //         CORINFO_OBJECT_HANDLE       objPtr
+    //         ) override {
+    //     WARN("isObjectImmutable not defined\r");
+    //     return false;
+    // }
+
+    //------------------------------------------------------------------------------
+    // getObjectType: obtains type handle for given object
+    //
+    // Arguments:
+    //    objPtr - Direct object handle
+    //
+    // Return Value:
+    //    Returns CORINFO_CLASS_HANDLE handle that represents given object's type
+    //
+    // CORINFO_CLASS_HANDLE getObjectType(
+    //         CORINFO_OBJECT_HANDLE       objPtr
+    //         ) override {
+    //     WARN("getObjectType not defined\r");
+    //     return nullptr;
+    // }
+
+    // int getArrayOrStringLength(CORINFO_OBJECT_HANDLE objHnd) override {
+    //     WARN("getArrayOrStringLength not defined\r");
+    //     return 0;
+    // }
+
+    //------------------------------------------------------------------------------
+    // getReadonlyStaticFieldValue: returns true and the actual field's value if the given
+    //    field represents a statically initialized readonly field of any type.
+    //
+    // Arguments:
+    //    field                - field handle
+    //    buffer               - buffer field's value will be stored to
+    //    bufferSize           - size of buffer
+    //    ignoreMovableObjects - ignore movable reference types or not
+    //
+    // Return Value:
+    //    Returns true if field's constant value was available and successfully copied to buffer
+    //
+    // bool getReadonlyStaticFieldValue(
+    //                 CORINFO_FIELD_HANDLE    field,
+    //                 uint8_t                *buffer,
+    //                 int                     bufferSize,
+    //                 bool                    ignoreMovableObjects = true
+    //                 ) override {
+    //     WARN("getReadonlyStaticFieldValue not defined\r");
+    //     return false;
+    // }
 };
 
 #endif

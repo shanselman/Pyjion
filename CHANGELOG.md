@@ -1,6 +1,10 @@
 # Release notes
 
-## 1.2.7 
+## 2.0.0
+
+* Updated to .NET 7
+
+## 1.2.7
 
 * Fix a bug in the native x86_64 disassembler giving an error about compatibility on Windows Intel CPUs
 

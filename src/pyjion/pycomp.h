@@ -28,7 +28,6 @@
 
 #include <windows.h>
 
-#include <share.h>
 #include <intrin.h>
 #include <climits>
 #include <cfloat>

@@ -35,7 +35,6 @@
 #include <climits>
 #include <cstring>
 #include <cfloat>
-#include <share.h>
 #include <cstdlib>
 #include <intrin.h>
 

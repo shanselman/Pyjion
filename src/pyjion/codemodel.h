@@ -185,7 +185,7 @@ public:
         pResult->codePointerLookup.constLookup.accessType = IAT_PVALUE;
         pResult->codePointerLookup.constLookup.addr = &m_addr;
         if (m_hasIntrinsics) {
-            pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC | CORINFO_FLG_INTRINSIC | CORINFO_FLG_JIT_INTRINSIC;
+            pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC | CORINFO_FLG_INTRINSIC;
         } else {
             pResult->verMethodFlags = pResult->methodFlags = CORINFO_FLG_STATIC;
         }
@@ -198,8 +198,13 @@ public:
         sig->retType = m_retType;
         sig->callConv = CORINFO_CALLCONV_DEFAULT;
         sig->retTypeClass = nullptr;
+        sig->retTypeSigClass = nullptr;
         sig->args = (CORINFO_ARG_LIST_HANDLE) (!m_params.empty() ? &m_params[0] : nullptr);
         sig->numArgs = m_params.size();
+        sig->sigInst.classInstCount = 0;
+        sig->sigInst.classInst = nullptr;
+        sig->sigInst.methInstCount = 0;
+        sig->sigInst.methInst = nullptr;
     }
     void getFunctionEntryPoint(CORINFO_CONST_LOOKUP* pResult) override {
         pResult->accessType = IAT_PVALUE;
