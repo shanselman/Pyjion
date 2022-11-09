@@ -187,7 +187,7 @@ if (UNIX)
 endif()
 
 if (WIN32)
-    set(CLR_OS_BUILD Windows_NT.x64.Debug)
+    set(CLR_OS_BUILD Windows.x64.Debug)
     if(DEFINED ENV{DOTNET_ROOT})
         file(GLOB DOTNETPATH $ENV{DOTNET_ROOT}/shared/Microsoft.NETCore.App*/7.*/)
         message ("Scanning " $ENV{DOTNET_ROOT}/shared/Microsoft.NETCore.App*/7.*/)
