@@ -1,6 +1,6 @@
 ![Pyjion logo](https://github.com/tonybaloney/Pyjion/raw/develop/main/Docs/source/_static/pyjion_logo.png)
 
-Pyjion, a JIT extension for CPython that compiles your Python code into native CIL and executes it using the .NET CLR.
+Pyjion, a JIT extension for CPython that compiles your Python code into native CIL and executes it using the [.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0) CLR.
 
 [![Documentation Status](https://readthedocs.org/projects/pyjion/badge/?version=latest)](https://pyjion.readthedocs.io/en/latest/?badge=latest)
 [![PyPI](https://img.shields.io/pypi/v/pyjion?label=pypi%20package)](https://pypi.org/p/pyjion)
@@ -22,7 +22,7 @@ Prerequisites:
 
 - CPython 3.10
 - CMake 3.13 +
-- .NET 6
+- [.NET 7](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
 - scikit-build
 
 ```console

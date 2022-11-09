@@ -16,7 +16,7 @@ Checkout the live Pyjion compiler and disassembler sandbox at `trypyjion.com <ht
 Prerequisites
 -------------
 
-- Pyjion requires `.NET 6 <https://dotnet.microsoft.com/download>`_ to be installed.
+- Pyjion requires `.NET 7 <https://dotnet.microsoft.com/download>`_ to be installed.
 - Pyjion requires `Python 3.10 <https://python.org/downloads>`_.
 
 Installing Pyjion
