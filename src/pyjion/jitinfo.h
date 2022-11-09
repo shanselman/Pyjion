@@ -1470,7 +1470,9 @@ public:
             CORINFO_METHOD_HANDLE ftn, /* IN */
             const char** moduleName    /* OUT */
             ) override {
-        *moduleName = m_moduleName;
+        if (moduleName != nullptr) {
+            *moduleName = m_moduleName;
+        }
         return m_methodName;
     }
 
@@ -1563,7 +1565,8 @@ public:
 
     const char* getClassNameFromMetadata(CORINFO_CLASS_HANDLE cls, const char** namespaceName) override {
         WARN("getClassNameFromMetadata not defined\r\n");
-        return nullptr;
+        *namespaceName = "<namespace>";
+        return "<class>";
     }
 
     CORINFO_CLASS_HANDLE getTypeInstantiationArgument(CORINFO_CLASS_HANDLE cls, unsigned int index) override {
@@ -2069,7 +2072,6 @@ public:
                     bool                    ignoreMovableObjects = true
                     ) override {
         WARN("getReadonlyStaticFieldValue not defined\r");
-        buffer = nullptr;
         return false;
     }
 };
