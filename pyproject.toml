@@ -5,10 +5,11 @@ requires = ["setuptools", "wheel", "scikit-build>=0.13.0", "cmake", "ninja"]
 skip = ["*-musllinux*"]
 test-requires = "pytest"
 test-command = "pytest {project}/Tests"
+test-skip = ["*-win_arm64", "*-macosx_universal2:arm64"]
 
 [tool.cibuildwheel.windows]
 before-build = "powershell eng\\install-dotnet.ps1 -Version 7.0.100 -InstallDir c:\\cibw\\dotnet"
-archs = ["AMD64"]
+archs = ["AMD64", "ARM64"]
 environment = {DOTNET_ROOT="c:/cibw/dotnet"}
 
 [tool.cibuildwheel.linux]

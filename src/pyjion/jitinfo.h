@@ -1405,7 +1405,7 @@ public:
     int FilterException(
             struct _EXCEPTION_POINTERS* pExceptionPointers) override {
         WARN("FilterException\r\n");
-        return 0;
+        return EXCEPTION_CONTINUE_SEARCH;
     }
 
     void ThrowExceptionForJitResult(
@@ -1967,19 +1967,32 @@ public:
         // Not implemented
     }
 
-    // Returns string length and content (can be null for dynamic context)
-    // for given metaTOK and module, length `-1` means input is incorrect
+    // // Returns string length and content (can be null for dynamic context)
+    // // for given metaTOK and module, length `-1` means input is incorrect
     int getStringLiteral (
             CORINFO_MODULE_HANDLE       module,     /* IN  */
             unsigned                    metaTOK,    /* IN  */
             char16_t*                   buffer,     /* OUT */
-            int                         bufferSize, /* IN  */
-            int                         startIndex = 0 /* IN  */
+            int                         bufferSize  /* IN  */
             ) override {
         WARN("getStringLiteral not defined\r\n");
         buffer = nullptr;
         return 0;
     }
+
+    // // Returns string length and content (can be null for dynamic context)
+    // // for given metaTOK and module, length `-1` means input is incorrect
+    // int getStringLiteral (
+    //         CORINFO_MODULE_HANDLE       module,     /* IN  */
+    //         unsigned                    metaTOK,    /* IN  */
+    //         char16_t*                   buffer,     /* OUT */
+    //         int                         bufferSize, /* IN  */
+    //         int                         startIndex = 0 /* IN  */
+    //         ) override {
+    //     WARN("getStringLiteral not defined\r\n");
+    //     buffer = nullptr;
+    //     return 0;
+    // }
 
     //------------------------------------------------------------------------------
     // printObjectDescription: Prints a (possibly truncated) textual UTF8 representation of the given
@@ -1997,23 +2010,23 @@ public:
     // Return Value:
     //    Bytes written to the given buffer, the range is [0..bufferSize)
     //
-    size_t printObjectDescription (
-            CORINFO_OBJECT_HANDLE       handle,                       /* IN  */
-            char*                       buffer,                       /* OUT */
-            size_t                      bufferSize,                   /* IN  */
-            size_t*                     pRequiredBufferSize = nullptr /* OUT */
-            ) override {
-        WARN("printObjectDescription not defined\r");
-        buffer = nullptr;
-        return 0;
-    }   
+    // size_t printObjectDescription (
+    //         CORINFO_OBJECT_HANDLE       handle,                       /* IN  */
+    //         char*                       buffer,                       /* OUT */
+    //         size_t                      bufferSize,                   /* IN  */
+    //         size_t*                     pRequiredBufferSize = nullptr /* OUT */
+    //         ) override {
+    //     WARN("printObjectDescription not defined\r");
+    //     buffer = nullptr;
+    //     return 0;
+    // }   
 
-    CORINFO_OBJECT_HANDLE getRuntimeTypePointer(
-            CORINFO_CLASS_HANDLE        cls
-            ) override {
-        WARN("getRuntimeTypePointer not defined\r");
-        return nullptr;
-    }
+    // CORINFO_OBJECT_HANDLE getRuntimeTypePointer(
+    //         CORINFO_CLASS_HANDLE        cls
+    //         ) override {
+    //     WARN("getRuntimeTypePointer not defined\r");
+    //     return nullptr;
+    // }
 
     //------------------------------------------------------------------------------
     // isObjectImmutable: checks whether given object is known to be immutable or not
@@ -2024,12 +2037,12 @@ public:
     // Return Value:
     //    Returns true if object is known to be immutable
     //
-    bool isObjectImmutable(
-            CORINFO_OBJECT_HANDLE       objPtr
-            ) override {
-        WARN("isObjectImmutable not defined\r");
-        return false;
-    }
+    // bool isObjectImmutable(
+    //         CORINFO_OBJECT_HANDLE       objPtr
+    //         ) override {
+    //     WARN("isObjectImmutable not defined\r");
+    //     return false;
+    // }
 
     //------------------------------------------------------------------------------
     // getObjectType: obtains type handle for given object
@@ -2040,17 +2053,17 @@ public:
     // Return Value:
     //    Returns CORINFO_CLASS_HANDLE handle that represents given object's type
     //
-    CORINFO_CLASS_HANDLE getObjectType(
-            CORINFO_OBJECT_HANDLE       objPtr
-            ) override {
-        WARN("getObjectType not defined\r");
-        return nullptr;
-    }
+    // CORINFO_CLASS_HANDLE getObjectType(
+    //         CORINFO_OBJECT_HANDLE       objPtr
+    //         ) override {
+    //     WARN("getObjectType not defined\r");
+    //     return nullptr;
+    // }
 
-    int getArrayOrStringLength(CORINFO_OBJECT_HANDLE objHnd) override {
-        WARN("getArrayOrStringLength not defined\r");
-        return 0;
-    }
+    // int getArrayOrStringLength(CORINFO_OBJECT_HANDLE objHnd) override {
+    //     WARN("getArrayOrStringLength not defined\r");
+    //     return 0;
+    // }
 
     //------------------------------------------------------------------------------
     // getReadonlyStaticFieldValue: returns true and the actual field's value if the given
@@ -2065,15 +2078,15 @@ public:
     // Return Value:
     //    Returns true if field's constant value was available and successfully copied to buffer
     //
-    bool getReadonlyStaticFieldValue(
-                    CORINFO_FIELD_HANDLE    field,
-                    uint8_t                *buffer,
-                    int                     bufferSize,
-                    bool                    ignoreMovableObjects = true
-                    ) override {
-        WARN("getReadonlyStaticFieldValue not defined\r");
-        return false;
-    }
+    // bool getReadonlyStaticFieldValue(
+    //                 CORINFO_FIELD_HANDLE    field,
+    //                 uint8_t                *buffer,
+    //                 int                     bufferSize,
+    //                 bool                    ignoreMovableObjects = true
+    //                 ) override {
+    //     WARN("getReadonlyStaticFieldValue not defined\r");
+    //     return false;
+    // }
 };
 
 #endif
