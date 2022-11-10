@@ -7,9 +7,9 @@ from skbuild.cmaker import get_cmake_version
 setup_requires = []
 try:
     if LegacyVersion(get_cmake_version()) < LegacyVersion("3.13"):
-        setup_requires.append('cmake')
+        setup_requires.append("cmake")
 except SKBuildError:
-    setup_requires.append('cmake')
+    setup_requires.append("cmake")
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -18,24 +18,22 @@ with open("CHANGELOG.md", "r") as fh:
     long_description += "\n\n" + fh.read()
 
 setup(
-    name='pyjion',
-    version='2.0.0',
-    description='A JIT compiler wrapper for CPython',
-    author='Anthony Shaw',
-    author_email='anthonyshaw@apache.org',
-    url='https://www.trypyjion.com/',
+    name="pyjion",
+    version="2.0.0",
+    description="A JIT compiler wrapper for CPython",
+    author="Anthony Shaw",
+    author_email="anthonyshaw@apache.org",
+    url="https://www.trypyjion.com/",
     project_urls={
-        'Documentation': 'https://pyjion.readthedocs.io/',
-        'Repository': 'https://github.com/tonybaloney/Pyjion',
+        "Documentation": "https://pyjion.readthedocs.io/",
+        "Repository": "https://github.com/tonybaloney/Pyjion",
     },
-    license='MIT',
-    packages=['pyjion'],
-    package_dir={'': 'src'},
+    license="MIT",
+    packages=["pyjion"],
+    package_dir={"": "src"},
     setup_requires=setup_requires,
-    extras_require={
-        'dis': ["rich>=11.0", "distorm3"]
-    },
-    python_requires='>=3.10',
+    extras_require={"dis": ["rich>=11.0", "distorm3"]},
+    python_requires="=3.10",
     include_package_data=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -46,6 +44,6 @@ setup(
         "Operating System :: OS Independent",
     ],
     entry_points={
-        'console_scripts': ['pyjion = pyjion.__main__:main'],
-    }
+        "console_scripts": ["pyjion = pyjion.__main__:main"],
+    },
 )
