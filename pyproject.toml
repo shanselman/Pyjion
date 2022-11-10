@@ -22,4 +22,4 @@ environment = {DOTNET_ROOT="/root/.dotnet", LD_LIBRARY_PATH="/root/.dotnet/share
 before-build = "bash eng/install-dotnet.sh --version 7.0.100"
 environment = {MACOSX_DEPLOYMENT_TARGET=11.0}
 repair-wheel-command = ""
-archs = ["x86_64", "universal2", "arm64"]
+archs = ["x86_64", "universal2"]
