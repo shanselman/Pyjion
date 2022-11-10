@@ -33,7 +33,7 @@ setup(
     package_dir={"": "src"},
     setup_requires=setup_requires,
     extras_require={"dis": ["rich>=11.0", "distorm3"]},
-    python_requires="~=3.10",
+    python_requires="==3.10.*",
     include_package_data=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
