@@ -366,11 +366,11 @@ public:
     // different value than if it was compiling for the host architecture.
     //
     uint32_t getExpectedTargetArchitecture() override {
-#ifdef _TARGET_AMD64_
+#ifdef __x86_64__
         return IMAGE_FILE_MACHINE_AMD64;
-#elif defined(_TARGET_X86_)
+#elif defined(__i686__)
         return IMAGE_FILE_MACHINE_I386;
-#elif defined(_TARGET_ARM64_)
+#elif defined(__arm__)
         return IMAGE_FILE_MACHINE_ARM64;
 #else
 #error "unsupported architecture"
