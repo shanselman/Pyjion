@@ -28,7 +28,7 @@
 
 #include <Python.h>
 #include <stdint.h>
-#include <windows.h>
+#include "crossplat.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>

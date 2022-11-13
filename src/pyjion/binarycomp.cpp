@@ -24,7 +24,7 @@
 */
 
 
-#include <windows.h>
+#include "crossplat.h"
 #include <corjit.h>
 
 #ifdef WINDOWS

@@ -40,7 +40,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include <windows.h>
+#include "crossplat.h"
 #include <corjit.h>
 
 #include <Python.h>

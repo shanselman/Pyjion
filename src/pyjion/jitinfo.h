@@ -29,7 +29,7 @@
 #include <Python.h>
 #include <frameobject.h>
 #include <opcode.h>
-#include <windows.h>
+#include "crossplat.h"
 #include <intrin.h>
 
 #include <vector>
@@ -361,11 +361,11 @@ public:
     // different value than if it was compiling for the host architecture.
     //
     uint32_t getExpectedTargetArchitecture() override {
-#ifdef __x86_64__
+#ifdef HOST_AMD64
         return IMAGE_FILE_MACHINE_AMD64;
-#elif defined(__i686__)
+#elif HOST_X86
         return IMAGE_FILE_MACHINE_I386;
-#elif defined(__arm__)
+#elif HOST_ARM64
         return IMAGE_FILE_MACHINE_ARM64;
 #else
 #error "unsupported architecture"

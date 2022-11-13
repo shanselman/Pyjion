@@ -26,7 +26,7 @@
 #ifndef PYJION_PYCOMP_H
 #define PYJION_PYCOMP_H
 
-#include <windows.h>
+#include "crossplat.h"
 
 #include <intrin.h>
 #include <climits>

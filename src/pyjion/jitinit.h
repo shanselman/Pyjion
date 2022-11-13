@@ -27,7 +27,7 @@
 #define PYJION_JITINIT_H
 
 #include <cstdint>
-#include <windows.h>
+#include "crossplat.h"
 #include <cwchar>
 #include <cstdio>
 #include <cstddef>
