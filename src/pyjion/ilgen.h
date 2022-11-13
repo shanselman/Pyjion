@@ -499,7 +499,10 @@ public:
 
     void ld_i(void* ptr) {
         auto value = (size_t) ptr;
-#ifdef HOST_64BIT
+#ifdef __i686__
+        ld_i(value);
+        push_back(CEE_CONV_I);
+#else
         if ((value & 0xFFFFFFFF) == value) {
             ld_i((int) value);
         } else {
@@ -514,9 +517,6 @@ public:
             push_back((value >> 56) & 0xff);
             push_back(CEE_CONV_I);// Pop1, PushI
         }
-#else
-        ld_i(value);
-        push_back(CEE_CONV_I);
 #endif
     }
 
