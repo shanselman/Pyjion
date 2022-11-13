@@ -292,7 +292,7 @@ public:
             } break;
             case IMAGE_REL_ARM64_BRANCH26:// 26 bit offset << 2 & sign ext, for B and BL
             {
-                _ASSERTE(slot == 0);
+                _ASSERTE(slotNum == 0);
                 _ASSERTE(addlDelta == 0);
 
                 auto branchTarget = (uint64_t) target;
@@ -314,7 +314,7 @@ public:
             } break;
 
             case IMAGE_REL_ARM64_PAGEBASE_REL21: {
-                _ASSERTE(slot == 0);
+                _ASSERTE(slotNum == 0);
                 _ASSERTE(addlDelta == 0);
 
                 // Write the 21 bits pc-relative page address into location.
@@ -333,7 +333,7 @@ public:
             } break;
 
             case IMAGE_REL_ARM64_PAGEOFFSET_12A: {
-                _ASSERTE(slot == 0);
+                _ASSERTE(slotNum == 0);
                 _ASSERTE(addlDelta == 0);
 
                 // Write the 12 bits page offset into location.

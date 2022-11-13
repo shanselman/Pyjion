@@ -23,6 +23,7 @@
 #elif defined(__powerpc__) && !defined(_M_PPC64)
 #define _M_PPC64 1
 #endif
+#endif
 
 #if defined(_M_IX86) && !defined(HOST_X86)
 #define HOST_X86
@@ -40,5 +41,20 @@
 #define HOST_POWERPC64
 #endif
 
-#endif // !_MSC_VER
+#ifdef HOST_X86
+#define TARGET_X86 1
+#elif defined(HOST_AMD64)
+#define TARGET_AMD64 1
+#elif defined(HOST_ARM)
+#define TARGET_ARM 1
+#elif defined(HOST_ARM64)
+#define TARGET_ARM64 1
+#elif defined(HOST_LOONGARCH64)
+#define TARGET_LOONGARCH64 1
+#elif defined(HOST_S390X)
+#define TARGET_S390X 1
+#elif defined(HOST_POWERPC64)
+#define TARGET_POWERPC64 1
+#endif
+
 #include <windows.h>
