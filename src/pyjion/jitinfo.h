@@ -29,7 +29,7 @@
 #include <Python.h>
 #include <frameobject.h>
 #include <opcode.h>
-#include <windows.h>
+#include "crossplat.h"
 #include <intrin.h>
 
 #include <vector>
@@ -279,7 +279,6 @@ public:
             case IMAGE_REL_BASED_DIR64:
                 *((uint64_t*) ((uint8_t*) location + slotNum)) = (uint64_t) target;
                 break;
-#ifdef _TARGET_AMD64_
             case IMAGE_REL_BASED_REL32: {
                 target = (uint8_t*) target + addlDelta;
 
@@ -291,11 +290,9 @@ public:
                 // Write the 32-bits pc-relative delta into location
                 *fixupLocation = (int32_t) delta;
             } break;
-#endif// _TARGET_AMD64_
-#ifdef _TARGET_ARM64_
             case IMAGE_REL_ARM64_BRANCH26:// 26 bit offset << 2 & sign ext, for B and BL
             {
-                _ASSERTE(slot == 0);
+                _ASSERTE(slotNum == 0);
                 _ASSERTE(addlDelta == 0);
 
                 auto branchTarget = (uint64_t) target;
@@ -317,7 +314,7 @@ public:
             } break;
 
             case IMAGE_REL_ARM64_PAGEBASE_REL21: {
-                _ASSERTE(slot == 0);
+                _ASSERTE(slotNum == 0);
                 _ASSERTE(addlDelta == 0);
 
                 // Write the 21 bits pc-relative page address into location.
@@ -336,7 +333,7 @@ public:
             } break;
 
             case IMAGE_REL_ARM64_PAGEOFFSET_12A: {
-                _ASSERTE(slot == 0);
+                _ASSERTE(slotNum == 0);
                 _ASSERTE(addlDelta == 0);
 
                 // Write the 12 bits page offset into location.
@@ -348,8 +345,6 @@ public:
                 addInstr |= (imm12 << 10);
                 *pCode = addInstr;
             } break;
-
-#endif// TARGET_ARM64
 
             default:
                 printf("Unsupported relocation type (%d)\r\n", fRelocType);
@@ -366,11 +361,11 @@ public:
     // different value than if it was compiling for the host architecture.
     //
     uint32_t getExpectedTargetArchitecture() override {
-#ifdef _TARGET_AMD64_
+#if defined(HOST_AMD64)
         return IMAGE_FILE_MACHINE_AMD64;
-#elif defined(_TARGET_X86_)
+#elif defined(HOST_X86)
         return IMAGE_FILE_MACHINE_I386;
-#elif defined(_TARGET_ARM64_)
+#elif defined(HOST_ARM64)
         return IMAGE_FILE_MACHINE_ARM64;
 #else
 #error "unsupported architecture"
