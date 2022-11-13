@@ -15,7 +15,7 @@ environment = {DOTNET_ROOT="c:/cibw/dotnet"}
 [tool.cibuildwheel.linux]
 before-build = "bash eng/install-dotnet.sh --version 7.0.100 --os linux"
 manylinux-x86_64-image = "manylinux2014"
-archs = ["x86_64", "aarch64"]
+archs = ["x86_64"]
 environment = {DOTNET_ROOT="/root/.dotnet", LD_LIBRARY_PATH="/root/.dotnet/shared/Microsoft.NETCore.App/7.0.0"}
 
 [tool.cibuildwheel.macos]
