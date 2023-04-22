@@ -12,7 +12,7 @@ unordered_map<const char*, AbstractValueKind> builtinReturnTypes = {
         {"breakpoint", AVK_None},
         {"bytearray", AVK_Bytearray},
         {"bytes", AVK_Bytes},
-        {"callable", AVK_Function},
+        {"callable", AVK_Bool},
         {"classmethod", AVK_Classmethod},
         {"compile", AVK_Code},
         {"chr", AVK_String},
