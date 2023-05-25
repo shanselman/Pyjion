@@ -55,5 +55,5 @@ def test_unboxed_conditional_branch():
         return x
     assert f(True) == 3
     assert f(True) == 3
-    with pytest.assertRaises(NameError):
+    with pytest.raises(UnboundLocalError):
         f(False)
