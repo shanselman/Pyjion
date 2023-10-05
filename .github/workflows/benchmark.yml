@@ -15,7 +15,7 @@ jobs:
         dot-net-version: [ "7.0.100" ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: Setup python
@@ -52,7 +52,7 @@ jobs:
         dot-net-version: [ "7.0.100" ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
@@ -84,7 +84,7 @@ jobs:
         dot-net-version: [ "7.0.100" ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: Setup python
