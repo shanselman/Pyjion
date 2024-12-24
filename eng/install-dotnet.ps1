@@ -65,7 +65,7 @@
 .PARAMETER Verbose
     Displays diagnostics information.
 .PARAMETER AzureFeed
-    Default: https://dotnetcli.azureedge.net/dotnet
+    Default: https://builds.dotnet.microsoft.com/dotnet
     This parameter typically is not changed by the user.
     It allows changing the URL for the Azure feed used by this installer.
 .PARAMETER UncachedFeed
@@ -104,7 +104,7 @@ param(
    [switch]$SharedRuntime,
    [switch]$DryRun,
    [switch]$NoPath,
-   [string]$AzureFeed="https://dotnetcli.azureedge.net/dotnet",
+   [string]$AzureFeed="https://builds.dotnet.microsoft.com/dotnet",
    [string]$UncachedFeed="https://dotnetcli.blob.core.windows.net/dotnet",
    [string]$FeedCredential,
    [string]$ProxyAddress,
