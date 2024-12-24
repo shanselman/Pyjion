@@ -17,7 +17,7 @@ RUN apt-get -y update && apt-get install -y software-properties-common && apt-ge
      libc6 libgcc1 libgl1 libglib2.0-0 libice6 libsm6 libstdc++6 libx11-6 libxext6 libxrender1 \
      && apt-get install -y python3.10 python3.10-dev python3.10-distutils python3.10-venv \
      && apt-get clean -y && rm -rf /var/lib/apt/lists/*
-RUN wget https://dotnetcli.azureedge.net/dotnet/Sdk/${DOTNET_VERSION}/dotnet-sdk-${DOTNET_VERSION}-linux-x64.tar.gz
+RUN wget https://builds.dotnet.microsoft.com/dotnet/Sdk/${DOTNET_VERSION}/dotnet-sdk-${DOTNET_VERSION}-linux-x64.tar.gz
 RUN mkdir -p dotnet && tar zxf dotnet-sdk-${DOTNET_VERSION}-linux-x64.tar.gz -C dotnet
 ENV DOTNET_ROOT=/src/dotnet
 RUN chmod +x /src/.github/build-manylinux.sh
